@@ -33,7 +33,7 @@ public class Main extends Activity {
             RSSReader handler = new RSSReader(this);
             xr.setContentHandler(handler);
             xr.setErrorHandler(handler);
-            URL url = new URL("http://feeds.feedburner.com/scudstv");
+            URL url = new URL(getString(R.string.feed_cinefuzz));
             URLConnection c = url.openConnection();
             c.setRequestProperty("User-Agent", "Android/Nowatch.TV");
             xr.parse(new InputSource(c.getInputStream()));

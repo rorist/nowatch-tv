@@ -19,6 +19,7 @@ public class RSSReader extends DefaultHandler {
     private SQLiteDatabase db;
     private String current_tag;
     private boolean in_items = false;
+    private boolean in_image = false;
 
     private static Map<String, String> channelMap;
     static {
@@ -27,15 +28,12 @@ public class RSSReader extends DefaultHandler {
         channelMap.put("description", "");
         channelMap.put("link", "");
         channelMap.put("pubDate", "");
+        channelMap.put("image_url", "");
     }
 
     private static Map<String, String> itemMap;
     static {
         itemMap = new HashMap<String, String>();
-        itemMap.put("title", "");
-        itemMap.put("description", "");
-        itemMap.put("link", "");
-        itemMap.put("pubDate", "");
         itemMap.put("file_uri", "");
         itemMap.put("file_type", "");
         itemMap.put("file_size", "");
@@ -68,22 +66,40 @@ public class RSSReader extends DefaultHandler {
         if (name == "item") {
             in_items = true;
             return;
+        } else if (name == "image") {
+            in_image = true;
         }
-        current_tag = name; // Set tag name (FIXME: HACKISH ? Better use int ?)
+        current_tag = name;
+
+        // Get attributes of enclosure tags
+        if (current_tag == "enclosure") {
+            for (int i = 0; i < attrs.getLength(); i++) {
+                logi(attrs.getLocalName(i) + "=" + attrs.getValue(i));
+                if (attrs.getLocalName(i) == "url") {
+                    itemMap.put("file_uri", attrs.getValue(i));
+                } else if (attrs.getLocalName(i) == "length") {
+                    itemMap.put("file_size", attrs.getValue(i));
+                } else if (attrs.getLocalName(i) == "type") {
+                    itemMap.put("file_type", attrs.getValue(i));
+                }
+            }
+        }
     }
 
     @Override
     public void endElement(String uri, String name, String qName) {
         logi("END=" + name);
         if (name == "item") {
-            // Process item and save in db
-            Log.v(TAG, "ITEM");
-            Log.v(TAG, "title=" + itemMap.get("title"));
-            Log.v(TAG, "link=" + itemMap.get("link"));
+            // Log.v(TAG, "ITEM");
+            // Log.v(TAG, "title=" + itemMap.get("title"));
+            // Log.v(TAG, "file_uri=" + itemMap.get("file_uri"));
         } else if (name == "channel") {
             Log.v(TAG, "CHANNEL");
             Log.v(TAG, "title=" + channelMap.get("title"));
             Log.v(TAG, "link=" + channelMap.get("link"));
+            Log.v(TAG, "image=" + channelMap.get("image_url"));
+        } else if (name == "image") {
+            in_image = false;
         }
         current_tag = null;
     }
@@ -98,6 +114,10 @@ public class RSSReader extends DefaultHandler {
         // Get channel info (First IN)
         else if (channelMap.get(current_tag) == "" && current_tag != null) {
             channelMap.put(current_tag, new String(ch, start, length));
+        }
+        // Get channel image url
+        else if (in_image && current_tag == "url") {
+            channelMap.put("image_url", new String(ch, start, length));
         }
     }
 
