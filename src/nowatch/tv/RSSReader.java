@@ -1,5 +1,8 @@
 package nowatch.tv;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -13,23 +16,30 @@ public class RSSReader extends DefaultHandler {
 
     private final String TAG = "RSSReader";
     private final boolean LOG_INFO = false;
-    private boolean in_items = false;
     private SQLiteDatabase db;
-    private int current_item = 0;
+    private String current_tag;
+    private boolean in_items = false;
 
-    private static String channel_title = null; // 1
-    private static String channel_description; // 2
-    private static String channel_link = null; // 3
-    private static String channel_pubDate; // 4
-    private static String channel_image; // 5
+    private static Map<String, String> channelMap;
+    static {
+        channelMap = new HashMap<String, String>();
+        channelMap.put("title", "");
+        channelMap.put("description", "");
+        channelMap.put("link", "");
+        channelMap.put("pubDate", "");
+    }
 
-    private String item_title; // 6
-    private String item_description; // 7
-    private String item_link; // 8
-    private String item_pubDate; // 9
-    private String item_file_uri;
-    private String item_file_type;
-    private int item_file_size;
+    private static Map<String, String> itemMap;
+    static {
+        itemMap = new HashMap<String, String>();
+        itemMap.put("title", "");
+        itemMap.put("description", "");
+        itemMap.put("link", "");
+        itemMap.put("pubDate", "");
+        itemMap.put("file_uri", "");
+        itemMap.put("file_type", "");
+        itemMap.put("file_size", "");
+    }
 
     public RSSReader(Context ctxt) {
         super();
@@ -59,48 +69,7 @@ public class RSSReader extends DefaultHandler {
             in_items = true;
             return;
         }
-        // Get items info
-        if (in_items) {
-            if (name == "title") {
-                current_item = 6;
-            } else if (name == "description") {
-                current_item = 7;
-            } else if (name == "link") {
-                current_item = 8;
-            } else if (name == "enclosure") {
-                String attr_name;
-                for (int i = 0; i < attrs.getLength(); i++) {
-                    logi(attrs.getLocalName(i) + "=" + attrs.getValue(i));
-                    attr_name = attrs.getLocalName(i);
-                    if (attr_name == "url") {
-                    } else if (attr_name == "length") {
-                    } else if (attr_name == "type") {
-                    }
-                }
-            } else if (name == "pubDate") {
-                current_item = 9;
-            } else {
-                current_item = 0;
-            }
-        }
-        // Get channel info
-        else {
-            // TODO: Use switch case and byte comparison with integers (more
-            // efficient) or not automatic fill of channel info anyhow
-            if (name == "title" && channel_title == null) {
-                current_item = 1;
-            } else if (name == "description") {
-                current_item = 2;
-            } else if (name == "link" && channel_link == null) {
-                current_item = 3;
-            } else if (name == "pubDate") {
-                current_item = 4;
-            } else if (name == "image") {
-                current_item = 5;
-            } else {
-                current_item = 0;
-            }
-        }
+        current_tag = name; // Set tag name (FIXME: HACKISH ? Better use int ?)
     }
 
     @Override
@@ -109,67 +78,44 @@ public class RSSReader extends DefaultHandler {
         if (name == "item") {
             // Process item and save in db
             Log.v(TAG, "ITEM");
-            Log.v(TAG, "title=" + item_title);
-            Log.v(TAG, "link=" + item_link);
+            Log.v(TAG, "title=" + itemMap.get("title"));
+            Log.v(TAG, "link=" + itemMap.get("link"));
         } else if (name == "channel") {
             Log.v(TAG, "CHANNEL");
-            Log.v(TAG, "title=" + channel_title);
-            Log.v(TAG, "link=" + channel_link);
+            Log.v(TAG, "title=" + channelMap.get("title"));
+            Log.v(TAG, "link=" + channelMap.get("link"));
         }
+        current_tag = null;
     }
 
     @Override
     public void characters(char ch[], int start, int length) {
-        switch (current_item) {
-            case 1:
-                channel_title = new String(ch, start, length);
-                Log.v(TAG, "TITLE=" + channel_title);
-                break;
-            case 2:
-                channel_description = new String(ch, start, length);
-                break;
-            case 3:
-                channel_link = new String(ch, start, length);
-                break;
-            case 4:
-                channel_pubDate = new String(ch, start, length);
-                break;
-            case 5:
-                // TODO: get image as binary blob
-                break;
-            case 6:
-                item_title = new String(ch, start, length);
-                break;
-            case 7:
-                item_description = new String(ch, start, length);
-                break;
-            case 8:
-                item_link = new String(ch, start, length);
-                break;
-            case 9:
-                item_pubDate = new String(ch, start, length);
-                break;
-            default:
-                break;
-        }
         logi("CHAR=" + new String(ch, start, length));
+        // Get items info
+        if (in_items && current_tag != null) {
+            itemMap.put(current_tag, new String(ch, start, length));
+        }
+        // Get channel info (First IN)
+        else if (channelMap.get(current_tag) == "" && current_tag != null) {
+            channelMap.put(current_tag, new String(ch, start, length));
+        }
     }
 
     @Override
     public void error(SAXParseException e) throws SAXException {
-        Log.e(TAG, e.getMessage());
+        Log.e(TAG + ":ErrorHandler", e.getMessage());
         super.error(e);
     }
 
     @Override
     public void fatalError(SAXParseException e) throws SAXException {
-        Log.e(TAG, e.getMessage());
+        Log.e(TAG + ":ErrorHandler", e.getMessage());
         super.fatalError(e);
     }
 
     @Override
     public void warning(SAXParseException e) throws SAXException {
-        Log.e(TAG, e.getMessage());
+        Log.e(TAG + ":ErrorHandler", e.getMessage());
         super.warning(e);
     }
 }
