@@ -16,32 +16,33 @@ public class RSSReader extends DefaultHandler {
 
     private final String TAG = "RSSReader";
     private final boolean LOG_INFO = false;
-    private SQLiteDatabase db;
-    private String current_tag;
     private boolean in_items = false;
     private boolean in_image = false;
+    private String current_tag;
+    private SQLiteDatabase db;
 
-    private static Map<String, String> channelMap;
+    protected static Map<String, String> channelMap;
     static {
         channelMap = new HashMap<String, String>();
-        channelMap.put("title", "");
-        channelMap.put("description", "");
-        channelMap.put("link", "");
-        channelMap.put("pubDate", "");
-        channelMap.put("image_url", "");
+        channelMap.put("title", null);
+        channelMap.put("description", null);
+        channelMap.put("link", null);
+        channelMap.put("pubDate", null);
+        channelMap.put("image_url", null);
     }
 
-    private static Map<String, String> itemMap;
+    protected static Map<String, String> itemMap;
     static {
         itemMap = new HashMap<String, String>();
-        itemMap.put("file_uri", "");
-        itemMap.put("file_type", "");
-        itemMap.put("file_size", "");
+        itemMap.put("file_uri", null);
+        itemMap.put("file_type", null);
+        itemMap.put("file_size", null);
     }
 
     public RSSReader(Context ctxt) {
         super();
         db = (new DB(ctxt)).getWritableDatabase();
+        db.close();
     }
 
     private void logi(String str) {
@@ -89,16 +90,7 @@ public class RSSReader extends DefaultHandler {
     @Override
     public void endElement(String uri, String name, String qName) {
         logi("END=" + name);
-        if (name == "item") {
-            // Log.v(TAG, "ITEM");
-            // Log.v(TAG, "title=" + itemMap.get("title"));
-            // Log.v(TAG, "file_uri=" + itemMap.get("file_uri"));
-        } else if (name == "channel") {
-            Log.v(TAG, "CHANNEL");
-            Log.v(TAG, "title=" + channelMap.get("title"));
-            Log.v(TAG, "link=" + channelMap.get("link"));
-            Log.v(TAG, "image=" + channelMap.get("image_url"));
-        } else if (name == "image") {
+        if (name == "image") {
             in_image = false;
         }
         current_tag = null;
@@ -112,7 +104,7 @@ public class RSSReader extends DefaultHandler {
             itemMap.put(current_tag, new String(ch, start, length));
         }
         // Get channel info (First IN)
-        else if (channelMap.get(current_tag) == "" && current_tag != null) {
+        else if (channelMap.get(current_tag) == null && current_tag != null) {
             channelMap.put(current_tag, new String(ch, start, length));
         }
         // Get channel image url
