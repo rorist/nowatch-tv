@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="hello">Hello World, Main!</string>
     <string name="app_name">Nowatch.TV</string>
+    <string name="feed_geekinc">http://feeds.feedburner.com/GeekInc</string>
+    <string name="feed_scuds">http://feeds.feedburner.com/scudstv</string>
+    <string name="feed_zapcast">http://feeds.feedburner.com/Zapcasttv</string>
+    <string name="feed_cinefuzz">http://feeds.feedburner.com/CineFuzz</string>
 </resources>
