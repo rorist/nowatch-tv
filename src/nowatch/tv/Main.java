@@ -9,11 +9,11 @@ import android.os.Bundle;
 public class Main extends Activity {
 
     // private final String TAG = "NowatchTV";
-    public static String VERSION = "0.1";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
         // setContentView(R.layout.main);
         startActivity(new Intent(getApplicationContext(), ItemsActivity.class));
         finish();

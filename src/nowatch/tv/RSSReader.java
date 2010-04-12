@@ -1,48 +1,44 @@
 package nowatch.tv;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Arrays;
+import java.util.List;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
 import org.xml.sax.helpers.DefaultHandler;
 
-import android.content.Context;
-import android.database.sqlite.SQLiteDatabase;
+import android.content.ContentValues;
 import android.util.Log;
 
 public class RSSReader extends DefaultHandler {
 
     private final String TAG = "RSSReader";
     private final boolean LOG_INFO = false;
+    private final List<String> feeds_fields = Arrays.asList("_id", "title", "description", "link",
+            "pubDate", "image");
+    private final List<String> items_fields = Arrays.asList("_id", "feed_id", "title",
+            "description", "link", "pubDate");
     private boolean in_items = false;
     private boolean in_image = false;
     private String current_tag;
-    private SQLiteDatabase db;
 
-    protected static Map<String, String> channelMap;
+    protected static ContentValues channelMap;
     static {
-        channelMap = new HashMap<String, String>();
-        channelMap.put("title", null);
-        channelMap.put("description", null);
-        channelMap.put("link", null);
-        channelMap.put("pubDate", null);
-        channelMap.put("image_url", null);
+        channelMap = new ContentValues();
+        channelMap.put("title", "");
+        channelMap.put("description", "");
+        channelMap.put("link", "");
+        channelMap.put("pubDate", "");
+        channelMap.put("image", "");
     }
 
-    protected static Map<String, String> itemMap;
+    protected static ContentValues itemMap;
     static {
-        itemMap = new HashMap<String, String>();
-        itemMap.put("file_uri", null);
-        itemMap.put("file_type", null);
-        itemMap.put("file_size", null);
-    }
-
-    public RSSReader(Context ctxt) {
-        super();
-        db = (new DB(ctxt)).getWritableDatabase();
-        db.close();
+        itemMap = new ContentValues();
+        itemMap.put("file_uri", "");
+        itemMap.put("file_type", "");
+        itemMap.put("file_size", "");
     }
 
     private void logi(String str) {
@@ -100,16 +96,17 @@ public class RSSReader extends DefaultHandler {
     public void characters(char ch[], int start, int length) {
         logi("CHAR=" + new String(ch, start, length));
         // Get items info
-        if (in_items && current_tag != null) {
+        if (in_items && items_fields.contains(current_tag) && current_tag != null) {
             itemMap.put(current_tag, new String(ch, start, length));
         }
         // Get channel info (First IN)
-        else if (channelMap.get(current_tag) == null && current_tag != null) {
+        else if (feeds_fields.contains(current_tag) && current_tag != null
+                && channelMap.get(current_tag) == "") {
             channelMap.put(current_tag, new String(ch, start, length));
         }
         // Get channel image url
         else if (in_image && current_tag == "url") {
-            channelMap.put("image_url", new String(ch, start, length));
+            channelMap.put("image", new String(ch, start, length));
         }
     }
 

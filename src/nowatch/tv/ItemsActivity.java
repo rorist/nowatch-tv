@@ -10,6 +10,6 @@ public class ItemsActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        new Thread(new UpdateRunnable(getApplicationContext(), R.string.feed_scuds)).start();
+        new Thread(new UpdateRunnable(getApplicationContext(), R.string.feed_scuds, "3")).start();
     }
 }
