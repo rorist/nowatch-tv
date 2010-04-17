@@ -25,7 +25,8 @@ public class ItemsActivity extends Activity {
 
     // private final String TAG = "ItemsActivity";
     private final String QUERY_ITEMS = "SELECT items._id, items.title, feeds.title, image "
-            + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id ORDER BY items.pubDate DESC LIMIT 16";
+            + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id "
+            + "ORDER BY date(items.pubDate) DESC LIMIT 16";
     private static final int MENU_UPDATE_ALL = 1;
     private ItemsAdapter adapter;
     private Context ctxt;
@@ -42,7 +43,7 @@ public class ItemsActivity extends Activity {
         ListView list = (ListView) findViewById(R.id.list_items);
         list.setAdapter(adapter);
         list.setItemsCanFocus(true);
-        db.close(); // FIXME: Close the db in onPause() ?
+        db.close();
     }
 
     @Override
@@ -74,6 +75,9 @@ public class ItemsActivity extends Activity {
         public ItemsAdapter(Context context, Cursor c) {
             super(context, c, false);
             inflater = LayoutInflater.from(ctxt);
+            if (c.getCount() == 0) {
+                (new UpdateTask(ItemsActivity.this)).execute();
+            }
         }
 
         @Override

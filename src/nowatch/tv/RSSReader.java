@@ -30,8 +30,8 @@ public class RSSReader extends DefaultHandler {
             "pubDate", "image");
     private final List<String> items_fields = Arrays.asList("_id", "feed_id", "title",
             "description", "link", "pubDate");
-    private boolean in_items = false;
     private boolean in_image = false;
+    protected boolean in_items = false;
     private String current_tag;
     protected ContentValues channelMap;
     protected ContentValues itemMap;
@@ -80,7 +80,7 @@ public class RSSReader extends DefaultHandler {
     }
 
     @Override
-    public void endElement(String uri, String name, String qName) {
+    public void endElement(String uri, String name, String qName) throws SAXException {
         logi("END=" + name);
         if (name == "image") {
             in_image = false;
@@ -132,10 +132,10 @@ public class RSSReader extends DefaultHandler {
             try {
                 response = httpclient.execute(httpget);
             } catch (SSLException e) {
-                Log.i(TAG, "SSL Certificate is not trusted");
+                logi("SSL Certificate is not trusted");
                 response = httpclient.execute(httpget);
             }
-            Log.i(TAG, "Status:[" + response.getStatusLine().toString() + "] " + url);
+            logi("Status:[" + response.getStatusLine().toString() + "] " + url);
             HttpEntity entity = response.getEntity();
             if (entity != null) {
                 return entity.getContent();
