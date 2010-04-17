@@ -1,8 +1,18 @@
 package nowatch.tv;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
 
+import javax.net.ssl.SSLException;
+
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.ClientProtocolException;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.DefaultHttpClient;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.SAXParseException;
@@ -14,6 +24,7 @@ import android.util.Log;
 public class RSSReader extends DefaultHandler {
 
     private final String TAG = "RSSReader";
+    protected final static String USERAGENT = "Android/Nowatch.TV/0.1";
     private final boolean LOG_INFO = false;
     private final List<String> feeds_fields = Arrays.asList("_id", "title", "description", "link",
             "pubDate", "image");
@@ -22,24 +33,8 @@ public class RSSReader extends DefaultHandler {
     private boolean in_items = false;
     private boolean in_image = false;
     private String current_tag;
-
-    protected static ContentValues channelMap;
-    static {
-        channelMap = new ContentValues();
-        channelMap.put("title", "");
-        channelMap.put("description", "");
-        channelMap.put("link", "");
-        channelMap.put("pubDate", "");
-        channelMap.put("image", "");
-    }
-
-    protected static ContentValues itemMap;
-    static {
-        itemMap = new ContentValues();
-        itemMap.put("file_uri", "");
-        itemMap.put("file_type", "");
-        itemMap.put("file_size", "");
-    }
+    protected ContentValues channelMap;
+    protected ContentValues itemMap;
 
     private void logi(String str) {
         if (LOG_INFO) {
@@ -50,6 +45,7 @@ public class RSSReader extends DefaultHandler {
     @Override
     public void startDocument() {
         logi("Start parsing of the file!");
+        initMaps();
     }
 
     @Override
@@ -108,6 +104,48 @@ public class RSSReader extends DefaultHandler {
         else if (in_image && current_tag == "url") {
             channelMap.put("image", new String(ch, start, length));
         }
+    }
+
+    private void initMaps() {
+        channelMap = new ContentValues();
+        channelMap.put("title", "");
+        channelMap.put("description", "");
+        channelMap.put("link", "");
+        channelMap.put("pubDate", "");
+        channelMap.put("image", "");
+        itemMap = new ContentValues();
+        itemMap.put("feed_id", 0);
+        itemMap.put("file_uri", "");
+        itemMap.put("file_type", "");
+        itemMap.put("file_size", "");
+    }
+
+    protected InputStream getFile(String url) {
+        HttpGet httpget = new HttpGet(url);
+        HttpClient httpclient = new DefaultHttpClient();
+        HttpResponse response;
+        httpget.getParams().setParameter("http.useragent", USERAGENT);
+        httpget.getParams().setParameter("http.protocol.content-charset", "UTF-8");
+        httpget.getParams().setParameter("http.protocol.expect-continue", true);
+        httpget.getParams().setParameter("http.protocol.wait-for-continue", 5000);
+        try {
+            try {
+                response = httpclient.execute(httpget);
+            } catch (SSLException e) {
+                Log.i(TAG, "SSL Certificate is not trusted");
+                response = httpclient.execute(httpget);
+            }
+            Log.i(TAG, "Status:[" + response.getStatusLine().toString() + "] " + url);
+            HttpEntity entity = response.getEntity();
+            if (entity != null) {
+                return entity.getContent();
+            }
+        } catch (ClientProtocolException e) {
+            Log.e(TAG, "There was a protocol based error", e);
+        } catch (IOException e) {
+            Log.e(TAG, "There was an IO Stream related error", e);
+        }
+        return null;
     }
 
     @Override
