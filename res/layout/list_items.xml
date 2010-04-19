@@ -2,17 +2,18 @@
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
-    android:layout_height="64dip"
-    android:padding="3dip">
+    android:layout_height="67dip">
     <ImageView
         android:id="@+id/logo"
-        android:layout_width="61dip"
-        android:layout_height="61dip" />
+        android:layout_width="64dip"
+        android:layout_height="64dip"
+        android:padding="3dip" />
     <LinearLayout
         android:layout_width="0dip"
         android:layout_height="wrap_content"
         android:layout_weight="1"
-        android:orientation="vertical">
+        android:orientation="vertical"
+        android:padding="3dip">
         <TextView
             android:id="@+id/title"
             android:layout_width="fill_parent"

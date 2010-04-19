@@ -5,4 +5,5 @@
     <string name="feed_scuds">http://feeds.feedburner.com/scudstv</string>
     <string name="feed_zapcast">http://feeds.feedburner.com/Zapcasttv</string>
     <string name="feed_cinefuzz">http://feeds.feedburner.com/CineFuzz</string>
+    <string name="feed_test">http://aaa.lamatricexiste.info/test.xml</string>
 </resources>

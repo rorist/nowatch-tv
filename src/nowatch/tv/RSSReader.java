@@ -1,7 +1,14 @@
 package nowatch.tv;
 
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.OutputStream;
+import java.nio.ByteBuffer;
+import java.nio.channels.Channels;
+import java.nio.channels.ReadableByteChannel;
+import java.nio.channels.WritableByteChannel;
 import java.util.Arrays;
 import java.util.List;
 
@@ -10,7 +17,6 @@ import javax.net.ssl.SSLException;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.xml.sax.Attributes;
@@ -35,6 +41,7 @@ public class RSSReader extends DefaultHandler {
     private String current_tag;
     protected ContentValues channelMap;
     protected ContentValues itemMap;
+    private DefaultHttpClient httpclient;
 
     private void logi(String str) {
         if (LOG_INFO) {
@@ -59,7 +66,7 @@ public class RSSReader extends DefaultHandler {
         if (name == "item") {
             in_items = true;
             return;
-        } else if (name == "image") {
+        } else if (name == "image" && uri != "http://www.itunes.com/dtds/podcast-1.0.dtd") {
             in_image = true;
         }
         current_tag = name;
@@ -120,23 +127,43 @@ public class RSSReader extends DefaultHandler {
         itemMap.put("file_size", "");
     }
 
-    protected InputStream getFile(String url) {
+    protected String getFile(String url) throws IOException {
+        File dst = File.createTempFile("nowatchtv", "");
+        dst.deleteOnExit();
+        httpclient = new DefaultHttpClient();
+        InputStream in = openURL(url);
+        OutputStream out = new FileOutputStream(dst);
+        final ReadableByteChannel inputChannel = Channels.newChannel(in);
+        final WritableByteChannel outputChannel = Channels.newChannel(out);
+
+        try {
+            fastChannelCopy(inputChannel, outputChannel);
+        } catch (IOException e) {
+            Log.e(TAG, e.getMessage());
+        } catch (NullPointerException e) {
+            Log.e(TAG, e.getMessage());
+        } finally {
+            inputChannel.close();
+            outputChannel.close();
+            in.close();
+            out.close();
+        }
+        return dst.getAbsolutePath();
+    }
+
+    private InputStream openURL(String url) {
         HttpGet httpget = new HttpGet(url);
-        HttpClient httpclient = new DefaultHttpClient();
         HttpResponse response;
-        httpget.getParams().setParameter("http.useragent", USERAGENT);
-        httpget.getParams().setParameter("http.protocol.content-charset", "UTF-8");
-        httpget.getParams().setParameter("http.protocol.expect-continue", true);
-        httpget.getParams().setParameter("http.protocol.wait-for-continue", 5000);
         try {
             try {
                 response = httpclient.execute(httpget);
             } catch (SSLException e) {
-                logi("SSL Certificate is not trusted");
+                Log.i(TAG, "SSL Certificate is not trusted");
                 response = httpclient.execute(httpget);
             }
-            logi("Status:[" + response.getStatusLine().toString() + "] " + url);
+            Log.i(TAG, "Status:[" + response.getStatusLine().toString() + "] " + url);
             HttpEntity entity = response.getEntity();
+
             if (entity != null) {
                 return entity.getContent();
             }
@@ -145,7 +172,24 @@ public class RSSReader extends DefaultHandler {
         } catch (IOException e) {
             Log.e(TAG, "There was an IO Stream related error", e);
         }
+
         return null;
+    }
+
+    private static void fastChannelCopy(final ReadableByteChannel src,
+            final WritableByteChannel dest) throws IOException, NullPointerException {
+        if (src != null) {
+            final ByteBuffer buffer = ByteBuffer.allocateDirect(16 * 1024);
+            while (src.read(buffer) != -1) {
+                buffer.flip();
+                dest.write(buffer);
+                buffer.compact();
+            }
+            buffer.flip();
+            while (buffer.hasRemaining()) {
+                dest.write(buffer);
+            }
+        }
     }
 
     @Override

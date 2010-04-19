@@ -11,6 +11,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,6 +29,8 @@ public class ItemsActivity extends Activity {
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id "
             + "ORDER BY date(items.pubDate) DESC LIMIT 16";
     private static final int MENU_UPDATE_ALL = 1;
+    private final int IMG_DIP = 64;
+    private DisplayMetrics displayMetrics;
     private ItemsAdapter adapter;
     private Context ctxt;
 
@@ -36,6 +39,10 @@ public class ItemsActivity extends Activity {
         super.onCreate(savedInstanceState);
         ctxt = getApplicationContext();
         setContentView(R.layout.items_activity);
+
+        // Screen metrics (for dip to px conversion)
+        displayMetrics = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
 
         // Podcasts/Items from DB
         SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
@@ -80,25 +87,39 @@ public class ItemsActivity extends Activity {
             }
         }
 
+        class ViewHolder {
+            TextView title;
+            TextView podcast;
+            ImageView logo;
+        }
+
         @Override
         public void bindView(View view, Context context, Cursor c) {
-            TextView title = (TextView) view.findViewById(R.id.title);
-            TextView podcast = (TextView) view.findViewById(R.id.podcast);
-            ImageView logo = (ImageView) view.findViewById(R.id.logo);
-            title.setText(c.getString(1));
-            podcast.setText(c.getString(2));
+            // FIXME: Is it worth using a Viewholder ?
+            ViewHolder vh = (ViewHolder) view.getTag();
+            vh.title.setText(c.getString(1));
+            vh.podcast.setText(c.getString(2));
             byte[] logo_byte = c.getBlob(3);
             if (logo_byte != null && logo_byte.length > 200) {
-                logo.setImageBitmap(BitmapFactory.decodeByteArray(logo_byte, 0, logo_byte.length));
+                vh.logo.setImageBitmap(Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(
+                        logo_byte, 0, logo_byte.length),
+                        (int) (IMG_DIP * displayMetrics.density + 0.5f),
+                        (int) (IMG_DIP * displayMetrics.density + 0.5f), true));
             } else {
-                logo.setImageResource(R.drawable.icon);
+                vh.logo.setImageResource(R.drawable.icon);
             }
         }
 
         @Override
         public View newView(Context context, Cursor c, ViewGroup parent) {
             // Do not use Cursor here, bindView() is called anyway!
-            return inflater.inflate(R.layout.list_items, parent, false);
+            View v = inflater.inflate(R.layout.list_items, parent, false);
+            ViewHolder vh = new ViewHolder();
+            vh.title = (TextView) v.findViewById(R.id.title);
+            vh.podcast = (TextView) v.findViewById(R.id.podcast);
+            vh.logo = (ImageView) v.findViewById(R.id.logo);
+            v.setTag(vh);
+            return v;
         }
     }
 
@@ -120,6 +141,8 @@ public class ItemsActivity extends Activity {
         @Override
         protected Void doInBackground(Void... params) {
             final Activity a = mActivity.get();
+            // UpdateDb.update(a.getApplicationContext(), "4",
+            // R.string.feed_test);
             UpdateDb.update(a.getApplicationContext(), "1", R.string.feed_cinefuzz);
             UpdateDb.update(a.getApplicationContext(), "2", R.string.feed_geekinc);
             UpdateDb.update(a.getApplicationContext(), "3", R.string.feed_scuds);
@@ -130,7 +153,8 @@ public class ItemsActivity extends Activity {
         @Override
         protected void onPostExecute(Void unused) {
             progress.dismiss();
-            adapter.notifyDataSetChanged();
+            // adapter.notifyDataSetChanged();
+            // TODO: update list
         }
     }
 }
