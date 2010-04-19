@@ -21,6 +21,7 @@ import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.content.Intent;
 
 public class ItemsActivity extends Activity {
 
@@ -69,6 +70,13 @@ public class ItemsActivity extends Activity {
         return false;
     }
 
+    private void updateQuery(){
+        SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
+        adapter.changeCursor(db.rawQuery(QUERY_ITEMS, null));
+        adapter.notifyDataSetChanged();
+        db.close();
+    }
+
     class Items {
         public Bitmap image;
         public String title;
@@ -108,6 +116,15 @@ public class ItemsActivity extends Activity {
             } else {
                 vh.logo.setImageResource(R.drawable.icon);
             }
+            final int item_id = c.getInt(0);
+            final Context ct = context;
+            view.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    Intent i = new Intent(ct, InfoActivity.class);
+                    i.putExtra("item_id", item_id);
+                    startActivity(i);
+                }
+            });
         }
 
         @Override
@@ -152,9 +169,8 @@ public class ItemsActivity extends Activity {
 
         @Override
         protected void onPostExecute(Void unused) {
+            updateQuery();
             progress.dismiss();
-            // adapter.notifyDataSetChanged();
-            // TODO: update list
         }
     }
 }

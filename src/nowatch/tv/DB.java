@@ -1,5 +1,7 @@
 package nowatch.tv;
 
+// TODO: Use ETags instead of relying on pubDate
+
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;

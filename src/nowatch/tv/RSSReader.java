@@ -35,7 +35,7 @@ public class RSSReader extends DefaultHandler {
     private final List<String> feeds_fields = Arrays.asList("_id", "title", "description", "link",
             "pubDate", "image");
     private final List<String> items_fields = Arrays.asList("_id", "feed_id", "title",
-            "description", "link", "pubDate");
+            "description", "link", "pubDate", "file_uri", "file_size", "file_type");
     private boolean in_image = false;
     protected boolean in_items = false;
     private String current_tag;

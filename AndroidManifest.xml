@@ -12,6 +12,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".ItemsActivity" android:label="@string/app_name" />
+        <activity android:name=".InfoActivity" android:label="@string/app_name" />
         
     </application>
     
