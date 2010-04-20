@@ -13,7 +13,7 @@ import android.widget.TextView;
 public class InfoActivity extends Activity {
 
     // private final String TAG = "InfoActivity";
-    private final String REQ = "SELECT feeds.title, items.title, items.description, "
+    private final String REQ = "SELECT feeds.title, items.title, items.summary, "
             + "items.link, feeds.link, image, file_uri, file_size, file_type "
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id WHERE items._id=";
     private final int IMG_DIP = 64;

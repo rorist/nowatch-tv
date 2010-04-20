@@ -54,6 +54,7 @@ public class UpdateDb {
         } catch (FileNotFoundException e) {
             e.printStackTrace();
         } catch (IOException e) {
+            Log.v(TAG, "SD Card not accessible ?");
             e.printStackTrace();
         } finally {
             if (file != null) {

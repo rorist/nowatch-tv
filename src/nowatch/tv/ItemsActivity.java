@@ -73,7 +73,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         return false;
     }
 
-    @Override
+    //@Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Intent i = new Intent(ctxt, InfoActivity.class);
         i.putExtra("item_id", id);
