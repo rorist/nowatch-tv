@@ -42,6 +42,7 @@ public class RSSReader extends DefaultHandler {
     protected ContentValues channelMap;
     protected ContentValues itemMap;
     private DefaultHttpClient httpclient;
+    private StringBuffer itemBuf;
 
     private void logi(String str) {
         if (LOG_INFO) {
@@ -70,6 +71,7 @@ public class RSSReader extends DefaultHandler {
             in_image = true;
         }
         current_tag = name;
+        itemBuf = new StringBuffer();
 
         // Get attributes of enclosure tags
         if (current_tag == "enclosure") {
@@ -92,6 +94,10 @@ public class RSSReader extends DefaultHandler {
         if (name == "image") {
             in_image = false;
         }
+        if (in_items && items_fields.contains(current_tag) && current_tag != null) {
+            itemMap.put(current_tag, itemBuf.toString());
+            itemBuf.setLength(0);
+        }
         current_tag = null;
     }
 
@@ -100,7 +106,7 @@ public class RSSReader extends DefaultHandler {
         logi("CHAR=" + new String(ch, start, length));
         // Get items info
         if (in_items && items_fields.contains(current_tag) && current_tag != null) {
-            itemMap.put(current_tag, new String(ch, start, length));
+            itemBuf.append(new String(ch, start, length));
         }
         // Get channel info (First IN)
         else if (feeds_fields.contains(current_tag) && current_tag != null

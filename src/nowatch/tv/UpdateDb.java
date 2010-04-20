@@ -126,7 +126,7 @@ public class UpdateDb {
                     Bitmap file_bitmap = BitmapFactory.decodeFile(file, options);
                     if (file_bitmap != null) {
                         ByteArrayOutputStream out = new ByteArrayOutputStream();
-                        file_bitmap.compress(Bitmap.CompressFormat.JPEG, 90, out);
+                        file_bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
                         channelMap.put("image", out.toByteArray());
                         // Save memory from Bitmap allocation
                         file_bitmap.recycle();

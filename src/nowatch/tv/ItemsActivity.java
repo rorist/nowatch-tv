@@ -5,6 +5,7 @@ import java.lang.ref.WeakReference;
 import android.app.Activity;
 import android.app.ProgressDialog;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
@@ -17,13 +18,14 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.content.Intent;
+import android.widget.AdapterView.OnItemClickListener;
 
-public class ItemsActivity extends Activity {
+public class ItemsActivity extends Activity implements OnItemClickListener {
 
     // private final String TAG = "ItemsActivity";
     private final String QUERY_ITEMS = "SELECT items._id, items.title, feeds.title, image "
@@ -51,6 +53,7 @@ public class ItemsActivity extends Activity {
         ListView list = (ListView) findViewById(R.id.list_items);
         list.setAdapter(adapter);
         list.setItemsCanFocus(true);
+        list.setOnItemClickListener(this);
         db.close();
     }
 
@@ -70,7 +73,14 @@ public class ItemsActivity extends Activity {
         return false;
     }
 
-    private void updateQuery(){
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        Intent i = new Intent(ctxt, InfoActivity.class);
+        i.putExtra("item_id", id);
+        startActivity(i);
+    }
+
+    private void updateQuery() {
         SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
         adapter.changeCursor(db.rawQuery(QUERY_ITEMS, null));
         adapter.notifyDataSetChanged();
@@ -111,20 +121,11 @@ public class ItemsActivity extends Activity {
             if (logo_byte != null && logo_byte.length > 200) {
                 vh.logo.setImageBitmap(Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(
                         logo_byte, 0, logo_byte.length),
-                        (int) (IMG_DIP * displayMetrics.density + 0.5f),
-                        (int) (IMG_DIP * displayMetrics.density + 0.5f), true));
+                        (int) (IMG_DIP * displayMetrics.density + 0.5f), (int) (IMG_DIP
+                                * displayMetrics.density + 0.5f), true));
             } else {
                 vh.logo.setImageResource(R.drawable.icon);
             }
-            final int item_id = c.getInt(0);
-            final Context ct = context;
-            view.setOnClickListener(new View.OnClickListener() {
-                public void onClick(View v) {
-                    Intent i = new Intent(ct, InfoActivity.class);
-                    i.putExtra("item_id", item_id);
-                    startActivity(i);
-                }
-            });
         }
 
         @Override
