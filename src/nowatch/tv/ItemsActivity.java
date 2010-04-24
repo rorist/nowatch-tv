@@ -10,6 +10,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteDiskIOException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
@@ -32,12 +33,20 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
     // private final String TAG = "ItemsActivity";
     private final String QUERY_ITEMS = "SELECT items._id, items.title, feeds.title, image "
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id "
-            + "ORDER BY date(items.pubDate) DESC LIMIT ";
+            + "ORDER BY items.pubDate DESC LIMIT ";
     private static final int MENU_UPDATE_ALL = 1;
     private int image_size;
     private ItemsAdapter adapter;
     private Context ctxt;
     private List<Items> items = null;
+
+    class Items {
+        public long id;
+        public Bitmap image;
+        public String title;
+        public String podcast;
+        public Bitmap logo;
+    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -59,7 +68,9 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         list.setOnItemClickListener(this);
         ((TextView) findViewById(R.id.loading)).setVisibility(View.INVISIBLE);
 
-        addToList(0, 12);
+        if (addToList(0, 12) == 0) {
+            (new UpdateTask(ItemsActivity.this)).execute();
+        }
         updateList();
     }
 
@@ -82,49 +93,48 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
     @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Intent i = new Intent(ctxt, InfoActivity.class);
-        i.putExtra("item_id", id);
+        i.putExtra("item_id", items.get(position).id);
         startActivity(i);
     }
 
-    private void addToList(int offset, int limit) {
+    private int addToList(int offset, int limit) {
         SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
         Cursor c = db.rawQuery(QUERY_ITEMS + offset + "," + limit, null);
         Items item;
         byte[] logo_byte;
-        if (c.getCount() > 0) {
-            c.moveToFirst();
-            do {
-                item = new Items();
-                item.id = c.getInt(0);
-                item.title = c.getString(1);
-                item.podcast = c.getString(2);
-                logo_byte = c.getBlob(3);
-                if (logo_byte != null && logo_byte.length > 200) {
-                    item.logo = Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_byte,
-                            0, logo_byte.length), image_size, image_size, true);
-                } else {
-                    item.logo = BitmapFactory.decodeResource(getResources(), R.drawable.icon);
-                }
-                items.add(item);
-                // TODO: Notify changes somehow
-            } while (c.moveToNext());
+        int cnt = 0;
+        try {
+            cnt = c.getCount();
+            if (cnt > 0) {
+                c.moveToFirst();
+                do {
+                    item = new Items();
+                    item.id = c.getInt(0);
+                    item.title = c.getString(1);
+                    item.podcast = c.getString(2);
+                    logo_byte = c.getBlob(3);
+                    if (logo_byte != null && logo_byte.length > 200) {
+                        item.logo = Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(
+                                logo_byte, 0, logo_byte.length), image_size, image_size, true);
+                    } else {
+                        item.logo = BitmapFactory.decodeResource(getResources(), R.drawable.icon);
+                    }
+                    items.add(item);
+                } while (c.moveToNext());
+            }
+        } catch (SQLiteDiskIOException e) {
+            // sqlite_stmt_journals partition is too small (4MB)
+            e.printStackTrace();
         }
         c.close();
         db.close();
+        return cnt;
     }
 
     private void updateList() {
         for (int i = adapter.getCount(); i < items.size(); i++) {
             adapter.add(null);
         }
-    }
-
-    class Items {
-        public int id;
-        public Bitmap image;
-        public String title;
-        public String podcast;
-        public Bitmap logo;
     }
 
     private class ItemsAdapter extends ArrayAdapter<Items> {
@@ -162,13 +172,13 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
             vh.logo.setImageBitmap(item.logo);
             // Set endless loader
             if (position == items.size() - 1) {
-                new ListTask().execute(position + 1);
+                new EndlessTask().execute(position + 1);
             }
             return convertView;
         }
     }
 
-    class ListTask extends AsyncTask<Integer, Void, Void> {
+    class EndlessTask extends AsyncTask<Integer, Void, Void> {
 
         @Override
         protected void onPreExecute() {

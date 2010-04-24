@@ -7,6 +7,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.TimeZone;
 
@@ -67,17 +68,15 @@ public class UpdateDb {
 
         private SQLiteDatabase db;
         private SimpleDateFormat formatter;
-        private SimpleDateFormat formatter_item;
         private Date lastPub;
+        private Calendar c = Calendar.getInstance();
 
         @Override
         public void startDocument() {
             super.startDocument();
             // Wed, 14 Apr 2010 18:18:07 +0200
-            formatter_item = new SimpleDateFormat("yyyy-MM-dd");
-            // FIXME Probleme parsing date !!!!
+            // FIXME Probleme parsing date !!!! and get local timezone ?
             formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss ZZZ");
-            // FIXME: Get device timezone
             formatter.setTimeZone(TimeZone.getDefault());
             Cursor c = null;
             try {
@@ -157,8 +156,9 @@ public class UpdateDb {
                     try {
                         Date item_date = formatter.parse(itemMap.getAsString("pubDate"));
                         if (item_date.after(lastPub)) {
-                            // Simplier date format for later SQL queries
-                            itemMap.put("pubDate", formatter_item.format(item_date));
+                            // Store in seconds for better SQL queries on items
+                            c.setTime(item_date);
+                            itemMap.put("pubDate", c.getTimeInMillis() / 1000);
                             itemMap.put("feed_id", feed_id);
                             db.insert("items", null, itemMap);
                         }

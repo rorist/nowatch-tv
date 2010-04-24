@@ -28,6 +28,7 @@ public class DB extends SQLiteOpenHelper {
         for (String podcast : podcasts) {
             db.execSQL("insert into feeds (\"title\") values (\"" + podcast + "\");");
         }
+        db.execSQL("CREATE INDEX pubDateIndex on items (pubDate);");
     }
 
     @Override
