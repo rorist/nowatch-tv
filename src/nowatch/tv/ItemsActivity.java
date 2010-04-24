@@ -1,6 +1,8 @@
 package nowatch.tv;
 
 import java.lang.ref.WeakReference;
+import java.util.ArrayList;
+import java.util.List;
 
 import android.app.Activity;
 import android.app.ProgressDialog;
@@ -19,23 +21,23 @@ import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
-import android.widget.CursorAdapter;
+import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
-import android.util.Log;
 
 public class ItemsActivity extends Activity implements OnItemClickListener {
 
     // private final String TAG = "ItemsActivity";
     private final String QUERY_ITEMS = "SELECT items._id, items.title, feeds.title, image "
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id "
-            + "ORDER BY date(items.pubDate) DESC";
+            + "ORDER BY date(items.pubDate) DESC LIMIT ";
     private static final int MENU_UPDATE_ALL = 1;
     private int image_size;
     private ItemsAdapter adapter;
     private Context ctxt;
+    private List<Items> items = null;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -48,15 +50,17 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
         image_size = (int) (64 * displayMetrics.density + 0.5f);
 
-        // Podcasts/Items from DB (FIXME: use updateQuery if possible to create empty ItemsAdapter)
-        SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
-        adapter = new ItemsAdapter(ctxt, db.rawQuery(QUERY_ITEMS+" LIMIT 12", null));
+        // Set list adapter
+        items = new ArrayList<Items>();
+        adapter = new ItemsAdapter();
         ListView list = (ListView) findViewById(R.id.list_items);
         list.setAdapter(adapter);
         list.setItemsCanFocus(true);
         list.setOnItemClickListener(this);
-        db.close();
         ((TextView) findViewById(R.id.loading)).setVisibility(View.INVISIBLE);
+
+        addToList(0, 12);
+        updateList();
     }
 
     @Override
@@ -75,40 +79,61 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         return false;
     }
 
-    // @Override
+    @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Intent i = new Intent(ctxt, InfoActivity.class);
         i.putExtra("item_id", id);
         startActivity(i);
     }
 
-    private void updateQuery(int offset) {
+    private void addToList(int offset, int limit) {
         SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
-        adapter.changeCursor(db.rawQuery(QUERY_ITEMS+" LIMIT 12,"+offset, null));
-        adapter.notifyDataSetChanged();
+        Cursor c = db.rawQuery(QUERY_ITEMS + offset + "," + limit, null);
+        Items item;
+        byte[] logo_byte;
+        if (c.getCount() > 0) {
+            c.moveToFirst();
+            do {
+                item = new Items();
+                item.id = c.getInt(0);
+                item.title = c.getString(1);
+                item.podcast = c.getString(2);
+                logo_byte = c.getBlob(3);
+                if (logo_byte != null && logo_byte.length > 200) {
+                    item.logo = Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_byte,
+                            0, logo_byte.length), image_size, image_size, true);
+                } else {
+                    item.logo = BitmapFactory.decodeResource(getResources(), R.drawable.icon);
+                }
+                items.add(item);
+                // TODO: Notify changes somehow
+            } while (c.moveToNext());
+        }
+        c.close();
         db.close();
-        ((TextView) findViewById(R.id.loading)).setVisibility(View.INVISIBLE);
+    }
+
+    private void updateList() {
+        for (int i = adapter.getCount(); i < items.size(); i++) {
+            adapter.add(null);
+        }
     }
 
     class Items {
+        public int id;
         public Bitmap image;
         public String title;
         public String podcast;
+        public Bitmap logo;
     }
 
-    private class ItemsAdapter extends CursorAdapter {
+    private class ItemsAdapter extends ArrayAdapter<Items> {
 
         private LayoutInflater inflater;
-        private ViewHolder vh;
-        private View v;
-        private byte[] logo_byte;
 
-        public ItemsAdapter(Context context, Cursor c) {
-            super(context, c, false);
+        public ItemsAdapter() {
+            super(ctxt, R.layout.list_items, R.id.title);
             inflater = LayoutInflater.from(ctxt);
-            if (c.getCount() == 0) {
-                (new UpdateTask(ItemsActivity.this)).execute();
-            }
         }
 
         class ViewHolder {
@@ -118,35 +143,50 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         }
 
         @Override
-        public void bindView(View view, Context context, Cursor c) {
-            vh = (ViewHolder) view.getTag();
-            vh.title.setText(c.getString(1));
-            vh.podcast.setText(c.getString(2));
-            logo_byte = c.getBlob(3);
-            if (logo_byte != null && logo_byte.length > 200) {
-                vh.logo.setImageBitmap(Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(
-                        logo_byte, 0, logo_byte.length), image_size, image_size, true));
+        public View getView(final int position, View convertView, ViewGroup parent) {
+            ViewHolder vh;
+            if (convertView == null) {
+                convertView = inflater.inflate(R.layout.list_items, parent, false);
+                vh = new ViewHolder();
+                vh.title = (TextView) convertView.findViewById(R.id.title);
+                vh.podcast = (TextView) convertView.findViewById(R.id.podcast);
+                vh.logo = (ImageView) convertView.findViewById(R.id.logo);
+                convertView.setTag(vh);
             } else {
-                vh.logo.setImageResource(R.drawable.icon);
+                vh = (ViewHolder) convertView.getTag();
             }
-            // Load next available content
-            if(c.getPosition()+1 == c.getCount()){
-                ((TextView) findViewById(R.id.loading)).setVisibility(View.VISIBLE);
-                updateQuery(c.getPosition()+1);
+            // Set information
+            final Items item = items.get(position);
+            vh.title.setText(item.title);
+            vh.podcast.setText(item.podcast);
+            vh.logo.setImageBitmap(item.logo);
+            // Set endless loader
+            if (position == items.size() - 1) {
+                new ListTask().execute(position + 1);
             }
+            return convertView;
+        }
+    }
+
+    class ListTask extends AsyncTask<Integer, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            ((TextView) findViewById(R.id.loading)).setVisibility(View.VISIBLE);
         }
 
         @Override
-        public View newView(Context context, Cursor c, ViewGroup parent) {
-            // Do not use Cursor here, bindView() is called anyway!
-            v = inflater.inflate(R.layout.list_items, parent, false);
-            vh = new ViewHolder();
-            vh.title = (TextView) v.findViewById(R.id.title);
-            vh.podcast = (TextView) v.findViewById(R.id.podcast);
-            vh.logo = (ImageView) v.findViewById(R.id.logo);
-            v.setTag(vh);
-            return v;
+        protected Void doInBackground(Integer... params) {
+            addToList(params[0], 12);
+            return null;
         }
+
+        @Override
+        protected void onPostExecute(Void unused) {
+            updateList();
+            ((TextView) findViewById(R.id.loading)).setVisibility(View.INVISIBLE);
+        }
+
     }
 
     class UpdateTask extends AsyncTask<Void, Void, Void> {
@@ -178,7 +218,11 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
 
         @Override
         protected void onPostExecute(Void unused) {
-            updateQuery(0);
+            items.clear();
+            adapter.clear();
+            addToList(0, 12);
+            updateList();
+            ((TextView) findViewById(R.id.loading)).setVisibility(View.INVISIBLE);
             progress.dismiss();
         }
     }
