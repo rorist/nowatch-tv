@@ -98,9 +98,6 @@ public class UpdateDb {
                 if (c != null) {
                     c.close();
                 }
-                if (db != null) {
-                    db.close();
-                }
             }
         }
 
@@ -147,7 +144,7 @@ public class UpdateDb {
             } else if (!in_items && name == "pubDate") {
                 try {
                     // Check publication date of channel
-                    if (formatter.parse(channelMap.getAsString("pubDate")).before(lastPub)) {
+                    if (!formatter.parse(channelMap.getAsString("pubDate")).after(lastPub)) {
                         // Stop the parser
                         db.close();
                         throw new SAXException("Nothing to update for feed_id=" + feed_id);
