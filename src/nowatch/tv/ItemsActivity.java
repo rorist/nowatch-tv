@@ -1,5 +1,6 @@
 package nowatch.tv;
 
+import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,6 +17,7 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -26,6 +28,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
 public class ItemsActivity extends Activity implements OnItemClickListener {
@@ -203,6 +206,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
 
         private ProgressDialog progress;
         private WeakReference<Activity> mActivity;
+        private boolean sdcarderror = false;
 
         public UpdateTask(Activity activity) {
             mActivity = new WeakReference<Activity>(activity);
@@ -219,10 +223,15 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
             final Activity a = mActivity.get();
             // UpdateDb.update(a.getApplicationContext(), "4",
             // R.string.feed_test);
-            UpdateDb.update(a.getApplicationContext(), "1", R.string.feed_cinefuzz);
-            UpdateDb.update(a.getApplicationContext(), "2", R.string.feed_geekinc);
-            UpdateDb.update(a.getApplicationContext(), "3", R.string.feed_scuds);
-            UpdateDb.update(a.getApplicationContext(), "4", R.string.feed_zapcast);
+            try {
+                UpdateDb.update(a.getApplicationContext(), "1", R.string.feed_cinefuzz);
+                UpdateDb.update(a.getApplicationContext(), "2", R.string.feed_geekinc);
+                UpdateDb.update(a.getApplicationContext(), "3", R.string.feed_scuds);
+                UpdateDb.update(a.getApplicationContext(), "4", R.string.feed_zapcast);
+            } catch (IOException e) {
+                Log.e("UpdateTask", e.getMessage());
+                sdcarderror = true;
+            }
             return null;
         }
 
@@ -234,6 +243,9 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
             updateList();
             ((TextView) findViewById(R.id.loading)).setVisibility(View.INVISIBLE);
             progress.dismiss();
+            if (sdcarderror) {
+                Toast.makeText(ctxt, "SDCard is not accessible !", Toast.LENGTH_LONG).show();
+            }
         }
     }
 }

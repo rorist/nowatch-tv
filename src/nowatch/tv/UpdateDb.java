@@ -35,7 +35,7 @@ public class UpdateDb {
     private static Context ctxt;
     private static String feed_id;
 
-    public static void update(Context ct, String fid, int feed_xml) {
+    public static void update(Context ct, String fid, int feed_xml) throws IOException {
         ctxt = ct;
         feed_id = fid;
         String file = null;
@@ -45,7 +45,11 @@ public class UpdateDb {
             file = handler.getFile(ctxt.getString(feed_xml));
             xr.setContentHandler(handler);
             xr.setErrorHandler(handler);
-            xr.parse(new InputSource(new FileReader(file)));
+            try {
+                xr.parse(new InputSource(new FileReader(file)));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         } catch (SAXException e) {
             Log.e(TAG, e.getMessage());
         } catch (ParserConfigurationException e) {
@@ -53,9 +57,6 @@ public class UpdateDb {
         } catch (FactoryConfigurationError e) {
             e.printStackTrace();
         } catch (FileNotFoundException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            Log.v(TAG, "SD Card not accessible ?");
             e.printStackTrace();
         } finally {
             if (file != null) {
@@ -96,6 +97,9 @@ public class UpdateDb {
             } finally {
                 if (c != null) {
                     c.close();
+                }
+                if (db != null) {
+                    db.close();
                 }
             }
         }
