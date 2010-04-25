@@ -42,6 +42,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
     private ItemsAdapter adapter;
     private Context ctxt;
     private List<Items> items = null;
+    private ListView list;
 
     class Items {
         public long id;
@@ -65,7 +66,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         // Set list adapter
         items = new ArrayList<Items>();
         adapter = new ItemsAdapter();
-        ListView list = (ListView) findViewById(R.id.list_items);
+        list = (ListView) findViewById(R.id.list_items);
         list.setAdapter(adapter);
         list.setItemsCanFocus(true);
         list.setOnItemClickListener(this);
@@ -241,6 +242,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
             adapter.clear();
             addToList(0, 12);
             updateList();
+            list.setSelection(0);
             ((TextView) findViewById(R.id.loading)).setVisibility(View.INVISIBLE);
             progress.dismiss();
             if (sdcarderror) {

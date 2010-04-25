@@ -7,13 +7,14 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.webkit.WebView;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 public class InfoActivity extends Activity {
 
     // private final String TAG = "InfoActivity";
-    private final String REQ = "SELECT feeds.title, items.title, items.summary, "
+    private final String REQ = "SELECT feeds.title, items.title, items.description, "
             + "items.link, feeds.link, image, file_uri, file_size, file_type "
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id WHERE items._id=";
     private final int IMG_DIP = 64;
@@ -34,8 +35,10 @@ public class InfoActivity extends Activity {
         Cursor c = db.rawQuery(REQ + extra.getLong("item_id"), null);
         c.moveToFirst();
         ((TextView) findViewById(R.id.title)).setText(c.getString(1));
-        ((TextView) findViewById(R.id.desc)).setText(c.getString(2));
-        ((TextView) findViewById(R.id.link)).setText(c.getString(3));
+        ((WebView) findViewById(R.id.desc)).loadData(c.getString(2)
+                + "<style>* {color: white;}</style>", "text/html", "utf-8");
+        ((WebView) findViewById(R.id.desc)).setBackgroundColor(0);
+        // ((TextView) findViewById(R.id.link)).setText(c.getString(3));
         ImageView logo = (ImageView) findViewById(R.id.logo);
         byte[] logo_byte = c.getBlob(5);
         if (logo_byte != null && logo_byte.length > 200) {

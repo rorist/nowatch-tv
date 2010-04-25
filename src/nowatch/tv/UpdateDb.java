@@ -70,6 +70,7 @@ public class UpdateDb {
         private SQLiteDatabase db;
         private SimpleDateFormat formatter;
         private Date lastPub;
+        private Date item_date;
         private Calendar c = Calendar.getInstance();
 
         @Override
@@ -155,7 +156,7 @@ public class UpdateDb {
             } else if (name == "item") {
                 if (db != null) {
                     try {
-                        Date item_date = formatter.parse(itemMap.getAsString("pubDate"));
+                        item_date = formatter.parse(itemMap.getAsString("pubDate"));
                         if (item_date.after(lastPub)) {
                             // Store in seconds for better SQL queries on items
                             c.setTime(item_date);

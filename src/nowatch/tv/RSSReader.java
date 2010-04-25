@@ -32,10 +32,10 @@ public class RSSReader extends DefaultHandler {
     private final String TAG = "RSSReader";
     protected final static String USERAGENT = "Android/Nowatch.TV/0.1";
     private final boolean LOG_INFO = false;
-    private final List<String> feeds_fields = Arrays.asList("_id", "title", "summary", "link",
+    private final List<String> feeds_fields = Arrays.asList("_id", "title", "description", "link",
             "pubDate", "image");
     private final List<String> items_fields = Arrays.asList("_id", "feed_id", "title",
-            "summary", "link", "pubDate", "file_uri", "file_size", "file_type");
+            "description", "link", "pubDate", "file_uri", "file_size", "file_type");
     private boolean in_image = false;
     protected boolean in_items = false;
     private String current_tag;
@@ -122,7 +122,7 @@ public class RSSReader extends DefaultHandler {
     private void initMaps() {
         channelMap = new ContentValues();
         channelMap.put("title", "");
-        channelMap.put("summary", "");
+        channelMap.put("description", "");
         channelMap.put("link", "");
         channelMap.put("pubDate", "");
         channelMap.put("image", "");

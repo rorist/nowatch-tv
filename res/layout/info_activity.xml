@@ -4,28 +4,48 @@
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
-    <ImageView
-        android:id="@+id/logo"
-        android:layout_width="64dip"
-        android:layout_height="64dip"/>
-    <TextView
-        android:id="@+id/title"
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Title" />
-    <TextView
-        android:id="@+id/desc"
+        android:padding="5dip">
+        <ImageView
+            android:id="@+id/logo"
+            android:layout_width="64dip"
+            android:layout_height="64dip"
+            android:layout_marginRight="5dip"/>
+        <TextView
+            android:id="@+id/title"
+            android:layout_width="0dip"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="Title"
+            android:textColor="?android:attr/textColorPrimary"
+            android:textAppearance="?android:attr/textAppearanceMedium" />
+    </LinearLayout>
+    <LinearLayout
+        android:orientation="horizontal"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:text="Description" />
-    <TextView
-        android:id="@+id/link"
+        android:padding="5dip">
+        <Button
+            android:id="@+id/btn_play"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Voir vidéo" />
+        <Button
+            android:id="@+id/btn_download"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Télécharger vidéo" />
+    </LinearLayout>
+    <ScrollView
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="http://" />
-    <Button
-        android:id="@+id/btn_play"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Voir vidéo" />
+        android:layout_height="0dip"
+        android:layout_weight="1">
+        <WebView
+            android:id="@+id/desc"
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent" />
+    </ScrollView>
 </LinearLayout>
