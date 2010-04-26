@@ -142,7 +142,7 @@ public class InfoActivity extends Activity {
 
             public getPodcastFile(){
                 super();
-                buffer_size = 32 * 1024;
+                buffer_size = 512 * 1024;
             }
 
             @Override
