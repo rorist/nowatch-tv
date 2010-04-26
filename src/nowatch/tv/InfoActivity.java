@@ -78,10 +78,9 @@ public class InfoActivity extends Activity {
                 startActivity(i);
             }
         });
-        final DownloadTask dl = new DownloadTask();
         ((Button) findViewById(R.id.btn_download)).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                dl.execute(file_uri, file_size);
+                new DownloadTask().execute(file_uri, file_size);
             }
         });
 

@@ -73,7 +73,8 @@ public class RSSReader extends DefaultHandler {
 
         // Get attributes of enclosure tags
         if (current_tag == "enclosure") {
-            for (int i = 0; i < attrs.getLength(); i++) {
+            int len = attrs.getLength();
+            for (int i = 0; i < len; i++) {
                 logi(attrs.getLocalName(i) + "=" + attrs.getValue(i));
                 if (attrs.getLocalName(i) == "url") {
                     itemMap.put("file_uri", attrs.getValue(i));

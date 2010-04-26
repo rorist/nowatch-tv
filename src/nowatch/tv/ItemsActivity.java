@@ -135,7 +135,8 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
     }
 
     private void updateList() {
-        for (int i = adapter.getCount(); i < items.size(); i++) {
+        int len = items.size();
+        for (int i = adapter.getCount(); i < len; i++) {
             adapter.add(null);
         }
     }
