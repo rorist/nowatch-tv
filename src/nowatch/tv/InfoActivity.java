@@ -1,6 +1,12 @@
 package nowatch.tv;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.MalformedURLException;
+
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
+import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -9,7 +15,6 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Environment;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -18,11 +23,7 @@ import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
-
-import java.net.URL;
-import java.net.MalformedURLException;
-import java.io.IOException;
-import java.io.File;
+import android.widget.Toast;
 
 public class InfoActivity extends Activity {
 
@@ -41,6 +42,7 @@ public class InfoActivity extends Activity {
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         requestWindowFeature(Window.FEATURE_PROGRESS);
         setContentView(R.layout.info_activity);
+        final Context ctxt = getApplicationContext();
 
         // Screen metrics (for dip to px conversion)
         displayMetrics = new DisplayMetrics();
@@ -52,7 +54,8 @@ public class InfoActivity extends Activity {
         Cursor c = db.rawQuery(REQ + extra.getLong("item_id"), null);
         c.moveToFirst();
         ((TextView) findViewById(R.id.title)).setText(c.getString(1));
-        ((WebView) findViewById(R.id.desc)).loadData(PRE + c.getString(2) + STYLE, "text/html", "utf-8");
+        ((WebView) findViewById(R.id.desc)).loadData(PRE + c.getString(2) + STYLE, "text/html",
+                "utf-8");
         ((WebView) findViewById(R.id.desc)).setBackgroundColor(0);
         // ((TextView) findViewById(R.id.link)).setText(c.getString(3));
         ImageView logo = (ImageView) findViewById(R.id.logo);
@@ -64,7 +67,7 @@ public class InfoActivity extends Activity {
         } else {
             logo.setImageResource(R.drawable.icon);
         }
-        
+
         // File
         final String file_uri = c.getString(6);
         final String file_size = c.getString(7);
@@ -73,9 +76,15 @@ public class InfoActivity extends Activity {
         // Set buttons
         ((Button) findViewById(R.id.btn_play)).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                Intent i = new Intent(Intent.ACTION_VIEW);
-                i.setDataAndType(Uri.parse(file_uri), file_type);
-                startActivity(i);
+                try {
+                    Intent i = new Intent(Intent.ACTION_VIEW);
+                    i.setDataAndType(Uri.parse(file_uri), file_type);
+                    startActivity(i);
+                } catch (ActivityNotFoundException e) {
+                    Log.e(TAG, e.getMessage());
+                    Toast.makeText(ctxt, "Format de fichier non supporté !", Toast.LENGTH_LONG)
+                            .show();
+                }
             }
         });
         ((Button) findViewById(R.id.btn_download)).setOnClickListener(new View.OnClickListener() {
@@ -88,13 +97,13 @@ public class InfoActivity extends Activity {
         c.close();
         db.close();
     }
-   
+
     @Override
     protected void onStop() {
         super.onStop();
         // Cancel DL here
     }
- 
+
     class DownloadTask extends AsyncTask<String, Integer, Void> {
 
         private long file_size = 0;
@@ -111,13 +120,15 @@ public class InfoActivity extends Activity {
         protected Void doInBackground(String... str) {
             try {
                 file_size = Integer.parseInt(str[1]);
-                //new getPodcastFile().get(str[0], Environment.getExternalStorageDirectory().toString() + "/" + new URL(str[0]).getFile());
-                new getPodcastFile().getChannel(str[0],  "/sdcard/" + new File(str[0]).getName());
-            } catch (MalformedURLException e){
+                // new getPodcastFile().get(str[0],
+                // Environment.getExternalStorageDirectory().toString() + "/" +
+                // new URL(str[0]).getFile());
+                new getPodcastFile().getChannel(str[0], "/sdcard/" + new File(str[0]).getName());
+            } catch (MalformedURLException e) {
                 Log.e(TAG, e.getMessage());
-            } catch (IOException e){
+            } catch (IOException e) {
                 Log.e(TAG, e.getMessage());
-            } catch (NumberFormatException e){
+            } catch (NumberFormatException e) {
                 Log.e(TAG, e.getMessage());
             }
             return null;
@@ -133,19 +144,18 @@ public class InfoActivity extends Activity {
         @Override
         protected void onProgressUpdate(Integer... values) {
             progress_current += values[0];
-            setProgress((int)(progress_current * 10000 / file_size));
+            setProgress((int) (progress_current * 10000 / file_size));
         }
-
 
         class getPodcastFile extends GetFile {
 
-            public getPodcastFile(){
+            public getPodcastFile() {
                 super();
                 buffer_size = 512 * 1024;
             }
 
             @Override
-            protected void update(int count){
+            protected void update(int count) {
                 publishProgress(count);
             }
         }

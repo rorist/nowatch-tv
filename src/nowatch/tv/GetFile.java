@@ -29,7 +29,7 @@ public class GetFile {
 
     public String getChannel(String src, String dst) throws IOException {
         File dstFile;
-        if(dst!=null){
+        if (dst != null) {
             dstFile = new File(dst);
         } else {
             dstFile = File.createTempFile(".nowatchtv", "");
@@ -81,8 +81,8 @@ public class GetFile {
         return null;
     }
 
-    private void fastChannelCopy(final ReadableByteChannel src,
-            final WritableByteChannel dest) throws IOException, NullPointerException {
+    private void fastChannelCopy(final ReadableByteChannel src, final WritableByteChannel dest)
+            throws IOException, NullPointerException {
         if (src != null) {
             final ByteBuffer buffer = ByteBuffer.allocateDirect(buffer_size);
             int count;
@@ -99,7 +99,7 @@ public class GetFile {
         }
     }
 
-    protected void update(int count){
+    protected void update(int count) {
         // Nothing to do here
     }
 }
