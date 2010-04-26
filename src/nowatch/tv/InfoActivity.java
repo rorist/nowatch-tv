@@ -1,13 +1,17 @@
 package nowatch.tv;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
+import android.view.View;
 import android.webkit.WebView;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -48,6 +52,18 @@ public class InfoActivity extends Activity {
         } else {
             logo.setImageResource(R.drawable.icon);
         }
+
+        // Set buttons
+        final String file_uri = c.getString(6);
+        final String file_type = c.getString(8);
+        ((Button) findViewById(R.id.btn_play)).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                Intent i = new Intent(Intent.ACTION_VIEW);
+                i.setDataAndType(Uri.parse(file_uri), file_type);
+                startActivity(i);
+            }
+        });
+
         c.close();
         db.close();
     }
