@@ -30,7 +30,6 @@ import android.util.Log;
 public class RSSReader extends DefaultHandler {
 
     private final String TAG = "RSSReader";
-    protected final static String USERAGENT = "Android/Nowatch.TV/0.1";
     private final boolean LOG_INFO = false;
     private final List<String> feeds_fields = Arrays.asList("_id", "title", "description", "link",
             "pubDate", "image");
@@ -41,7 +40,6 @@ public class RSSReader extends DefaultHandler {
     private String current_tag;
     protected ContentValues channelMap;
     protected ContentValues itemMap;
-    private DefaultHttpClient httpclient;
     private StringBuffer itemBuf;
 
     private void logi(String str) {
@@ -131,71 +129,6 @@ public class RSSReader extends DefaultHandler {
         itemMap.put("file_uri", "");
         itemMap.put("file_type", "");
         itemMap.put("file_size", "");
-    }
-
-    protected String getFile(String url) throws IOException {
-        File dst = File.createTempFile("nowatchtv", "");
-        dst.deleteOnExit();
-        httpclient = new DefaultHttpClient();
-        InputStream in = openURL(url);
-        OutputStream out = new FileOutputStream(dst);
-        final ReadableByteChannel inputChannel = Channels.newChannel(in);
-        final WritableByteChannel outputChannel = Channels.newChannel(out);
-
-        try {
-            fastChannelCopy(inputChannel, outputChannel);
-        } catch (IOException e) {
-            Log.e(TAG, e.getMessage());
-        } catch (NullPointerException e) {
-            Log.e(TAG, e.getMessage());
-        } finally {
-            inputChannel.close();
-            outputChannel.close();
-            in.close();
-            out.close();
-        }
-        return dst.getAbsolutePath();
-    }
-
-    private InputStream openURL(String url) {
-        HttpGet httpget = new HttpGet(url);
-        HttpResponse response;
-        try {
-            try {
-                response = httpclient.execute(httpget);
-            } catch (SSLException e) {
-                Log.i(TAG, "SSL Certificate is not trusted");
-                response = httpclient.execute(httpget);
-            }
-            Log.i(TAG, "Status:[" + response.getStatusLine().toString() + "] " + url);
-            HttpEntity entity = response.getEntity();
-
-            if (entity != null) {
-                return entity.getContent();
-            }
-        } catch (ClientProtocolException e) {
-            Log.e(TAG, "There was a protocol based error", e);
-        } catch (IOException e) {
-            Log.e(TAG, "There was an IO Stream related error", e);
-        }
-
-        return null;
-    }
-
-    private static void fastChannelCopy(final ReadableByteChannel src,
-            final WritableByteChannel dest) throws IOException, NullPointerException {
-        if (src != null) {
-            final ByteBuffer buffer = ByteBuffer.allocateDirect(16 * 1024);
-            while (src.read(buffer) != -1) {
-                buffer.flip();
-                dest.write(buffer);
-                buffer.compact();
-            }
-            buffer.flip();
-            while (buffer.hasRemaining()) {
-                dest.write(buffer);
-            }
-        }
     }
 
     @Override

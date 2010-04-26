@@ -21,6 +21,8 @@ public class InfoActivity extends Activity {
     private final String REQ = "SELECT feeds.title, items.title, items.description, "
             + "items.link, feeds.link, image, file_uri, file_size, file_type "
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id WHERE items._id=";
+    private final String PRE = "<meta http-equiv=\"Content-Type\" content=\"application/xhtml+xml; charset=UTF-8\"/>";
+    private final String STYLE = "<style>*{color: white;}</style>";
     private final int IMG_DIP = 64;
     private DisplayMetrics displayMetrics;
 
@@ -39,8 +41,7 @@ public class InfoActivity extends Activity {
         Cursor c = db.rawQuery(REQ + extra.getLong("item_id"), null);
         c.moveToFirst();
         ((TextView) findViewById(R.id.title)).setText(c.getString(1));
-        ((WebView) findViewById(R.id.desc)).loadData(c.getString(2)
-                + "<style>* {color: white;}</style>", "text/html", "utf-8");
+        ((WebView) findViewById(R.id.desc)).loadData(PRE + c.getString(2) + STYLE, "text/html", "utf-8");
         ((WebView) findViewById(R.id.desc)).setBackgroundColor(0);
         // ((TextView) findViewById(R.id.link)).setText(c.getString(3));
         ImageView logo = (ImageView) findViewById(R.id.logo);
@@ -61,6 +62,11 @@ public class InfoActivity extends Activity {
                 Intent i = new Intent(Intent.ACTION_VIEW);
                 i.setDataAndType(Uri.parse(file_uri), file_type);
                 startActivity(i);
+            }
+        });
+        
+        ((Button) findViewById(R.id.btn_download)).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
             }
         });
 

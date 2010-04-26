@@ -27,8 +27,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.util.Log;
 
-// TODO: DB is not closed when parsing error (tag not closed), and I cannot find where to catch this
-
 public class UpdateDb {
 
     private static final String TAG = "UpdateDb";
@@ -42,7 +40,7 @@ public class UpdateDb {
         try {
             XMLReader xr = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
             RSS handler = new RSS();
-            file = handler.getFile(ctxt.getString(feed_xml));
+            file = new GetFile().get(ctxt.getString(feed_xml), null);
             xr.setContentHandler(handler);
             xr.setErrorHandler(handler);
             try {
@@ -122,7 +120,7 @@ public class UpdateDb {
                     && uri != "http://www.itunes.com/dtds/podcast-1.0.dtd") {
                 // Get image bits
                 try {
-                    String file = getFile(channelMap.getAsString("image"));
+                    String file = new GetFile().get(channelMap.getAsString("image"), null);
                     BitmapFactory.Options options = new BitmapFactory.Options();
                     options.inSampleSize = 2;
                     Bitmap file_bitmap = BitmapFactory.decodeFile(file, options);
