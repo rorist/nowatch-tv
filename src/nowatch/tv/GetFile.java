@@ -23,17 +23,19 @@ import android.util.Log;
 public class GetFile {
 
     private final String TAG = "GetFile";
-    private final static String USERAGENT = "Android/Nowatch.TV/0.1";
+    private final String USERAGENT = "Android/Nowatch.TV/0.1";
     private DefaultHttpClient httpclient;
+    protected int buffer_size = 16 * 1024; // in Bytes
 
-    public String get(String src, String dst) throws IOException {
+    public String getChannel(String src, String dst) throws IOException {
         File dstFile;
         if(dst!=null){
             dstFile = new File(dst);
         } else {
-            dstFile = File.createTempFile("nowatchtv", "");
+            dstFile = File.createTempFile(".nowatchtv", "");
         }
         httpclient = new DefaultHttpClient();
+        httpclient.getParams().setParameter("http.useragent", USERAGENT);
         InputStream in = openURL(src);
         OutputStream out = new FileOutputStream(dstFile);
         final ReadableByteChannel inputChannel = Channels.newChannel(in);
@@ -79,19 +81,25 @@ public class GetFile {
         return null;
     }
 
-    private static void fastChannelCopy(final ReadableByteChannel src,
+    private void fastChannelCopy(final ReadableByteChannel src,
             final WritableByteChannel dest) throws IOException, NullPointerException {
         if (src != null) {
-            final ByteBuffer buffer = ByteBuffer.allocateDirect(16 * 1024);
-            while (src.read(buffer) != -1) {
+            final ByteBuffer buffer = ByteBuffer.allocateDirect(buffer_size);
+            int count;
+            while ((count = src.read(buffer)) != -1) {
                 buffer.flip();
                 dest.write(buffer);
                 buffer.compact();
+                update(count);
             }
             buffer.flip();
             while (buffer.hasRemaining()) {
                 dest.write(buffer);
             }
         }
+    }
+
+    protected void update(int count){
+        // Nothing to do here
     }
 }
