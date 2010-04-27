@@ -50,7 +50,7 @@ public class InfoActivity extends Activity {
 
         // Get item information
         Bundle extra = getIntent().getExtras();
-        SQLiteDatabase db = (new DB(getApplicationContext())).getWritableDatabase();
+        SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
         Cursor c = db.rawQuery(REQ + extra.getLong("item_id"), null);
         c.moveToFirst();
         ((TextView) findViewById(R.id.title)).setText(c.getString(1));
@@ -82,8 +82,15 @@ public class InfoActivity extends Activity {
                     startActivity(i);
                 } catch (ActivityNotFoundException e) {
                     Log.e(TAG, e.getMessage());
-                    Toast.makeText(ctxt, "Format de fichier non supporté !", Toast.LENGTH_LONG)
-                            .show();
+                    try {
+                        Intent i = new Intent(Intent.ACTION_VIEW);
+                        i.setDataAndType(Uri.parse(file_uri), "video/*");
+                        startActivity(i);
+                    } catch (ActivityNotFoundException e1) {
+                        Log.e(TAG, e1.getMessage());
+                        Toast.makeText(ctxt, "Format de fichier non supporté !", Toast.LENGTH_LONG)
+                                .show();
+                    }
                 }
             }
         });
