@@ -175,7 +175,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
             vh.podcast.setText(item.podcast);
             vh.logo.setImageBitmap(item.logo);
             // Set endless loader
-            if (position == items.size() - 1) {
+            if (position == items.size() - 3) {
                 new EndlessTask().execute(position + 1);
             }
             return convertView;

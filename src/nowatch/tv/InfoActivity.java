@@ -5,6 +5,9 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
 import android.content.Intent;
@@ -15,13 +18,14 @@ import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
-import android.view.Window;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.RemoteViews;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -35,14 +39,14 @@ public class InfoActivity extends Activity {
     private final String STYLE = "<style>*{color: white;}</style>";
     private final int IMG_DIP = 64;
     private DisplayMetrics displayMetrics;
+    private Context ctxt;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
-        requestWindowFeature(Window.FEATURE_PROGRESS);
         setContentView(R.layout.info_activity);
         final Context ctxt = getApplicationContext();
+        this.ctxt = ctxt;
 
         // Screen metrics (for dip to px conversion)
         displayMetrics = new DisplayMetrics();
@@ -53,7 +57,8 @@ public class InfoActivity extends Activity {
         SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
         Cursor c = db.rawQuery(REQ + extra.getLong("item_id"), null);
         c.moveToFirst();
-        ((TextView) findViewById(R.id.title)).setText(c.getString(1));
+        final String title = c.getString(1);
+        ((TextView) findViewById(R.id.title)).setText(title);
         ((WebView) findViewById(R.id.desc)).loadData(PRE + c.getString(2) + STYLE, "text/html",
                 "utf-8");
         ((WebView) findViewById(R.id.desc)).setBackgroundColor(0);
@@ -76,15 +81,14 @@ public class InfoActivity extends Activity {
         // Set buttons
         ((Button) findViewById(R.id.btn_play)).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
+                Intent i = new Intent(Intent.ACTION_VIEW);
                 try {
-                    Intent i = new Intent(Intent.ACTION_VIEW);
                     i.setDataAndType(Uri.parse(file_uri), file_type);
                     startActivity(i);
                 } catch (ActivityNotFoundException e) {
                     Log.e(TAG, e.getMessage());
                     try {
-                        Intent i = new Intent(Intent.ACTION_VIEW);
-                        i.setDataAndType(Uri.parse(file_uri), "video/*");
+                        i.setType("video/*");
                         startActivity(i);
                     } catch (ActivityNotFoundException e1) {
                         Log.e(TAG, e1.getMessage());
@@ -96,7 +100,7 @@ public class InfoActivity extends Activity {
         });
         ((Button) findViewById(R.id.btn_download)).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                new DownloadTask().execute(file_uri, file_size);
+                new DownloadTask(title).execute(file_uri, file_size);
             }
         });
 
@@ -113,59 +117,85 @@ public class InfoActivity extends Activity {
 
     class DownloadTask extends AsyncTask<String, Integer, Void> {
 
-        private long file_size = 0;
-        private long progress_current = 0;
+        private NotificationManager mNotificationManager;
+        private RemoteViews rv;
+        private Notification nf;
+        private final int ID = 1;
+        private String download_title;
+
+        public DownloadTask(String title) {
+            super();
+            mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            download_title = title;
+        }
 
         @Override
         protected void onPreExecute() {
-            setProgressBarIndeterminateVisibility(true);
-            setProgressBarVisibility(true);
-            setProgress(0);
+            nf = new Notification(R.drawable.icon, "Download started!", System.currentTimeMillis());
+            rv = new RemoteViews(ctxt.getPackageName(), R.layout.notification_download);
+            rv.setImageViewResource(R.id.download_icon, R.drawable.icon);
+            rv.setTextViewText(R.id.download_title, download_title);
+            rv.setProgressBar(R.id.download_progress, 0, 0, true);
+            // Null must be replaced by a DownloadManager Activity
+            nf.contentIntent = PendingIntent.getActivity(ctxt, 0, null, 0);
+            nf.contentView = rv;
+            nf.flags |= Notification.FLAG_ONGOING_EVENT;
+            nf.flags |= Notification.FLAG_NO_CLEAR;
+            mNotificationManager.notify(ID, nf);
         }
 
         @Override
         protected Void doInBackground(String... str) {
+            int fs = 1;
             try {
-                file_size = Integer.parseInt(str[1]);
-                // new getPodcastFile().get(str[0],
-                // Environment.getExternalStorageDirectory().toString() + "/" +
-                // new URL(str[0]).getFile());
-                new getPodcastFile().getChannel(str[0], "/sdcard/" + new File(str[0]).getName());
+                fs = Integer.parseInt(str[1]);
+            } catch (NumberFormatException e) {
+            }
+            // Download file
+            try {
+                new getPodcastFile(fs).getChannel(str[0], Environment.getExternalStorageDirectory()
+                        .toString()
+                        + "/" + new File(str[0]).getName());
             } catch (MalformedURLException e) {
                 Log.e(TAG, e.getMessage());
             } catch (IOException e) {
-                Log.e(TAG, e.getMessage());
-            } catch (NumberFormatException e) {
                 Log.e(TAG, e.getMessage());
             }
             return null;
         }
 
         @Override
-        protected void onPostExecute(Void unused) {
-            setProgressBarIndeterminateVisibility(false);
-            setProgressBarVisibility(false);
-            setProgress(10000);
+        protected void onProgressUpdate(Integer... values) {
+            rv.setProgressBar(R.id.download_progress, 100, values[0], false);
+            mNotificationManager.notify(ID, nf);
         }
 
         @Override
-        protected void onProgressUpdate(Integer... values) {
-            progress_current += values[0];
-            setProgress((int) (progress_current * 10000 / file_size));
+        protected void onPostExecute(Void unused) {
+            nf.flags = Notification.FLAG_SHOW_LIGHTS;
+            mNotificationManager.notify(ID, nf);
         }
 
         class getPodcastFile extends GetFile {
 
-            public getPodcastFile() {
-                super();
-                buffer_size = 512 * 1024;
+            private long current_bytes = 0;
+            private long file_size = 1;
+            private int progress = 0;
+
+            public getPodcastFile(long file_size) {
+                if (file_size != 0) {
+                    this.file_size = file_size;
+                }
             }
 
             @Override
             protected void update(int count) {
-                publishProgress(count);
+                current_bytes += count;
+                if (file_size > 1
+                        && progress != (progress = (int) (current_bytes * 100 / file_size))) {
+                    publishProgress(progress);
+                }
             }
         }
-
     }
 }

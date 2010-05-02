@@ -56,6 +56,8 @@ public class UpdateDb {
             e.printStackTrace();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
+        }  catch (NullPointerException e) {
+            e.printStackTrace();
         } finally {
             if (file != null) {
                 new File(file).delete();

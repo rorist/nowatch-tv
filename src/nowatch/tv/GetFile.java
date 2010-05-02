@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
@@ -74,6 +75,8 @@ public class GetFile {
             }
         } catch (ClientProtocolException e) {
             Log.e(TAG, "There was a protocol based error", e);
+        } catch (UnknownHostException e) {
+            Log.e(TAG, "Connectivity errror", e);
         } catch (IOException e) {
             Log.e(TAG, "There was an IO Stream related error", e);
         }
