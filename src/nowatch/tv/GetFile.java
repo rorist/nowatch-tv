@@ -44,10 +44,12 @@ public class GetFile {
 
         try {
             fastChannelCopy(inputChannel, outputChannel);
-        } catch (IOException e) {
-            Log.e(TAG, e.getMessage());
         } catch (NullPointerException e) {
             Log.e(TAG, e.getMessage());
+            e.printStackTrace();
+        } catch (IOException e) {
+            Log.e(TAG, e.getMessage());
+            e.printStackTrace();
         } finally {
             inputChannel.close();
             outputChannel.close();

@@ -9,7 +9,7 @@
     <ImageView android:id="@+id/download_icon"
         android:layout_width="@android:dimen/app_icon_size"
         android:layout_height="@android:dimen/app_icon_size"
-        android:paddingRight="5dip" />
+        android:paddingRight="3dip" />
         
     <LinearLayout
         android:orientation="vertical"
@@ -23,12 +23,28 @@
             android:textColor="#000000"
             android:singleLine="true"
             android:ellipsize="end"
-            android:paddingBottom="5dip" />
-    
-        <ProgressBar android:id="@+id/download_progress"
-            style="?android:attr/progressBarStyleHorizontal"
+            android:paddingBottom="3dip" />
+        
+        <LinearLayout
+            android:orientation="horizontal"
             android:layout_width="fill_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content">
+            
+            <TextView android:id="@+id/download_status"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textAppearance="?android:attr/textAppearanceSmall"
+                android:textColor="#000000"
+                android:text="0% 0kB/s"
+                android:paddingRight="5dip" />
+
+            <ProgressBar android:id="@+id/download_progress"
+                style="?android:attr/progressBarStyleHorizontal"
+                android:layout_width="0dip"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+                    
+            </LinearLayout>
     
     </LinearLayout>
 
