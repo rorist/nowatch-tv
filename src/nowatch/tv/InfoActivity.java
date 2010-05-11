@@ -43,7 +43,7 @@ public class InfoActivity extends Activity {
         // Get item information
         Bundle extra = getIntent().getExtras();
         SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
-        Cursor c = db.rawQuery(REQ + extra.getLong("item_id"), null);
+        Cursor c = db.rawQuery(REQ + extra.getInt("item_id"), null);
         c.moveToFirst();
         final String title = c.getString(1);
         ((TextView) findViewById(R.id.title)).setText(title);
@@ -87,7 +87,7 @@ public class InfoActivity extends Activity {
             }
         });
         final Intent i = new Intent(this, DownloadService.class);
-        i.putExtra("item_id", extra.getLong("item_id"));
+        i.putExtra("item_id", extra.getInt("item_id"));
         ((Button) findViewById(R.id.btn_download)).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 startService(i);

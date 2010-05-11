@@ -45,7 +45,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
     private ListView list;
 
     class Items {
-        public long id;
+        public int id;
         public Bitmap image;
         public String title;
         public String podcast;

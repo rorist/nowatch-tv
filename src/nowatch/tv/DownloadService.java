@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -21,13 +22,16 @@ import android.os.IBinder;
 import android.util.Log;
 import android.view.View;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
 public class DownloadService extends Service {
 
     private final String TAG = "DownloadService";
-    private final String REQ = "select _id, title,file_uri,file_size from items where _id=";
+    private final String REQ = "select title,file_uri,file_size from items where _id=";
+    private final int SIMULTANEOUS_DOWNLOAD = 2;
     private Context ctxt;
-    private List<Integer> currentDownloads = new ArrayList<Integer>();
+    private ConcurrentLinkedQueue<Integer> downloadQueue = new ConcurrentLinkedQueue<Integer>();
+    private int downloadCurrent = 0;
 
     @Override
     public void onCreate() {
@@ -50,19 +54,20 @@ public class DownloadService extends Service {
         Log.i(TAG, "onStart()");
         // FIXME: onStrart() is deprecated, but used for backward compatibility!
 
-        // TODO: Check if there is enough space on device
-        // Get item information and start DownloadTask
-        if (!currentDownloads.contains(startId)) {
-            currentDownloads.add(startId);
-            Bundle extra = intent.getExtras();
-            SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
-            Cursor c = db.rawQuery(REQ + extra.getLong("item_id"), null);
-            c.moveToFirst();
-            new DownloadTask(c.getString(1), c.getInt(0)).execute(c.getString(2), c.getString(3));
-            c.close();
-            db.close();
+        // Add item to download queue
+        Bundle extra = intent.getExtras();
+        int item_id = extra.getInt("item_id");
+        if (!downloadQueue.contains(item_id)) {
+            downloadQueue.add(item_id);
         } else {
-            Log.v(TAG, "Already downloaded");
+            Log.i(TAG, "Already in download queue ...");
+        }
+
+        if (downloadCurrent < SIMULTANEOUS_DOWNLOAD) {
+            startDownloadTask();
+        } else {
+            Toast.makeText(ctxt, "Téléchargement ajouté dans la file d'attente ...", Toast.LENGTH_SHORT);
+            Log.i(TAG, "maximum simlutaneous download reached");
         }
     }
 
@@ -79,19 +84,35 @@ public class DownloadService extends Service {
         return true;
     }
 
+    private void startDownloadTask() {
+        Integer itemId = downloadQueue.poll();
+        if (itemId != null) {
+            // TODO: Check if there is enough space on device
+            // Get item information and start DownloadTask
+            SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
+            Cursor c = db.rawQuery(REQ + itemId, null);
+            c.moveToFirst();
+            new DownloadTask(c.getString(0), itemId).execute(c.getString(1), c.getString(2));
+            c.close();
+            db.close();
+        } else {
+            Log.i(TAG, "download queue is empty");
+        }
+    }
+
     class DownloadTask extends AsyncTask<String, Integer, Void> {
 
         private NotificationManager mNotificationManager;
         private RemoteViews rv;
         private Notification nf;
-        private int notification_id;
+        private int item_id;
         private String download_title;
 
-        public DownloadTask(String title, int id) {
+        public DownloadTask(String title, int itemId) {
             super();
             mNotificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
             download_title = title;
-            notification_id = id;
+            item_id = itemId;
         }
 
         @Override
@@ -107,7 +128,8 @@ public class DownloadService extends Service {
             nf.contentView = rv;
             nf.flags |= Notification.FLAG_ONGOING_EVENT;
             nf.flags |= Notification.FLAG_NO_CLEAR;
-            mNotificationManager.notify(notification_id, nf);
+            mNotificationManager.notify(item_id, nf);
+            downloadCurrent++;
         }
 
         @Override
@@ -135,25 +157,52 @@ public class DownloadService extends Service {
         protected void onProgressUpdate(Integer... values) {
             rv.setProgressBar(R.id.download_progress, 100, values[0], false);
             rv.setTextViewText(R.id.download_status, values[0] + "% " + values[1] + "kB/s");
-            mNotificationManager.notify(notification_id, nf);
+            mNotificationManager.notify(item_id, nf);
         }
 
         @Override
         protected void onPostExecute(Void unused) {
+            /*
             rv.setViewVisibility(R.id.download_progress, View.GONE);
             rv.setTextViewText(R.id.download_status, "Téléchargement terminé!");
-            // nf.contentView = rv;
-            nf.flags = Notification.FLAG_SHOW_LIGHTS;
-            mNotificationManager.notify(notification_id, nf);
-            stopSelf();
+            nf.contentView = rv;
+            //nf.flags = Notification.FLAG_AUTO_CANCEL;
+            mNotificationManager.notify(item_id, nf);
+            */
+            finishNotification("Téléchargement terminé!");
+            stopOrContinue();
         }
 
         @Override
         protected void onCancelled() {
             super.onCancelled();
+            /*
+            rv.setTextViewText(R.id.download_status, "Téléchargement annulé!");
+            nf.contentView = rv;
             nf.flags = 0;
-            mNotificationManager.notify(notification_id, nf);
-            stopSelf();
+            mNotificationManager.notify(item_id, nf);
+            */
+            finishNotification("Téléchargement annulé!");
+            stopOrContinue();
+        }
+
+        private void finishNotification(String msg){
+            try {
+                mNotificationManager.cancel(item_id);
+            } catch (Exception e) {
+            }
+            nf = new Notification(R.drawable.icon, "", System.currentTimeMillis());
+            nf.setLatestEventInfo(ctxt, "", msg, PendingIntent.getActivity(ctxt, 0, new Intent(ctxt, DownloadManager.class), 0));
+            mNotificationManager.notify(item_id, nf);
+        }
+
+        private void stopOrContinue(){
+            downloadCurrent--;
+            if(downloadQueue.peek() == null && downloadCurrent == 0){
+                stopSelf();
+            } else {
+                startDownloadTask();
+            }
         }
 
         class getPodcastFile extends GetFile {
