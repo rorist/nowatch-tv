@@ -80,7 +80,7 @@ public class InfoActivity extends Activity {
                         startActivity(i);
                     } catch (ActivityNotFoundException e1) {
                         Log.e(TAG, e1.getMessage());
-                        Toast.makeText(ctxt, "Format de fichier non supporté !", Toast.LENGTH_LONG)
+                        Toast.makeText(ctxt, R.string.toast_notsupported, Toast.LENGTH_LONG)
                                 .show();
                     }
                 }
@@ -92,12 +92,9 @@ public class InfoActivity extends Activity {
             public void onClick(View v) {
                 startService(i);
                 finish();
-                // ((Button)
-                // findViewById(R.id.btn_download)).setClickable(false);
-                // ((Button) findViewById(R.id.btn_download)).setEnabled(false);
             }
         });
-
+        
         // Close stuff
         c.close();
         db.close();

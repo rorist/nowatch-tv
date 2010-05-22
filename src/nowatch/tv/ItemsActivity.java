@@ -38,6 +38,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id "
             + "ORDER BY items.pubDate DESC LIMIT ";
     private static final int MENU_UPDATE_ALL = 1;
+    private static final int MENU_MANAGE = 2;
     private int image_size;
     private ItemsAdapter adapter;
     private Context ctxt;
@@ -89,7 +90,10 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, MENU_UPDATE_ALL, 0, "Mettre a jour").setIcon(android.R.drawable.ic_menu_upload);
+        menu.add(0, MENU_UPDATE_ALL, 0, R.string.menu_update_all).setIcon(
+                android.R.drawable.ic_menu_upload);
+        menu.add(0, MENU_MANAGE, 0, R.string.menu_manage)
+                .setIcon(android.R.drawable.ic_menu_manage);
         return true;
     }
 
@@ -98,6 +102,9 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         switch (item.getItemId()) {
             case MENU_UPDATE_ALL:
                 (new UpdateTask(ItemsActivity.this)).execute();
+                return true;
+            case MENU_MANAGE:
+                startActivity(new Intent(ItemsActivity.this, DownloadManager.class));
                 return true;
         }
         return false;
@@ -225,7 +232,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         @Override
         protected void onPreExecute() {
             final Activity a = mActivity.get();
-            progress = ProgressDialog.show(a, "", "Mise a jour des fluxxx ... ");
+            progress = ProgressDialog.show(a, "", getString(R.string.dialog_update_all));
         }
 
         @Override
@@ -252,7 +259,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
             ((TextView) findViewById(R.id.loading)).setVisibility(View.INVISIBLE);
             progress.dismiss();
             if (sdcarderror) {
-                Toast.makeText(ctxt, "SDCard is not accessible !", Toast.LENGTH_LONG).show();
+                Toast.makeText(ctxt, R.string.toast_sdcard, Toast.LENGTH_LONG).show();
             }
         }
     }

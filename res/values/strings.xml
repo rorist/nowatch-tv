@@ -8,4 +8,16 @@
     <string name="feed_cinefuzz">http://feeds.feedburner.com/CineFuzz</string>
     <string name="feed_tom">http://feeds.feedburner.com/tonightonmars</string>
     
+    <string name="loading">Chargement ...</string>
+    <string name="menu_update_all">Mettre à jour</string>
+    <string name="menu_manage">Gérer les téléchargements</string>
+    <string name="dialog_update_all">Mise à jour des flux en cours ...\nMerci de patienter ...</string>
+    <string name="toast_dl_added">Téléchargement ajouté dans la file d'attente ...</string>
+    <string name="toast_sdcard">La carte SD n\'est pas accessible !</string>
+    <string name="toast_notsupported">Format de fichier non supporté !</string>
+    <string name="file_view">Voir en streaming</string>
+    <string name="file_download">Télécharger</string>
+    
+<!--    <string name=""></string>-->
+    
 </resources>

@@ -186,7 +186,6 @@ public class UpdateDb {
                     try {
                         item_date = formatter.parse(itemMap.getAsString("pubDate"));
                         if (item_date.after(lastPub)) {
-                            // Store in seconds for better SQL queries on items
                             cal.setTime(item_date);
                             itemMap.put("pubDate", cal.getTimeInMillis() / 1000);
                             itemMap.put("feed_id", feed_id);

@@ -56,16 +56,11 @@ public class DownloadService extends Service {
         int item_id = extra.getInt("item_id");
         if (!downloadQueue.contains(item_id)) {
             downloadQueue.add(item_id);
-        } else {
-            Log.i(TAG, "Already in download queue ...");
         }
-
         if (downloadCurrent < SIMULTANEOUS_DOWNLOAD) {
             startDownloadTask();
         } else {
-            Toast.makeText(ctxt, "Téléchargement ajouté dans la file d'attente ...",
-                    Toast.LENGTH_SHORT);
-            Log.i(TAG, "maximum simlutaneous download reached");
+            Toast.makeText(ctxt, R.string.toast_dl_added, Toast.LENGTH_SHORT);
         }
     }
 
@@ -160,6 +155,8 @@ public class DownloadService extends Service {
 
         @Override
         protected void onPostExecute(Void unused) {
+            super.onPostExecute(unused);
+            // FIXME: Use Activity.getString()
             finishNotification("Téléchargement terminé!");
             stopOrContinue();
         }
@@ -167,6 +164,7 @@ public class DownloadService extends Service {
         @Override
         protected void onCancelled() {
             super.onCancelled();
+            // FIXME: Use Activity.getString()
             finishNotification("Téléchargement annulé!");
             stopOrContinue();
         }
