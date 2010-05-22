@@ -1,6 +1,6 @@
 package nowatch.tv;
 
-// TODO: Use ETags instead of relying on pubDate
+// TODO: Use ETags instead of relying on pubDate only
 
 import android.content.Context;
 import android.database.Cursor;
@@ -13,7 +13,7 @@ public class DB extends SQLiteOpenHelper {
     private final static String TAG = "DB";
     private final static String DB_NAME = "nowatch.db";
     private final static int DB_VERSION = 1;
-    private final String CREATE_FEEDS = "create table feeds (_id INTEGER PRIMARY KEY, title TEXT, description TEXT, link TEXT, pubDate NUMERIC, image BLOB);";
+    private final String CREATE_FEEDS = "create table feeds (_id INTEGER PRIMARY KEY, title TEXT, description TEXT, link TEXT, pubDate NUMERIC, etag TEXT, image BLOB);";
     private final String CREATE_ITEMS = "create table items (_id INTEGER PRIMARY KEY, feed_id INTEGER, title TEXT, description TEXT, link TEXT, pubDate NUMERIC, file_uri TEXT, file_size INTEGER, file_type TEXT);";
     private final String[] podcasts = new String[] { "cinefuzz", "geekinc", "scudstv", "zapcasttv" };
 
@@ -29,6 +29,7 @@ public class DB extends SQLiteOpenHelper {
             db.execSQL("insert into feeds (\"title\") values (\"" + podcast + "\");");
         }
         db.execSQL("CREATE INDEX pubDateIndex on items (pubDate);");
+        db.execSQL("CREATE INDEX etagIndex on feeds(etag);");
     }
 
     @Override

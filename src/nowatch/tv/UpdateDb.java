@@ -30,84 +30,109 @@ import android.util.Log;
 public class UpdateDb {
 
     private static final String TAG = "UpdateDb";
+    private static SQLiteDatabase db;
     private static Context ctxt;
     private static String feed_id;
+    private static String etag = null;
+    private static Date lastPub;
+    private static SimpleDateFormat formatter;
 
     public static void update(Context ct, String fid, int feed_xml) throws IOException {
         ctxt = ct;
         feed_id = fid;
-        String file = null;
+        Cursor c = null;
         try {
-            XMLReader xr = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
-            RSS handler = new RSS();
-            file = new GetFile().getChannel(ctxt.getString(feed_xml), null);
-            xr.setContentHandler(handler);
-            xr.setErrorHandler(handler);
-            try {
-                xr.parse(new InputSource(new FileReader(file)));
-            } catch (IOException e) {
-                e.printStackTrace();
+            // Get lastpub and etag
+            db = (new DB(ctxt)).getWritableDatabase();
+           
+            // FIXME Probleme parsing date !!!! and get local timezone ?
+            // Wed, 14 Apr 2010 18:18:07 +0200
+            formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss ZZZ");
+            formatter.setTimeZone(TimeZone.getDefault());
+           
+            c = db.rawQuery("select etag,pubDate from feeds where _id=? limit 1", new String[] { fid });
+            c.moveToFirst();
+            
+            // etag
+            if (c.getString(0) != null) {
+                etag = c.getString(0);
+                Log.v(TAG, "ETag1="+etag);
             }
-        } catch (SAXException e) {
+            
+            // pubDate
+            if (c.getString(1) != null) {
+                lastPub = formatter.parse(c.getString(1));
+            } else {
+                lastPub = formatter.parse("Wed, 31 Mar 1999 00:00:00 +0200");
+            }
+
+            // Try to download feed
+            new GetFeed().getChannel(ctxt.getString(feed_xml), null, etag);
+       
+        } catch (ParseException e) {
             Log.e(TAG, e.getMessage());
-        } catch (ParserConfigurationException e) {
-            e.printStackTrace();
+        } catch (SQLiteException e) {
+            Log.e(TAG, e.getMessage());
         } catch (FactoryConfigurationError e) {
             e.printStackTrace();
         } catch (FileNotFoundException e) {
             e.printStackTrace();
-        }  catch (NullPointerException e) {
+        } catch (NullPointerException e) {
             e.printStackTrace();
         } finally {
-            if (file != null) {
-                new File(file).delete();
+            if (c != null) {
+                c.close();
+            }
+        }
+    }
+
+    private static class GetFeed extends GetFile {
+        @Override
+        protected void finish(String file){
+            super.finish(file);
+            if(file!=null){ 
+                // Save etag
+                Log.v(TAG, "ETag2="+etag);
+                if(etag != null){
+                    db.rawQuery("update feeds set etag=? where _id=?", new String[] { etag, feed_id });
+                }
+                
+                // Start the parser
+                try {
+                    XMLReader xr = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
+                    RSS handler = new RSS();
+                    xr.setContentHandler(handler);
+                    xr.setErrorHandler(handler);
+                    xr.parse(new InputSource(new FileReader(file)));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (SAXException e) {
+                    Log.e(TAG, e.getMessage());
+                } catch (ParserConfigurationException e) {
+                    e.printStackTrace();
+                } finally {
+                    new File(file).delete();
+                }
+            }
+            if (db != null) {
+                db.close();
             }
         }
     }
 
     private static class RSS extends RSSReader {
 
-        private SQLiteDatabase db;
-        private SimpleDateFormat formatter;
-        private Date lastPub;
         private Date item_date;
-        private Calendar c = Calendar.getInstance();
+        private Calendar cal = Calendar.getInstance();
 
         @Override
         public void startDocument() {
             super.startDocument();
-            // Wed, 14 Apr 2010 18:18:07 +0200
-            // FIXME Probleme parsing date !!!! and get local timezone ?
-            formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss ZZZ");
-            formatter.setTimeZone(TimeZone.getDefault());
-            Cursor c = null;
-            try {
-                db = (new DB(ctxt)).getWritableDatabase();
-                c = db.rawQuery("select pubDate from feeds where _id=? limit 1",
-                        new String[] { feed_id });
-                c.moveToFirst();
-                if (c.getString(0) != null) {
-                    lastPub = formatter.parse(c.getString(0));
-                } else {
-                    lastPub = formatter.parse("Wed, 31 Mar 1999 00:00:00 +0200");
-                }
-            } catch (SQLiteException e) {
-                Log.e(TAG, e.getMessage());
-            } catch (ParseException e) {
-                Log.e(TAG, e.getMessage());
-            } finally {
-                if (c != null) {
-                    c.close();
-                }
-            }
         }
 
         @Override
         public void endDocument() {
             super.endDocument();
-            if (db != null) {
-                db.close();
-            }
         }
 
         @Override
@@ -122,7 +147,8 @@ public class UpdateDb {
                     && uri != "http://www.itunes.com/dtds/podcast-1.0.dtd") {
                 // Get image bits
                 try {
-                    String file = new GetFile().getChannel(channelMap.getAsString("image"), null);
+                    String file = new GetFile().getChannel(channelMap.getAsString("image"), null,
+                            null);
                     BitmapFactory.Options options = new BitmapFactory.Options();
                     options.inSampleSize = 2;
                     Bitmap file_bitmap = BitmapFactory.decodeFile(file, options);
@@ -159,8 +185,8 @@ public class UpdateDb {
                         item_date = formatter.parse(itemMap.getAsString("pubDate"));
                         if (item_date.after(lastPub)) {
                             // Store in seconds for better SQL queries on items
-                            c.setTime(item_date);
-                            itemMap.put("pubDate", c.getTimeInMillis() / 1000);
+                            cal.setTime(item_date);
+                            itemMap.put("pubDate", cal.getTimeInMillis() / 1000);
                             itemMap.put("feed_id", feed_id);
                             db.insert("items", null, itemMap);
                         }

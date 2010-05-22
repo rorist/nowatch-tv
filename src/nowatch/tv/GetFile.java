@@ -15,6 +15,7 @@ import javax.net.ssl.SSLException;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
+import org.apache.http.HttpStatus;
 import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -27,8 +28,9 @@ public class GetFile {
     private final String USERAGENT = "Android/Nowatch.TV/0.1";
     private DefaultHttpClient httpclient;
     protected int buffer_size = 16 * 1024; // in Bytes
+    protected String etag;
 
-    public String getChannel(String src, String dst) throws IOException {
+    public String getChannel(String src, String dst, String etag) throws IOException {
         File dstFile;
         if (dst != null) {
             dstFile = new File(dst);
@@ -37,31 +39,42 @@ public class GetFile {
         }
         httpclient = new DefaultHttpClient();
         httpclient.getParams().setParameter("http.useragent", USERAGENT);
-        InputStream in = openURL(src);
-        OutputStream out = new FileOutputStream(dstFile);
-        final ReadableByteChannel inputChannel = Channels.newChannel(in);
-        final WritableByteChannel outputChannel = Channels.newChannel(out);
 
-        try {
-            fastChannelCopy(inputChannel, outputChannel);
-        } catch (NullPointerException e) {
-            Log.e(TAG, e.getMessage());
-            e.printStackTrace();
-        } catch (IOException e) {
-            Log.e(TAG, e.getMessage());
-            e.printStackTrace();
-        } finally {
-            inputChannel.close();
-            outputChannel.close();
-            in.close();
-            out.close();
+        InputStream in = openURL(src, etag);
+        if ( in != null) {
+            OutputStream out = new FileOutputStream(dstFile);
+            final ReadableByteChannel inputChannel = Channels.newChannel(in);
+            final WritableByteChannel outputChannel = Channels.newChannel(out);
+            try {
+                fastChannelCopy(inputChannel, outputChannel);
+            } catch (NullPointerException e) {
+                Log.e(TAG, e.getMessage());
+                e.printStackTrace();
+            } catch (IOException e) {
+                Log.e(TAG, e.getMessage());
+                e.printStackTrace();
+            } finally {
+                inputChannel.close();
+                outputChannel.close();
+                in.close();
+                out.close();
+                finish(dstFile.getAbsolutePath());
+            }
+            return dstFile.getAbsolutePath();
         }
-        return dstFile.getAbsolutePath();
+        finish(null);
+        return null;
     }
 
-    private InputStream openURL(String url) {
+    private InputStream openURL(String url, String etag) {
         HttpGet httpget = new HttpGet(url);
         HttpResponse response;
+        // Add headers
+        // TODO: We don't need Last-Modified unless new feeds do
+        if (etag != null) {
+            httpget.addHeader("If-None-Match", etag);
+        }
+        // Execute request
         try {
             try {
                 response = httpclient.execute(httpget);
@@ -70,8 +83,19 @@ public class GetFile {
                 response = httpclient.execute(httpget);
             }
             Log.i(TAG, "Status:[" + response.getStatusLine().toString() + "] " + url);
-            HttpEntity entity = response.getEntity();
 
+            // Exit if content not modified
+            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
+                return null;
+            }
+            // Save etag
+            else if (response.getLastHeader("ETag") != null) {
+                this.etag = response.getLastHeader("ETag").getValue();
+                Log.v(TAG, "ETag3="+etag);
+            }
+
+            // Retrieve content
+            HttpEntity entity = response.getEntity();
             if (entity != null) {
                 return entity.getContent();
             }
@@ -82,13 +106,12 @@ public class GetFile {
         } catch (IOException e) {
             Log.e(TAG, "There was an IO Stream related error", e);
         }
-
         return null;
     }
 
     private void fastChannelCopy(final ReadableByteChannel src, final WritableByteChannel dest)
             throws IOException, NullPointerException {
-        if (src != null) {
+        if (src != null && dest != null) {
             final ByteBuffer buffer = ByteBuffer.allocateDirect(buffer_size);
             int count;
             while ((count = src.read(buffer)) != -1) {
@@ -105,6 +128,10 @@ public class GetFile {
     }
 
     protected void update(int count) {
+        // Nothing to do here
+    }
+
+    protected void finish(String file) {
         // Nothing to do here
     }
 }

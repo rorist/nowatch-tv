@@ -3,8 +3,6 @@ package nowatch.tv;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import android.app.Notification;
@@ -20,7 +18,6 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
 import android.util.Log;
-import android.view.View;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
@@ -66,7 +63,8 @@ public class DownloadService extends Service {
         if (downloadCurrent < SIMULTANEOUS_DOWNLOAD) {
             startDownloadTask();
         } else {
-            Toast.makeText(ctxt, "Téléchargement ajouté dans la file d'attente ...", Toast.LENGTH_SHORT);
+            Toast.makeText(ctxt, "Téléchargement ajouté dans la file d'attente ...",
+                    Toast.LENGTH_SHORT);
             Log.i(TAG, "maximum simlutaneous download reached");
         }
     }
@@ -117,8 +115,8 @@ public class DownloadService extends Service {
 
         @Override
         protected void onPreExecute() {
-            nf = new Notification(R.drawable.icon, "Téléchargement démarré ...", System
-                    .currentTimeMillis());
+            nf = new Notification(android.R.drawable.stat_sys_download,
+                    "Téléchargement démarré ...", System.currentTimeMillis());
             rv = new RemoteViews(ctxt.getPackageName(), R.layout.notification_download);
             rv.setImageViewResource(R.id.download_icon, R.drawable.icon);
             rv.setTextViewText(R.id.download_title, download_title);
@@ -143,7 +141,7 @@ public class DownloadService extends Service {
             try {
                 new getPodcastFile(fs).getChannel(str[0], Environment.getExternalStorageDirectory()
                         .toString()
-                        + "/" + new File(str[0]).getName());
+                        + "/" + new File(str[0]).getName(), null);
             } catch (MalformedURLException e) {
                 Log.e(TAG, e.getMessage());
             } catch (IOException e) {
@@ -162,13 +160,6 @@ public class DownloadService extends Service {
 
         @Override
         protected void onPostExecute(Void unused) {
-            /*
-            rv.setViewVisibility(R.id.download_progress, View.GONE);
-            rv.setTextViewText(R.id.download_status, "Téléchargement terminé!");
-            nf.contentView = rv;
-            //nf.flags = Notification.FLAG_AUTO_CANCEL;
-            mNotificationManager.notify(item_id, nf);
-            */
             finishNotification("Téléchargement terminé!");
             stopOrContinue();
         }
@@ -176,29 +167,25 @@ public class DownloadService extends Service {
         @Override
         protected void onCancelled() {
             super.onCancelled();
-            /*
-            rv.setTextViewText(R.id.download_status, "Téléchargement annulé!");
-            nf.contentView = rv;
-            nf.flags = 0;
-            mNotificationManager.notify(item_id, nf);
-            */
             finishNotification("Téléchargement annulé!");
             stopOrContinue();
         }
 
-        private void finishNotification(String msg){
+        private void finishNotification(String msg) {
             try {
                 mNotificationManager.cancel(item_id);
             } catch (Exception e) {
             }
-            nf = new Notification(R.drawable.icon, "", System.currentTimeMillis());
-            nf.setLatestEventInfo(ctxt, "", msg, PendingIntent.getActivity(ctxt, 0, new Intent(ctxt, DownloadManager.class), 0));
+            nf = new Notification(android.R.drawable.stat_sys_download_done, "", System
+                    .currentTimeMillis());
+            nf.setLatestEventInfo(ctxt, download_title, msg, PendingIntent.getActivity(ctxt, 0,
+                    new Intent(ctxt, DownloadManager.class), 0));
             mNotificationManager.notify(item_id, nf);
         }
 
-        private void stopOrContinue(){
+        private void stopOrContinue() {
             downloadCurrent--;
-            if(downloadQueue.peek() == null && downloadCurrent == 0){
+            if (downloadQueue.peek() == null && downloadCurrent == 0) {
                 stopSelf();
             } else {
                 startDownloadTask();
