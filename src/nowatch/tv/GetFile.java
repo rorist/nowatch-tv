@@ -41,7 +41,7 @@ public class GetFile {
         httpclient.getParams().setParameter("http.useragent", USERAGENT);
 
         InputStream in = openURL(src, etag);
-        if ( in != null) {
+        if (in != null) {
             OutputStream out = new FileOutputStream(dstFile);
             final ReadableByteChannel inputChannel = Channels.newChannel(in);
             final WritableByteChannel outputChannel = Channels.newChannel(out);
@@ -72,6 +72,7 @@ public class GetFile {
         // Add headers
         // TODO: We don't need Last-Modified unless new feeds do
         if (etag != null) {
+            Log.v(TAG, "ETag (add header)=" + etag);
             httpget.addHeader("If-None-Match", etag);
         }
         // Execute request
@@ -91,7 +92,6 @@ public class GetFile {
             // Save etag
             else if (response.getLastHeader("ETag") != null) {
                 this.etag = response.getLastHeader("ETag").getValue();
-                Log.v(TAG, "ETag3="+etag);
             }
 
             // Retrieve content

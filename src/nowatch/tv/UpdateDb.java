@@ -19,6 +19,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
+import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
@@ -44,21 +45,22 @@ public class UpdateDb {
         try {
             // Get lastpub and etag
             db = (new DB(ctxt)).getWritableDatabase();
-           
+
             // FIXME Probleme parsing date !!!! and get local timezone ?
             // Wed, 14 Apr 2010 18:18:07 +0200
             formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss ZZZ");
             formatter.setTimeZone(TimeZone.getDefault());
-           
-            c = db.rawQuery("select etag,pubDate from feeds where _id=? limit 1", new String[] { fid });
+
+            c = db.rawQuery("select etag,pubDate from feeds where _id=? limit 1",
+                    new String[] { fid });
             c.moveToFirst();
-            
+
             // etag
             if (c.getString(0) != null) {
                 etag = c.getString(0);
-                Log.v(TAG, "ETag1="+etag);
+                Log.v(TAG, "ETag (database)=" + etag);
             }
-            
+
             // pubDate
             if (c.getString(1) != null) {
                 lastPub = formatter.parse(c.getString(1));
@@ -68,7 +70,7 @@ public class UpdateDb {
 
             // Try to download feed
             new GetFeed().getChannel(ctxt.getString(feed_xml), null, etag);
-       
+
         } catch (ParseException e) {
             Log.e(TAG, e.getMessage());
         } catch (SQLiteException e) {
@@ -88,15 +90,16 @@ public class UpdateDb {
 
     private static class GetFeed extends GetFile {
         @Override
-        protected void finish(String file){
+        protected void finish(String file) {
             super.finish(file);
-            if(file!=null){ 
+            if (file != null) {
                 // Save etag
-                Log.v(TAG, "ETag2="+etag);
-                if(etag != null){
-                    db.rawQuery("update feeds set etag=? where _id=?", new String[] { etag, feed_id });
+                if (etag != null) {
+                    ContentValues etag_value = new ContentValues();
+                    etag_value.put("etag", etag);
+                    db.update("feeds", etag_value, "_id=?", new String[] { feed_id });
                 }
-                
+
                 // Start the parser
                 try {
                     XMLReader xr = SAXParserFactory.newInstance().newSAXParser().getXMLReader();

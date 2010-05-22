@@ -20,11 +20,11 @@ public class RSSReader extends DefaultHandler {
     private final List<String> items_fields = Arrays.asList("_id", "feed_id", "title",
             "description", "link", "pubDate", "file_uri", "file_size", "file_type");
     private boolean in_image = false;
-    protected boolean in_items = false;
     private String current_tag;
+    private StringBuffer itemBuf;
+    protected boolean in_items = false;
     protected ContentValues channelMap;
     protected ContentValues itemMap;
-    private StringBuffer itemBuf;
 
     private void logi(String str) {
         if (LOG_INFO) {

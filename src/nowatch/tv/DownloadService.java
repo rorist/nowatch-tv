@@ -209,7 +209,7 @@ public class DownloadService extends Service {
             @Override
             protected void update(int count) {
                 current_bytes += count;
-                if (file_size > 1
+                if (file_size > 0
                         && progress != (progress = (int) (current_bytes * 100 / file_size))) {
                     publishProgress(progress, getSpeed());
                 }
