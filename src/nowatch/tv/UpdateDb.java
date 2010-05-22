@@ -58,7 +58,6 @@ public class UpdateDb {
             // etag
             if (c.getString(0) != null) {
                 etag = c.getString(0);
-                Log.v(TAG, "ETag (database)=" + etag);
             }
 
             // pubDate

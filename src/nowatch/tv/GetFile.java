@@ -25,7 +25,7 @@ import android.util.Log;
 public class GetFile {
 
     private final String TAG = "GetFile";
-    private final String USERAGENT = "Android/Nowatch.TV/0.1";
+    private final String USERAGENT = "Android/Nowatch.TV/1.0";
     private DefaultHttpClient httpclient;
     protected int buffer_size = 16 * 1024; // in Bytes
     protected String etag;
@@ -72,7 +72,6 @@ public class GetFile {
         // Add headers
         // TODO: We don't need Last-Modified unless new feeds do
         if (etag != null) {
-            Log.v(TAG, "ETag (add header)=" + etag);
             httpget.addHeader("If-None-Match", etag);
         }
         // Execute request

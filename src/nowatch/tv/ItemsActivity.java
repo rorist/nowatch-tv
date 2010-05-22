@@ -41,6 +41,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
     private int image_size;
     private ItemsAdapter adapter;
     private Context ctxt;
+    private List<Feed> feeds;
     private List<Items> items = null;
     private ListView list;
 
@@ -57,6 +58,14 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         super.onCreate(savedInstanceState);
         ctxt = getApplicationContext();
         setContentView(R.layout.items_activity);
+
+        // Add all feeds
+        feeds = new ArrayList<Feed>();
+        feeds.add(new Feed(1, R.string.feed_cinefuzz));
+        feeds.add(new Feed(2, R.string.feed_geekinc));
+        feeds.add(new Feed(3, R.string.feed_scuds));
+        feeds.add(new Feed(4, R.string.feed_zapcast));
+        feeds.add(new Feed(5, R.string.feed_tom));
 
         // Screen metrics (for dip to px conversion)
         DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -223,11 +232,9 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         protected Void doInBackground(Void... params) {
             final Activity a = mActivity.get();
             try {
-                UpdateDb.update(a.getApplicationContext(), "1", R.string.feed_cinefuzz);
-                UpdateDb.update(a.getApplicationContext(), "2", R.string.feed_geekinc);
-                UpdateDb.update(a.getApplicationContext(), "3", R.string.feed_scuds);
-                UpdateDb.update(a.getApplicationContext(), "4", R.string.feed_zapcast);
-                UpdateDb.update(a.getApplicationContext(), "5", R.string.feed_tom);
+                for (Feed f : feeds) {
+                    UpdateDb.update(a.getApplicationContext(), "" + f._id, f._resource);
+                }
             } catch (IOException e) {
                 Log.e("UpdateTask", e.getMessage());
                 sdcarderror = true;

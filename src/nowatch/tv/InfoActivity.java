@@ -25,8 +25,8 @@ public class InfoActivity extends Activity {
     private final String REQ = "SELECT feeds.title, items.title, items.description, "
             + "items.link, feeds.link, image, file_uri, file_size, file_type "
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id WHERE items._id=";
-    private final String PRE = "<meta http-equiv=\"Content-Type\" content=\"application/xhtml+xml; charset=UTF-8\"/>";
     private final String STYLE = "<style>*{color: white;}</style>";
+    private final String PRE = "<meta http-equiv=\"Content-Type\" content=\"application/xhtml+text; charset=UTF-8\"/>"+STYLE;
     private final int IMG_DIP = 64;
     private DisplayMetrics displayMetrics;
 
@@ -47,7 +47,7 @@ public class InfoActivity extends Activity {
         c.moveToFirst();
         final String title = c.getString(1);
         ((TextView) findViewById(R.id.title)).setText(title);
-        ((WebView) findViewById(R.id.desc)).loadData(PRE + c.getString(2) + STYLE, "text/html",
+        ((WebView) findViewById(R.id.desc)).loadData(PRE + c.getString(2), "text/html",
                 "utf-8");
         ((WebView) findViewById(R.id.desc)).setBackgroundColor(0);
         // ((TextView) findViewById(R.id.link)).setText(c.getString(3));
