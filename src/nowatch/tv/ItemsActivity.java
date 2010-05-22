@@ -222,17 +222,12 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         @Override
         protected Void doInBackground(Void... params) {
             final Activity a = mActivity.get();
-            // UpdateDb.update(a.getApplicationContext(), "4",
-            // R.string.feed_test);
             try {
-                // FIXME: Uncomment that when test over
-                // UpdateDb.update(a.getApplicationContext(), "1",
-                // R.string.feed_cinefuzz);
+                UpdateDb.update(a.getApplicationContext(), "1", R.string.feed_cinefuzz);
                 UpdateDb.update(a.getApplicationContext(), "2", R.string.feed_geekinc);
-                // UpdateDb.update(a.getApplicationContext(), "3",
-                // R.string.feed_scuds);
-                // UpdateDb.update(a.getApplicationContext(), "4",
-                // R.string.feed_zapcast);
+                UpdateDb.update(a.getApplicationContext(), "3", R.string.feed_scuds);
+                UpdateDb.update(a.getApplicationContext(), "4", R.string.feed_zapcast);
+                UpdateDb.update(a.getApplicationContext(), "5", R.string.feed_tom);
             } catch (IOException e) {
                 Log.e("UpdateTask", e.getMessage());
                 sdcarderror = true;

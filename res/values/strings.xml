@@ -1,9 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">NWTV Beta</string>
+    
     <string name="feed_geekinc">http://feeds.feedburner.com/GeekInc</string>
     <string name="feed_scuds">http://feeds.feedburner.com/scudstv</string>
     <string name="feed_zapcast">http://feeds.feedburner.com/Zapcasttv</string>
     <string name="feed_cinefuzz">http://feeds.feedburner.com/CineFuzz</string>
-    <string name="feed_test">http://aaa.lamatricexiste.info/test.xml</string>
+    <string name="feed_tom">http://feeds.feedburner.com/tonightonmars</string>
+    
 </resources>
