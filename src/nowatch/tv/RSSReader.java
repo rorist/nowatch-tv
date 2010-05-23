@@ -114,6 +114,7 @@ public class RSSReader extends DefaultHandler {
         itemMap.put("file_uri", "");
         itemMap.put("file_type", "");
         itemMap.put("file_size", "");
+        itemMap.put("status", Feed.STATUS_NEW);
     }
 
     @Override

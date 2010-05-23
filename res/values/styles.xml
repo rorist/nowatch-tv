@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<resources>
+    <style name="List">
+        <item name="android:textColor">#000</item>
+    </style>
+    <style name="List.Title" parent="List">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">#222</item>
+        <item name="android:textStyle">bold</item>
+        <!--
+            <item
+            name="android:textAppearance">?android:attr/textAppearanceMedium</item>
+        -->
+    </style>
+    <style name="List.Sub" parent="List">
+        <!--
+            <item
+            name="android:textAppearance">?android:attr/textAppearanceSmall</item>
+        -->
+        <item name="android:textSize">12sp</item>
+        <item name="android:textColor">#666</item>
+    </style>
+</resources>

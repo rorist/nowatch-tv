@@ -27,7 +27,7 @@ public class GetFile {
     private final String TAG = "GetFile";
     private final String USERAGENT = "Android/Nowatch.TV/1.0";
     private DefaultHttpClient httpclient;
-    protected int buffer_size = 16 * 1024; // in Bytes
+    protected int buffer_size = 8 * 1024; // in Bytes
     protected String etag;
 
     public String getChannel(String src, String dst, String etag) throws IOException {
@@ -40,7 +40,48 @@ public class GetFile {
         httpclient = new DefaultHttpClient();
         httpclient.getParams().setParameter("http.useragent", USERAGENT);
 
-        InputStream in = openURL(src, etag);
+        // Open URL
+        InputStream in = null;
+        HttpGet httpget = new HttpGet(src);
+        HttpResponse response;
+        // Add headers
+        // TODO: We don't need Last-Modified unless new feeds do
+        if (etag != null) {
+            httpget.addHeader("If-None-Match", etag);
+        }
+        // Execute request
+        try {
+            try {
+                response = httpclient.execute(httpget);
+            } catch (SSLException e) {
+                Log.i(TAG, "SSL Certificate is not trusted");
+                response = httpclient.execute(httpget);
+            }
+            Log.i(TAG, "Status:[" + response.getStatusLine().toString() + "] " + src);
+
+            // Exit if content not modified
+            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
+                return null;
+            }
+            // Save etag
+            else if (response.getLastHeader("ETag") != null) {
+                this.etag = response.getLastHeader("ETag").getValue();
+            }
+
+            // Retrieve content
+            HttpEntity entity = response.getEntity();
+            if (entity != null) {
+                in = entity.getContent();
+            }
+        } catch (ClientProtocolException e) {
+            Log.e(TAG, "There was a protocol based error", e);
+        } catch (UnknownHostException e) {
+            Log.e(TAG, "Connectivity errror", e);
+        } catch (IOException e) {
+            Log.e(TAG, "There was an IO Stream related error", e);
+        }
+
+        // Get channel
         if (in != null) {
             OutputStream out = new FileOutputStream(dstFile);
             final ReadableByteChannel inputChannel = Channels.newChannel(in);
@@ -63,48 +104,6 @@ public class GetFile {
             return dstFile.getAbsolutePath();
         }
         finish(null);
-        return null;
-    }
-
-    private InputStream openURL(String url, String etag) {
-        HttpGet httpget = new HttpGet(url);
-        HttpResponse response;
-        // Add headers
-        // TODO: We don't need Last-Modified unless new feeds do
-        if (etag != null) {
-            httpget.addHeader("If-None-Match", etag);
-        }
-        // Execute request
-        try {
-            try {
-                response = httpclient.execute(httpget);
-            } catch (SSLException e) {
-                Log.i(TAG, "SSL Certificate is not trusted");
-                response = httpclient.execute(httpget);
-            }
-            Log.i(TAG, "Status:[" + response.getStatusLine().toString() + "] " + url);
-
-            // Exit if content not modified
-            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
-                return null;
-            }
-            // Save etag
-            else if (response.getLastHeader("ETag") != null) {
-                this.etag = response.getLastHeader("ETag").getValue();
-            }
-
-            // Retrieve content
-            HttpEntity entity = response.getEntity();
-            if (entity != null) {
-                return entity.getContent();
-            }
-        } catch (ClientProtocolException e) {
-            Log.e(TAG, "There was a protocol based error", e);
-        } catch (UnknownHostException e) {
-            Log.e(TAG, "Connectivity errror", e);
-        } catch (IOException e) {
-            Log.e(TAG, "There was an IO Stream related error", e);
-        }
         return null;
     }
 

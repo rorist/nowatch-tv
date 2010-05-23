@@ -13,7 +13,8 @@
             android:id="@+id/logo"
             android:layout_width="64dip"
             android:layout_height="64dip"
-            android:layout_marginRight="5dip"/>
+            android:layout_marginRight="5dip"
+            android:src="@drawable/icon_scream_48"/>
         <TextView
             android:id="@+id/title"
             android:layout_width="0dip"
@@ -29,15 +30,15 @@
         android:layout_height="wrap_content"
         android:padding="5dip">
         <Button
-            android:id="@+id/btn_play"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/file_view" />
-        <Button
             android:id="@+id/btn_download"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/file_download" />
+            android:text="@string/btn_download" />
+        <Button
+            android:id="@+id/btn_play"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/btn_view" />
     </LinearLayout>
     <ScrollView
         android:layout_width="fill_parent"

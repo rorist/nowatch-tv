@@ -209,12 +209,9 @@ public class DownloadService extends Service {
                 current_bytes += count;
                 if (file_size > 0
                         && progress != (progress = (int) (current_bytes * 100 / file_size))) {
-                    publishProgress(progress, getSpeed());
+                    publishProgress(progress, (int) (current_bytes / Math
+                            .abs((System.nanoTime() - start) / 1000000)));
                 }
-            }
-
-            private int getSpeed() {
-                return (int) (current_bytes / Math.abs((System.nanoTime() - start) / 1000000));
             }
         }
     }

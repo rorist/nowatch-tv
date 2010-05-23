@@ -84,6 +84,9 @@ public class UpdateDb {
             if (c != null) {
                 c.close();
             }
+            if (db != null) {
+                db.close();
+            }
         }
     }
 
@@ -114,6 +117,9 @@ public class UpdateDb {
                     e.printStackTrace();
                 } finally {
                     new File(file).delete();
+                    if (db != null) {
+                        db.close();
+                    }
                 }
             }
             if (db != null) {
@@ -187,7 +193,7 @@ public class UpdateDb {
                         item_date = formatter.parse(itemMap.getAsString("pubDate"));
                         if (item_date.after(lastPub)) {
                             cal.setTime(item_date);
-                            itemMap.put("pubDate", cal.getTimeInMillis() / 1000);
+                            itemMap.put("pubDate", cal.getTimeInMillis());
                             itemMap.put("feed_id", feed_id);
                             db.insert("items", null, itemMap);
                         }
