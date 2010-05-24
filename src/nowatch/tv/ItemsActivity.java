@@ -26,7 +26,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
@@ -47,18 +46,8 @@ public class ItemsActivity extends Activity {
     private UpdateTask updateTask = null;
     private Context ctxt;
     private List<Feed> feeds;
-    private List<Items> items = null;
+    private List<Item> items = null;
     private ListView list;
-
-    class Items {
-        public int id;
-        public Bitmap image;
-        public String title;
-        public String status;
-        public String date;
-        public Bitmap logo;
-        public OnClickListener action;
-    }
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -87,7 +76,7 @@ public class ItemsActivity extends Activity {
         });
 
         // Set list adapter
-        items = new ArrayList<Items>();
+        items = new ArrayList<Item>();
         adapter = new ItemsAdapter();
         list = (ListView) findViewById(R.id.list_items);
         list.setAdapter(adapter);
@@ -175,21 +164,21 @@ public class ItemsActivity extends Activity {
             if (cnt > 0) {
                 c.moveToFirst();
                 do {
-                    final Items item = new Items();
+                    final Item item = new Item();
                     item.id = c.getInt(0);
                     item.title = c.getString(1);
                     // Status
                     switch (c.getInt(2)) {
-                        case Feed.STATUS_NEW:
+                        case Item.STATUS_NEW:
                             item.status = getString(R.string.status_new);
                             break;
-                        case Feed.STATUS_DOWNLOADING:
+                        case Item.STATUS_DOWNLOADING:
                             item.status = getString(R.string.status_downloading);
                             break;
-                        case Feed.STATUS_UNREAD:
+                        case Item.STATUS_UNREAD:
                             item.status = getString(R.string.status_unread);
                             break;
-                        case Feed.STATUS_READ:
+                        case Item.STATUS_READ:
                             item.status = getString(R.string.status_read);
                             break;
                         default:
@@ -247,7 +236,7 @@ public class ItemsActivity extends Activity {
         }
     }
 
-    private class ItemsAdapter extends ArrayAdapter<Items> {
+    private class ItemsAdapter extends ArrayAdapter<Item> {
 
         private LayoutInflater inflater;
 
@@ -280,7 +269,7 @@ public class ItemsActivity extends Activity {
                 vh = (ViewHolder) convertView.getTag();
             }
             // Set information
-            final Items item = items.get(position);
+            final Item item = items.get(position);
             vh.title.setText(item.title);
             vh.status.setText(item.status);
             vh.date.setText(item.date);

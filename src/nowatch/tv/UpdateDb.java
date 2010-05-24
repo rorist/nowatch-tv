@@ -149,13 +149,13 @@ public class UpdateDb {
             if (name == "channel") {
                 // Update channel info, always
                 if (db != null) {
-                    db.update("feeds", channelMap, "_id=?", new String[] { feed_id });
+                    db.update("feeds", feedMap, "_id=?", new String[] { feed_id });
                 }
             } else if (!in_items && name == "image"
                     && uri != "http://www.itunes.com/dtds/podcast-1.0.dtd") {
                 // Get image bits
                 try {
-                    String file = new GetFile().getChannel(channelMap.getAsString("image"), null,
+                    String file = new GetFile().getChannel(feedMap.getAsString("image"), null,
                             null);
                     BitmapFactory.Options options = new BitmapFactory.Options();
                     options.inSampleSize = 2;
@@ -163,7 +163,7 @@ public class UpdateDb {
                     if (file_bitmap != null) {
                         ByteArrayOutputStream out = new ByteArrayOutputStream();
                         file_bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-                        channelMap.put("image", out.toByteArray());
+                        feedMap.put("image", out.toByteArray());
                         // Save memory from Bitmap allocation
                         file_bitmap.recycle();
                         new File(file).delete();
@@ -179,7 +179,7 @@ public class UpdateDb {
             } else if (!in_items && name == "pubDate") {
                 try {
                     // Check publication date of channel
-                    if (!formatter.parse(channelMap.getAsString("pubDate")).after(lastPub)) {
+                    if (!formatter.parse(feedMap.getAsString("pubDate")).after(lastPub)) {
                         // Stop the parser
                         db.close();
                         throw new SAXException("Nothing to update for feed_id=" + feed_id);

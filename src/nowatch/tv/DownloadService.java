@@ -156,6 +156,7 @@ public class DownloadService extends Service {
         @Override
         protected void onPostExecute(Void unused) {
             super.onPostExecute(unused);
+            InfoActivity.changeStatus(ctxt, item_id, Item.STATUS_DL_UNREAD);
             // FIXME: Use Activity.getString()
             finishNotification("Téléchargement terminé!");
             stopOrContinue();
@@ -164,6 +165,7 @@ public class DownloadService extends Service {
         @Override
         protected void onCancelled() {
             super.onCancelled();
+            InfoActivity.changeStatus(ctxt, item_id, Item.STATUS_UNREAD);
             // FIXME: Use Activity.getString()
             finishNotification("Téléchargement annulé!");
             stopOrContinue();

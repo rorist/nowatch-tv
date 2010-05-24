@@ -18,7 +18,7 @@
     
     <string name="loading">Chargement ...</string>
     <string name="dialog_update_all">Mise à jour en cours,\nMerci de patienter ...</string>
-    <string name="toast_dl_added">Téléchargement ajouté dans la file d'attente ...</string>
+    <string name="toast_dl_added">Téléchargement ajouté dans la file d\'attente ...</string>
     <string name="toast_sdcard">La carte SD n\'est pas accessible !</string>
     <string name="toast_notsupported">Format de fichier non supporté !</string>
     

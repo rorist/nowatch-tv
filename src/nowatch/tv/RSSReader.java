@@ -23,13 +23,29 @@ public class RSSReader extends DefaultHandler {
     private String current_tag;
     private StringBuffer itemBuf;
     protected boolean in_items = false;
-    protected ContentValues channelMap;
+    protected ContentValues feedMap;
     protected ContentValues itemMap;
 
     private void logi(String str) {
         if (LOG_INFO) {
             Log.i(TAG, str);
         }
+    }
+
+    private void initMaps() {
+        feedMap = new ContentValues();
+        feedMap.put("title", "");
+        feedMap.put("description", "");
+        feedMap.put("link", "");
+        feedMap.put("pubDate", "");
+        feedMap.put("image", "");
+
+        itemMap = new ContentValues();
+        itemMap.put("feed_id", 0);
+        itemMap.put("file_uri", "");
+        itemMap.put("file_type", "");
+        itemMap.put("file_size", "");
+        itemMap.put("status", Item.STATUS_NEW);
     }
 
     @Override
@@ -93,28 +109,13 @@ public class RSSReader extends DefaultHandler {
         }
         // Get channel info (First IN)
         else if (feeds_fields.contains(current_tag) && current_tag != null
-                && channelMap.get(current_tag) == "") {
-            channelMap.put(current_tag, new String(ch, start, length));
+                && feedMap.get(current_tag) == "") {
+            feedMap.put(current_tag, new String(ch, start, length));
         }
         // Get channel image url
         else if (in_image && current_tag == "url") {
-            channelMap.put("image", new String(ch, start, length));
+            feedMap.put("image", new String(ch, start, length));
         }
-    }
-
-    private void initMaps() {
-        channelMap = new ContentValues();
-        channelMap.put("title", "");
-        channelMap.put("description", "");
-        channelMap.put("link", "");
-        channelMap.put("pubDate", "");
-        channelMap.put("image", "");
-        itemMap = new ContentValues();
-        itemMap.put("feed_id", 0);
-        itemMap.put("file_uri", "");
-        itemMap.put("file_type", "");
-        itemMap.put("file_size", "");
-        itemMap.put("status", Feed.STATUS_NEW);
     }
 
     @Override
