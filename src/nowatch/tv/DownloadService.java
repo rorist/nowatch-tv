@@ -3,6 +3,9 @@ package nowatch.tv;
 import java.io.File;
 import java.io.IOException;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import android.app.Notification;
@@ -17,6 +20,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
+import android.os.RemoteException;
 import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
@@ -28,12 +32,13 @@ public class DownloadService extends Service {
     private final int SIMULTANEOUS_DOWNLOAD = 2;
     private Context ctxt;
     private ConcurrentLinkedQueue<Integer> downloadQueue = new ConcurrentLinkedQueue<Integer>();
+    private List<DownloadTask> downloadTasks;
     private int downloadCurrent = 0;
 
     @Override
     public void onCreate() {
-        Log.i(TAG, "onCreate()");
         ctxt = getApplicationContext();
+        downloadTasks = new ArrayList<DownloadTask>();
     }
 
     @Override
@@ -48,12 +53,16 @@ public class DownloadService extends Service {
 
     @Override
     public void onStart(Intent intent, int startId) {
-        Log.i(TAG, "onStart()");
         // FIXME: onStrart() is deprecated, but used for backward compatibility!
 
         // Add item to download queue
         Bundle extra = intent.getExtras();
-        int item_id = extra.getInt("item_id");
+        if (intent.hasExtra("item_id")) {
+            addItem(extra.getInt("item_id"));
+        }
+    }
+
+    private void addItem(int item_id) {
         if (!downloadQueue.contains(item_id)) {
             downloadQueue.add(item_id);
         }
@@ -62,19 +71,7 @@ public class DownloadService extends Service {
         } else {
             Toast.makeText(ctxt, R.string.toast_dl_added, Toast.LENGTH_SHORT);
         }
-    }
-
-    @Override
-    public IBinder onBind(Intent intent) {
-        Log.i(TAG, "onBind()");
-        // Going to be used with AIDL for DownloadManager
-        return null;
-    }
-
-    @Override
-    public boolean onUnbind(Intent intent) {
-        Log.i(TAG, "onUnbind()");
-        return true;
+        InfoActivity.changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
     }
 
     private void startDownloadTask() {
@@ -85,7 +82,9 @@ public class DownloadService extends Service {
             SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
             Cursor c = db.rawQuery(REQ + itemId, null);
             c.moveToFirst();
-            new DownloadTask(c.getString(0), itemId).execute(c.getString(1), c.getString(2));
+            DownloadTask task = new DownloadTask(c.getString(0), itemId);
+            task.execute(c.getString(1), c.getString(2));
+            downloadTasks.add(task);
             c.close();
             db.close();
         } else {
@@ -218,4 +217,68 @@ public class DownloadService extends Service {
         }
     }
 
+    /**
+     * Service control (IPC) using AIDL interface
+     */
+    private final DownloadInterface.Stub mBinder = new DownloadInterface.Stub() {
+        @Override
+        public boolean startDownload(int id) throws RemoteException {
+            addItem(id);
+            return false;
+        }
+
+        @Override
+        public boolean cancelDownload(int id) throws RemoteException {
+            // Search current dl
+            if (downloadQueue.contains(id)) {
+                downloadQueue.remove(id);
+                InfoActivity.changeStatus(ctxt, id, Item.STATUS_UNREAD);
+                return true;
+            }
+            // Search pending dl
+            for (DownloadTask task : downloadTasks) {
+                if (task.item_id == id) {
+                    task.cancel(true);
+                    InfoActivity.changeStatus(ctxt, id, Item.STATUS_UNREAD);
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @Override
+        public int[] getCurrentDownloads() throws RemoteException {
+            int[] current = new int[downloadCurrent];
+            for (int i = 0; i < downloadCurrent; i++) {
+                current[i] = downloadTasks.get(i).item_id;
+            }
+            return current;
+        }
+
+        @Override
+        public int[] getPendingDownload() throws RemoteException {
+            int[] pending = new int[downloadCurrent];
+            Iterator<Integer> iterator = downloadQueue.iterator();
+            int i = 0;
+            while (iterator.hasNext()) {
+                pending[i] = iterator.next();
+                i++;
+            }
+            return pending;
+        }
+
+        @Override
+        public void setStatus(int id) throws RemoteException {
+        }
+    };
+
+    @Override
+    public IBinder onBind(Intent intent) {
+        return mBinder;
+    }
+
+    @Override
+    public boolean onUnbind(Intent intent) {
+        return true;
+    }
 }

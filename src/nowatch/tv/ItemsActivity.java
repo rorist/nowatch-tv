@@ -181,6 +181,12 @@ public class ItemsActivity extends Activity {
                         case Item.STATUS_READ:
                             item.status = getString(R.string.status_read);
                             break;
+                        case Item.STATUS_DL_UNREAD:
+                            item.status = getString(R.string.status_unread);
+                            break;
+                        case Item.STATUS_DL_READ:
+                            item.status = getString(R.string.status_read);
+                            break;
                         default:
                             item.status = getString(R.string.status_new);
                     }
