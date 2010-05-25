@@ -109,8 +109,7 @@ public class DownloadService extends Service {
 
         @Override
         protected void onPreExecute() {
-            nf = new Notification(android.R.drawable.stat_sys_download,
-                    "Téléchargement démarré ...", System.currentTimeMillis());
+            nf = new Notification(android.R.drawable.stat_sys_download, getString(R.string.notif_dl_started), System.currentTimeMillis());
             rv = new RemoteViews(ctxt.getPackageName(), R.layout.notification_download);
             rv.setImageViewResource(R.id.download_icon, R.drawable.icon);
             rv.setTextViewText(R.id.download_title, download_title);
@@ -157,7 +156,7 @@ public class DownloadService extends Service {
             super.onPostExecute(unused);
             InfoActivity.changeStatus(ctxt, item_id, Item.STATUS_DL_UNREAD);
             // FIXME: Use Activity.getString()
-            finishNotification("Téléchargement terminé!");
+            finishNotification(getString(R.string.notif_dl_complete));
             stopOrContinue();
         }
 
@@ -166,7 +165,7 @@ public class DownloadService extends Service {
             super.onCancelled();
             InfoActivity.changeStatus(ctxt, item_id, Item.STATUS_UNREAD);
             // FIXME: Use Activity.getString()
-            finishNotification("Téléchargement annulé!");
+            finishNotification(getString(R.string.notif_dl_canceled));
             stopOrContinue();
         }
 
@@ -221,13 +220,11 @@ public class DownloadService extends Service {
      * Service control (IPC) using AIDL interface
      */
     private final DownloadInterface.Stub mBinder = new DownloadInterface.Stub() {
-        @Override
         public boolean startDownload(int id) throws RemoteException {
             addItem(id);
             return false;
         }
-
-        @Override
+        
         public boolean cancelDownload(int id) throws RemoteException {
             // Search current dl
             if (downloadQueue.contains(id)) {
@@ -245,8 +242,7 @@ public class DownloadService extends Service {
             }
             return false;
         }
-
-        @Override
+        
         public int[] getCurrentDownloads() throws RemoteException {
             int[] current = new int[downloadCurrent];
             for (int i = 0; i < downloadCurrent; i++) {
@@ -254,8 +250,7 @@ public class DownloadService extends Service {
             }
             return current;
         }
-
-        @Override
+        
         public int[] getPendingDownload() throws RemoteException {
             int[] pending = new int[downloadCurrent];
             Iterator<Integer> iterator = downloadQueue.iterator();
@@ -266,8 +261,7 @@ public class DownloadService extends Service {
             }
             return pending;
         }
-
-        @Override
+        
         public void setStatus(int id) throws RemoteException {
         }
     };

@@ -21,6 +21,9 @@
     <string name="toast_dl_added">Téléchargement ajouté dans la file d\'attente ...</string>
     <string name="toast_sdcard">La carte SD n\'est pas accessible !</string>
     <string name="toast_notsupported">Format de fichier non supporté !</string>
+    <string name="notif_dl_started">Téléchargement démarré ...</string>
+    <string name="notif_dl_complete">Téléchargement terminé!</string>
+    <string name="notif_dl_canceled">Téléchargement annulé!</string>
     
     <string name="btn_view">Voir en streaming</string>
     <string name="btn_download">Télécharger</string>

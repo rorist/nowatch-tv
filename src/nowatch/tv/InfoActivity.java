@@ -2,6 +2,10 @@ package nowatch.tv;
 
 import java.io.File;
 
+import android.os.RemoteException;
+import android.content.ComponentName;
+import android.os.IBinder;
+import android.content.ServiceConnection;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
@@ -32,9 +36,10 @@ public class InfoActivity extends Activity {
     private final String STYLE = "<style>*{color: black;}</style>";
     private final String PRE = "<meta http-equiv=\"Content-Type\" content=\"application/xhtml+text; charset=UTF-8\"/>"
             + STYLE;
+    private final Context ctxt = this;
     private final int IMG_DIP = 64;
+    private boolean mIsBound = false;
     private DisplayMetrics displayMetrics;
-    final Context ctxt = this;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -98,16 +103,34 @@ public class InfoActivity extends Activity {
                         }
                     });
         } else {
-            final Intent i = new Intent(this, DownloadService.class);
-            i.putExtra("item_id", item_id);
             ((Button) findViewById(R.id.btn_download))
                     .setOnClickListener(new View.OnClickListener() {
                         public void onClick(View v) {
                             changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
-                            startService(i);
+                            if (mIsBound && mService != null){
+                                try {
+                                    mService.startDownload(item_id);
+                                } catch (RemoteException e) {
+                                    Log.e(TAG, e.getMessage());
+                                }
+                            }
                         }
                     });
         }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        bindService(new Intent(DownloadInterface.class.getName()), mConnection, Context.BIND_AUTO_CREATE);
+        mIsBound = true;
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        unbindService(mConnection);
+        mIsBound = false;
     }
 
     public static void changeStatus(Context ctxt, int id, int status) {
@@ -143,4 +166,17 @@ public class InfoActivity extends Activity {
         btn.setEnabled(clickable);
         btn.setText(txt);
     }
+
+    /**
+     * Service Binding
+     */
+    private DownloadInterface mService = null;
+    private ServiceConnection mConnection = new ServiceConnection(){
+        public void onServiceConnected(ComponentName className, IBinder service) {
+            mService = DownloadInterface.Stub.asInterface(service);
+        }
+        public void onServiceDisconnected(ComponentName className) {
+            mService = null;
+        }
+    };
 }
