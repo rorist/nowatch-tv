@@ -28,7 +28,7 @@ import android.widget.Toast;
 public class DownloadService extends Service {
 
     private final String TAG = "DownloadService";
-    private final String REQ = "select title,file_uri,file_size from items where _id=";
+    private final String REQ = "select title,file_uri,file_size from items where _id=? limit 1";
     private final int SIMULTANEOUS_DOWNLOAD = 2;
     private Context ctxt;
     private ConcurrentLinkedQueue<Integer> downloadQueue = new ConcurrentLinkedQueue<Integer>();
@@ -37,6 +37,7 @@ public class DownloadService extends Service {
 
     @Override
     public void onCreate() {
+        Log.i(TAG, "onCreate()");
         ctxt = getApplicationContext();
         downloadTasks = new ArrayList<DownloadTask>();
     }
@@ -53,12 +54,24 @@ public class DownloadService extends Service {
 
     @Override
     public void onStart(Intent intent, int startId) {
+        Log.i(TAG, "onStart()");
         // FIXME: onStrart() is deprecated, but used for backward compatibility!
+        handleCommand(intent);
+    }
 
+    @Override
+    public int onStartCommand(Intent intent, int flags, int startId) {
+        Log.i(TAG, "onStartCommand()");
+        handleCommand(intent);
+        return START_NOT_STICKY;
+    }
+
+    private void handleCommand(Intent intent){
         // Add item to download queue
-        Bundle extra = intent.getExtras();
-        if (intent.hasExtra("item_id")) {
-            addItem(extra.getInt("item_id"));
+        if(intent != null){
+            if (intent.hasExtra("item_id")) {
+                addItem(intent.getExtras().getInt("item_id"));
+            }
         }
     }
 
@@ -66,6 +79,7 @@ public class DownloadService extends Service {
         if (!downloadQueue.contains(item_id)) {
             downloadQueue.add(item_id);
         }
+        Log.v(TAG, "downloadCurrent="+downloadCurrent);
         if (downloadCurrent < SIMULTANEOUS_DOWNLOAD) {
             startDownloadTask();
         } else {
@@ -80,7 +94,7 @@ public class DownloadService extends Service {
             // TODO: Check if there is enough space on device
             // Get item information and start DownloadTask
             SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
-            Cursor c = db.rawQuery(REQ + itemId, null);
+            Cursor c = db.rawQuery(REQ, new Integer[]{ itemId });
             c.moveToFirst();
             DownloadTask task = new DownloadTask(c.getString(0), itemId);
             task.execute(c.getString(1), c.getString(2));
@@ -220,9 +234,8 @@ public class DownloadService extends Service {
      * Service control (IPC) using AIDL interface
      */
     private final DownloadInterface.Stub mBinder = new DownloadInterface.Stub() {
-        public boolean startDownload(int id) throws RemoteException {
+        public void startDownload(int id) throws RemoteException {
             addItem(id);
-            return false;
         }
         
         public boolean cancelDownload(int id) throws RemoteException {
@@ -252,7 +265,7 @@ public class DownloadService extends Service {
         }
         
         public int[] getPendingDownload() throws RemoteException {
-            int[] pending = new int[downloadCurrent];
+            int[] pending = new int[downloadQueue.size()];
             Iterator<Integer> iterator = downloadQueue.iterator();
             int i = 0;
             while (iterator.hasNext()) {
@@ -261,18 +274,17 @@ public class DownloadService extends Service {
             }
             return pending;
         }
-        
-        public void setStatus(int id) throws RemoteException {
-        }
     };
 
     @Override
     public IBinder onBind(Intent intent) {
+        Log.v(TAG, "onBind()");
         return mBinder;
     }
 
     @Override
     public boolean onUnbind(Intent intent) {
+        Log.v(TAG, "onUnbind()");
         return true;
     }
 }

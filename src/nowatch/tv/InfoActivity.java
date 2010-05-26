@@ -107,7 +107,7 @@ public class InfoActivity extends Activity {
                     .setOnClickListener(new View.OnClickListener() {
                         public void onClick(View v) {
                             changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
-                            if (mIsBound && mService != null){
+                            if (mIsBound && mService != null) {
                                 try {
                                     mService.startDownload(item_id);
                                 } catch (RemoteException e) {
@@ -122,7 +122,8 @@ public class InfoActivity extends Activity {
     @Override
     public void onStart() {
         super.onStart();
-        bindService(new Intent(DownloadInterface.class.getName()), mConnection, Context.BIND_AUTO_CREATE);
+        bindService(new Intent(InfoActivity.this, DownloadService.class), mConnection,
+                Context.BIND_AUTO_CREATE);
         mIsBound = true;
     }
 
@@ -171,10 +172,11 @@ public class InfoActivity extends Activity {
      * Service Binding
      */
     private DownloadInterface mService = null;
-    private ServiceConnection mConnection = new ServiceConnection(){
+    private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
             mService = DownloadInterface.Stub.asInterface(service);
         }
+
         public void onServiceDisconnected(ComponentName className) {
             mService = null;
         }

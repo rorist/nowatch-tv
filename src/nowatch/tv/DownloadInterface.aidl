@@ -2,10 +2,9 @@ package nowatch.tv;
 
 interface DownloadInterface {
 
-    boolean startDownload(int id);
-    boolean cancelDownload(int id);
+    void startDownload(int id);
+    void cancelDownload(int id);
     int[] getCurrentDownloads();
     int[] getPendingDownload(); 
-    void setStatus(int id);
     
 }
