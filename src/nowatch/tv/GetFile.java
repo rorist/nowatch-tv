@@ -10,6 +10,7 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+import android.os.Environment;
 
 import javax.net.ssl.SSLException;
 
@@ -28,19 +29,35 @@ public class GetFile {
     private final String USERAGENT = "Android/Nowatch.TV/1.2";
     private DefaultHttpClient httpclient;
     private int buffer_size = 8 * 1024; // in Bytes
+    private boolean deleteOnFinish = false;
     protected String etag;
 
-    public String getChannel(String src, String dst, String etag) throws IOException {
+    public void getChannel(String src, String dst, String etag) throws IOException {
+        getChannel(src, dst, etag, deleteOnFinish);
+    }
+
+    public void getChannel(String src, String dst, String etag, boolean _deleteOnFinish)
+            throws IOException {
+        deleteOnFinish = _deleteOnFinish;
+
+        if (!Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
+            return;
+        }
+
+        // Get destination file
         File dstFile;
         if (dst != null) {
             dstFile = new File(dst);
         } else {
-            dstFile = File.createTempFile(".nowatchtv", "");
+            dstFile = new File(Environment.getExternalStorageDirectory().getCanonicalPath()
+                    + "/Android/data/nowatch.tv/cache");
+            dstFile.mkdirs();
+            dstFile = File.createTempFile("nowatchtv", "", dstFile);
         }
-        httpclient = new DefaultHttpClient();
-        httpclient.getParams().setParameter("http.useragent", USERAGENT);
 
         // Open URL
+        httpclient = new DefaultHttpClient();
+        httpclient.getParams().setParameter("http.useragent", USERAGENT);
         InputStream in = null;
         HttpGet httpget = new HttpGet(src);
         HttpResponse response;
@@ -61,7 +78,7 @@ public class GetFile {
 
             // Exit if content not modified
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
-                return null;
+                return;
             }
             // Save etag
             else if (response.getLastHeader("ETag") != null) {
@@ -101,10 +118,10 @@ public class GetFile {
                 out.close();
                 finish(dstFile.getAbsolutePath());
             }
-            return dstFile.getAbsolutePath();
+            return;
         }
         finish(null);
-        return null;
+        return;
     }
 
     private void fastChannelCopy(final ReadableByteChannel src, final WritableByteChannel dest)
@@ -130,6 +147,8 @@ public class GetFile {
     }
 
     protected void finish(String file) {
-        // Nothing to do here
+        if (deleteOnFinish) {
+            new File(file).delete();
+        }
     }
 }

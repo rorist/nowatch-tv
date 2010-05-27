@@ -27,14 +27,14 @@ public class DownloadManager extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        bindService(new Intent(DownloadManager.this, DownloadService.class), mConnection,
+                Context.BIND_AUTO_CREATE);
     }
 
     @Override
     public void onStart() {
         super.onStart();
         Context ctxt = getApplicationContext();
-        bindService(new Intent(DownloadManager.this, DownloadService.class), mConnection,
-                Context.BIND_AUTO_CREATE);
         if (mService != null) {
             try {
                 downloadCurrent = getDownloads(mService._getCurrentDownloads());
@@ -50,8 +50,8 @@ public class DownloadManager extends Activity {
     }
 
     @Override
-    public void onPause() {
-        super.onPause();
+    public void onStop() {
+        super.onStop();
         unbindService(mConnection);
     }
 

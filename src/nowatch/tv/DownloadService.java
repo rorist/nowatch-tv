@@ -161,9 +161,16 @@ public class DownloadService extends Service {
             }
             // Download file
             try {
-                new getPodcastFile(fs).getChannel(str[0], Environment.getExternalStorageDirectory()
-                        .toString()
-                        + "/" + new File(str[0]).getName(), null);
+                String state = Environment.getExternalStorageState();
+                if (Environment.MEDIA_MOUNTED.equals(state)) {
+                    //TODO: Use getExternalStoragePublicDirectory() (API Level 8)
+                    File dst = new File(Environment.getExternalStorageDirectory().getCanonicalPath() + "/Podcasts/NowatchTV");
+                    dst.mkdirs();
+                    new getPodcastFile(fs).getChannel(str[0], dst.getCanonicalPath() + "/" + new File(str[0]).getName());
+                } else {
+                    //FIXME: Propagate error or exception
+                    cancel(false);
+                }
             } catch (MalformedURLException e) {
                 Log.e(TAG, e.getMessage());
             } catch (IOException e) {
@@ -227,6 +234,10 @@ public class DownloadService extends Service {
                     this.file_size = file_size;
                 }
                 start = System.nanoTime();
+            }
+           
+            public void getChannel(String src, String dst) throws IOException {
+                getChannel(src, dst, null, false);
             }
 
             @Override

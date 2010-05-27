@@ -25,7 +25,8 @@
     <string name="notif_dl_complete">Téléchargement terminé!</string>
     <string name="notif_dl_canceled">Téléchargement annulé!</string>
     
-    <string name="btn_view">Voir en streaming</string>
+    <string name="btn_view">Voir</string>
+    <string name="btn_stream">Voir en streaming</string>
     <string name="btn_download">Télécharger</string>
     
 <!--    <string name=""></string>-->

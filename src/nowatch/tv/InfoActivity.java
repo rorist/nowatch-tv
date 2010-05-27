@@ -98,8 +98,8 @@ public class InfoActivity extends Activity {
             ((Button) findViewById(R.id.btn_download))
                     .setOnClickListener(new View.OnClickListener() {
                         public void onClick(View v) {
-                            //FIXME: This is for testing
-                            viewVideo("/sdcard/" + new File(file_uri).getName(), file_type, item_id); 
+                            // FIXME: This is for testing
+                            viewVideo("/sdcard/" + new File(file_uri).getName(), file_type, item_id);
                         }
                     });
         } else {
@@ -123,7 +123,7 @@ public class InfoActivity extends Activity {
     @Override
     public void onStart() {
         super.onStart();
-        bindService(new Intent(InfoActivity.this, DownloadService.class), mConnection, 0); //Context.BIND_AUTO_CREATE
+        bindService(new Intent(InfoActivity.this, DownloadService.class), mConnection, 0); // Context.BIND_AUTO_CREATE
     }
 
     @Override

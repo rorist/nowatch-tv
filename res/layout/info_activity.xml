@@ -39,7 +39,7 @@
             android:id="@+id/btn_play"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/btn_view" />
+            android:text="@string/btn_stream" />
     </LinearLayout>
     <ScrollView
         android:layout_width="fill_parent"

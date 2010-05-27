@@ -1,7 +1,6 @@
 package nowatch.tv;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -68,7 +67,7 @@ public class UpdateDb {
             }
 
             // Try to download feed
-            new GetFeed().getChannel(ctxt.getString(feed_xml), null, etag);
+            new GetFeed().getChannel(ctxt.getString(feed_xml), etag);
 
         } catch (ParseException e) {
             Log.e(TAG, e.getMessage());
@@ -91,9 +90,13 @@ public class UpdateDb {
     }
 
     private static class GetFeed extends GetFile {
+
+        public void getChannel(String src, String etag) throws IOException {
+            getChannel(src, null, etag, true);
+        }
+
         @Override
         protected void finish(String file) {
-            super.finish(file);
             if (file != null) {
                 // Save etag
                 if (etag != null) {
@@ -116,7 +119,6 @@ public class UpdateDb {
                 } catch (ParserConfigurationException e) {
                     e.printStackTrace();
                 } finally {
-                    new File(file).delete();
                     if (db != null) {
                         db.close();
                     }
@@ -125,6 +127,7 @@ public class UpdateDb {
             if (db != null) {
                 db.close();
             }
+            super.finish(file);
         }
     }
 
@@ -155,26 +158,9 @@ public class UpdateDb {
                     && uri != "http://www.itunes.com/dtds/podcast-1.0.dtd") {
                 // Get image bits
                 try {
-                    String file = new GetFile().getChannel(feedMap.getAsString("image"), null,
-                            null);
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inSampleSize = 2;
-                    Bitmap file_bitmap = BitmapFactory.decodeFile(file, options);
-                    if (file_bitmap != null) {
-                        ByteArrayOutputStream out = new ByteArrayOutputStream();
-                        file_bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-                        feedMap.put("image", out.toByteArray());
-                        // Save memory from Bitmap allocation
-                        file_bitmap.recycle();
-                        new File(file).delete();
-                    }
-                } catch (IllegalStateException e) {
-                    Log.e(TAG, e.getMessage());
-                } catch (IllegalArgumentException e) {
-                    Log.e(TAG, e.getMessage());
+                    new GetImage().getChannel(feedMap.getAsString("image"));
                 } catch (IOException e) {
                     Log.e(TAG, e.getMessage());
-                    e.printStackTrace();
                 }
             } else if (!in_items && name == "pubDate") {
                 try {
@@ -201,6 +187,35 @@ public class UpdateDb {
                         Log.e(TAG, e.getMessage());
                     }
                 }
+            }
+        }
+
+        // TODO: Being static
+        class GetImage extends GetFile {
+
+            public void getChannel(String src) throws IOException {
+                getChannel(src, null, null, true);
+            }
+
+            @Override
+            protected void finish(String file) {
+                try {
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inSampleSize = 2;
+                    Bitmap file_bitmap = BitmapFactory.decodeFile(file, options);
+                    if (file_bitmap != null) {
+                        ByteArrayOutputStream out = new ByteArrayOutputStream();
+                        file_bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+                        feedMap.put("image", out.toByteArray());
+                        // Save memory from Bitmap allocation
+                        file_bitmap.recycle();
+                    }
+                } catch (IllegalStateException e) {
+                    Log.e(TAG, e.getMessage());
+                } catch (IllegalArgumentException e) {
+                    Log.e(TAG, e.getMessage());
+                }
+                super.finish(file);
             }
         }
     }
