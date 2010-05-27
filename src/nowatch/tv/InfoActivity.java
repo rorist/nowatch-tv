@@ -38,7 +38,6 @@ public class InfoActivity extends Activity {
             + STYLE;
     private final Context ctxt = this;
     private final int IMG_DIP = 64;
-    private boolean mIsBound = false;
     private DisplayMetrics displayMetrics;
 
     @Override
@@ -99,7 +98,8 @@ public class InfoActivity extends Activity {
             ((Button) findViewById(R.id.btn_download))
                     .setOnClickListener(new View.OnClickListener() {
                         public void onClick(View v) {
-                            viewVideo("/sdcard/" + new File(file_uri).getName(), file_type, item_id);
+                            //FIXME: This is for testing
+                            viewVideo("/sdcard/" + new File(file_uri).getName(), file_type, item_id); 
                         }
                     });
         } else {
@@ -107,9 +107,9 @@ public class InfoActivity extends Activity {
                     .setOnClickListener(new View.OnClickListener() {
                         public void onClick(View v) {
                             changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
-                            if (mIsBound && mService != null) {
+                            if (mService != null) {
                                 try {
-                                    mService.startDownload(item_id);
+                                    mService._startDownload(item_id);
                                 } catch (RemoteException e) {
                                     Log.e(TAG, e.getMessage());
                                 }
@@ -117,21 +117,31 @@ public class InfoActivity extends Activity {
                         }
                     });
         }
+        startService(new Intent(InfoActivity.this, DownloadService.class));
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        bindService(new Intent(InfoActivity.this, DownloadService.class), mConnection,
-                Context.BIND_AUTO_CREATE);
-        mIsBound = true;
+        bindService(new Intent(InfoActivity.this, DownloadService.class), mConnection, 0); //Context.BIND_AUTO_CREATE
     }
 
     @Override
     public void onPause() {
         super.onPause();
+    }
+
+    @Override
+    protected void onStop() {
+        super.onDestroy();
+        if (mService != null) {
+            try {
+                mService._stopOrContinue();
+            } catch (RemoteException e) {
+                Log.e(TAG, e.getMessage());
+            }
+        }
         unbindService(mConnection);
-        mIsBound = false;
     }
 
     public static void changeStatus(Context ctxt, int id, int status) {

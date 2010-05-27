@@ -25,9 +25,9 @@ import android.util.Log;
 public class GetFile {
 
     private final String TAG = "GetFile";
-    private final String USERAGENT = "Android/Nowatch.TV/1.0";
+    private final String USERAGENT = "Android/Nowatch.TV/1.2";
     private DefaultHttpClient httpclient;
-    protected int buffer_size = 8 * 1024; // in Bytes
+    private int buffer_size = 8 * 1024; // in Bytes
     protected String etag;
 
     public String getChannel(String src, String dst, String etag) throws IOException {

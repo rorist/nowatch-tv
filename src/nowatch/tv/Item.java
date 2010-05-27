@@ -20,4 +20,15 @@ public class Item {
     public Bitmap logo;
     public OnClickListener action;
 
+    public Item() {
+    }
+
+    public Item(int _id) {
+        id = _id;
+    }
+
+    public String toString() {
+        return title;
+    }
+
 }
