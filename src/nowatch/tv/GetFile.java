@@ -104,7 +104,21 @@ public class GetFile {
             final ReadableByteChannel inputChannel = Channels.newChannel(in);
             final WritableByteChannel outputChannel = Channels.newChannel(out);
             try {
-                fastChannelCopy(inputChannel, outputChannel);
+                // Fast Channel Copy
+                if (inputChannel != null && outputChannel != null) {
+                    final ByteBuffer buffer = ByteBuffer.allocateDirect(buffer_size);
+                    int count;
+                    while ((count = inputChannel.read(buffer)) != -1) {
+                        buffer.flip();
+                        outputChannel.write(buffer);
+                        buffer.compact();
+                        update(count);
+                    }
+                    buffer.flip();
+                    while (buffer.hasRemaining()) {
+                        outputChannel.write(buffer);
+                    }
+                }
             } catch (NullPointerException e) {
                 Log.e(TAG, e.getMessage());
                 e.printStackTrace();
@@ -121,25 +135,6 @@ public class GetFile {
             return;
         }
         finish(null);
-        return;
-    }
-
-    private void fastChannelCopy(final ReadableByteChannel src, final WritableByteChannel dest)
-            throws IOException, NullPointerException {
-        if (src != null && dest != null) {
-            final ByteBuffer buffer = ByteBuffer.allocateDirect(buffer_size);
-            int count;
-            while ((count = src.read(buffer)) != -1) {
-                buffer.flip();
-                dest.write(buffer);
-                buffer.compact();
-                update(count);
-            }
-            buffer.flip();
-            while (buffer.hasRemaining()) {
-                dest.write(buffer);
-            }
-        }
     }
 
     protected void update(int count) {

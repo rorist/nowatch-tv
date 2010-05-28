@@ -78,15 +78,15 @@ public class DownloadService extends Service {
     private void addItem(int item_id) {
         if (!downloadQueue.contains(new Integer(item_id))) {
             downloadQueue.add(new Integer(item_id));
-            Log.i(TAG, "Item added to queue="+item_id);
+            Log.i(TAG, "Item added to queue=" + item_id);
         }
         startDownloadTask();
         InfoActivity.changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
     }
 
     private void startDownloadTask() {
-        Log.v(TAG, "StopOrContinue: " + downloadCurrent + " < "+SIMULTANEOUS_DOWNLOAD);
-        if(downloadCurrent < SIMULTANEOUS_DOWNLOAD){
+        Log.v(TAG, "StopOrContinue: " + downloadCurrent + " < " + SIMULTANEOUS_DOWNLOAD);
+        if (downloadCurrent < SIMULTANEOUS_DOWNLOAD) {
             Integer itemId = downloadQueue.poll();
             if (itemId != null) {
                 // TODO: Check if there is enough space on device
@@ -127,9 +127,11 @@ public class DownloadService extends Service {
         public DownloadTask(DownloadService activity, String title, int itemId) {
             super();
             mService = new WeakReference<DownloadService>(activity);
+
             final DownloadService service = mService.get();
             mNotificationManager = (NotificationManager) service
                     .getSystemService(Context.NOTIFICATION_SERVICE);
+
             download_title = title;
             item_id = itemId;
         }
@@ -137,6 +139,7 @@ public class DownloadService extends Service {
         @Override
         protected void onPreExecute() {
             final DownloadService service = mService.get();
+
             nf = new Notification(android.R.drawable.stat_sys_download, service
                     .getString(R.string.notif_dl_started), System.currentTimeMillis());
             rv = new RemoteViews(service.getPackageName(), R.layout.notification_download);
@@ -149,6 +152,7 @@ public class DownloadService extends Service {
             nf.flags |= Notification.FLAG_ONGOING_EVENT;
             nf.flags |= Notification.FLAG_NO_CLEAR;
             mNotificationManager.notify(item_id, nf);
+
             service.downloadCurrent++;
         }
 
@@ -163,12 +167,15 @@ public class DownloadService extends Service {
             try {
                 String state = Environment.getExternalStorageState();
                 if (Environment.MEDIA_MOUNTED.equals(state)) {
-                    //TODO: Use getExternalStoragePublicDirectory() (API Level 8)
-                    File dst = new File(Environment.getExternalStorageDirectory().getCanonicalPath() + "/Podcasts/NowatchTV");
+                    // TODO: Use getExternalStoragePublicDirectory() (API L8)
+                    File dst = new File(Environment.getExternalStorageDirectory()
+                            .getCanonicalPath()
+                            + "/Podcasts/Nowatch.TV");
                     dst.mkdirs();
-                    new getPodcastFile(fs).getChannel(str[0], dst.getCanonicalPath() + "/" + new File(str[0]).getName());
+                    new getPodcastFile(fs).getChannel(str[0], dst.getCanonicalPath() + "/"
+                            + new File(str[0]).getName());
                 } else {
-                    //FIXME: Propagate error or exception
+                    // FIXME: Propagate error or exception
                     cancel(false);
                 }
             } catch (MalformedURLException e) {
@@ -182,9 +189,11 @@ public class DownloadService extends Service {
 
         @Override
         protected void onProgressUpdate(Integer... values) {
+
             rv.setProgressBar(R.id.download_progress, 100, values[0], false);
             rv.setTextViewText(R.id.download_status, values[0] + "% " + values[1] + "kB/s");
             mNotificationManager.notify(item_id, nf);
+
         }
 
         @Override
@@ -235,7 +244,7 @@ public class DownloadService extends Service {
                 }
                 start = System.nanoTime();
             }
-           
+
             public void getChannel(String src, String dst) throws IOException {
                 getChannel(src, dst, null, false);
             }
@@ -278,7 +287,7 @@ public class DownloadService extends Service {
             }
             return;
         }
-        
+
         public void _stopOrContinue() throws RemoteException {
             stopOrContinue();
         }

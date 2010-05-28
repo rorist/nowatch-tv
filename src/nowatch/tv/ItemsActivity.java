@@ -26,14 +26,16 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.AdapterView.OnItemClickListener;
 
-public class ItemsActivity extends Activity {
+public class ItemsActivity extends Activity implements OnItemClickListener {
 
     // private final String TAG = "ItemsActivity";
     private final String QUERY_ITEMS = "SELECT items._id, items.title, items.status, feeds.image, items.pubDate "
@@ -41,6 +43,7 @@ public class ItemsActivity extends Activity {
             + "ORDER BY items.pubDate DESC LIMIT ";
     private static final int MENU_UPDATE_ALL = 1;
     private static final int MENU_MANAGE = 2;
+    private static final int ITEMS_NB = 16;
     private int image_size;
     private ItemsAdapter adapter;
     private UpdateTask updateTask = null;
@@ -81,9 +84,10 @@ public class ItemsActivity extends Activity {
         list = (ListView) findViewById(R.id.list_items);
         list.setAdapter(adapter);
         list.setItemsCanFocus(false);
+        list.setOnItemClickListener(this);
         ((TextView) findViewById(R.id.loading)).setVisibility(View.INVISIBLE);
 
-        if (addToList(0, 12) == 0) {
+        if (addToList(0, ITEMS_NB) == 0) {
             updateTask = new UpdateTask(ItemsActivity.this);
             updateTask.execute();
         }
@@ -111,6 +115,13 @@ public class ItemsActivity extends Activity {
                 return true;
         }
         return false;
+    }
+
+    @Override
+    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+        Intent i = new Intent(ctxt, InfoActivity.class);
+        i.putExtra("item_id", items.get(position).id);
+        startActivity(i);
     }
 
     class UpdateTask extends AsyncTask<Void, Void, Void> {
@@ -199,17 +210,31 @@ public class ItemsActivity extends Activity {
                         item.logo = BitmapFactory.decodeResource(getResources(), R.drawable.icon);
                     }
                     // Date
-                    SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy");
-                    formatter.setTimeZone(TimeZone.getDefault());
-                    item.date = formatter.format(new Date(c.getLong(4)));
+                    long date = c.getLong(4);
+                    long diff = System.currentTimeMillis() / 1000 - date / 1000;
+                    if (diff < 3600) { // 1h
+                        item.date = getString(R.string.date_hour);
+                    } else if (diff < 86400) { // 24h
+                        item.date = String.format(getString(R.string.date_hours), (diff / 60 / 60));
+                    } else if (diff < 2678400) { // 31 days
+                        item.date = String.format(getString(R.string.date_days),
+                                (diff / 60 / 60 / 24));
+                    } else if (diff < 7776000) { // 3 monthes
+                        item.date = String.format(getString(R.string.date_monthes),
+                                (diff / 60 / 60 / 24 / 30));
+                    } else {
+                        SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy");
+                        formatter.setTimeZone(TimeZone.getDefault());
+                        item.date = formatter.format(new Date(date));
+                    }
                     // Actions
-                    item.action = new View.OnClickListener() {
-                        public void onClick(View v) {
-                            Intent i = new Intent(ctxt, InfoActivity.class);
-                            i.putExtra("item_id", item.id);
-                            startActivity(i);
-                        }
-                    };
+                    // item.action = new View.OnClickListener() {
+                    // public void onClick(View v) {
+                    // Intent i = new Intent(ctxt, InfoActivity.class);
+                    // i.putExtra("item_id", item.id);
+                    // startActivity(i);
+                    // }
+                    // };
 
                     // Add the item
                     items.add(item);
@@ -230,7 +255,7 @@ public class ItemsActivity extends Activity {
         }
         items.clear();
         adapter.clear();
-        addToList(0, 12);
+        addToList(0, ITEMS_NB);
         updateList();
         list.setSelection(0);
     }
@@ -251,7 +276,7 @@ public class ItemsActivity extends Activity {
             TextView status;
             TextView date;
             ImageView logo;
-            ImageButton action;
+            // ImageButton action;
         }
 
         public ItemsAdapter() {
@@ -269,7 +294,8 @@ public class ItemsActivity extends Activity {
                 vh.status = (TextView) convertView.findViewById(R.id.status);
                 vh.date = (TextView) convertView.findViewById(R.id.date);
                 vh.logo = (ImageView) convertView.findViewById(R.id.logo);
-                vh.action = (ImageButton) convertView.findViewById(R.id.btn_actions);
+                // vh.action = (ImageButton)
+                // convertView.findViewById(R.id.btn_actions);
                 convertView.setTag(vh);
             } else {
                 vh = (ViewHolder) convertView.getTag();
@@ -280,7 +306,7 @@ public class ItemsActivity extends Activity {
             vh.status.setText(item.status);
             vh.date.setText(item.date);
             vh.logo.setImageBitmap(item.logo);
-            vh.action.setOnClickListener(item.action);
+            // vh.action.setOnClickListener(item.action);
             // Set endless loader
             if (position == items.size() - 3) {
                 new EndlessTask().execute(position + 1);
@@ -298,7 +324,7 @@ public class ItemsActivity extends Activity {
 
         @Override
         protected Void doInBackground(Integer... params) {
-            addToList(params[0], 12);
+            addToList(params[0], ITEMS_NB);
             return null;
         }
 

@@ -24,6 +24,10 @@
     <string name="notif_dl_started">Téléchargement démarré ...</string>
     <string name="notif_dl_complete">Téléchargement terminé!</string>
     <string name="notif_dl_canceled">Téléchargement annulé!</string>
+    <string name="date_hour">Moins d\'une heure</string>
+    <string name="date_hours">Il y a %s heures</string>
+    <string name="date_days">Il y a %s jours</string>
+    <string name="date_monthes">Il y a %s mois</string>
     
     <string name="btn_view">Voir</string>
     <string name="btn_stream">Voir en streaming</string>
