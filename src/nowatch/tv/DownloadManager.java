@@ -15,6 +15,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.ImageButton;
+import android.widget.ListView;
 
 public class DownloadManager extends Activity {
 
@@ -27,20 +29,33 @@ public class DownloadManager extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        bindService(new Intent(DownloadManager.this, DownloadService.class), mConnection,
-                Context.BIND_AUTO_CREATE);
+        startService(new Intent(DownloadManager.this, DownloadService.class));
+        setContentView(R.layout.manage_activity);
+        // Title button
+        ((ImageButton) findViewById(R.id.btn_logo)).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                finish();
+            }
+        });
     }
 
     @Override
     public void onStart() {
         super.onStart();
+        bindService(new Intent(DownloadManager.this, DownloadService.class), mConnection, 0);
         Context ctxt = getApplicationContext();
         if (mService != null) {
             try {
+                // Get data
                 downloadCurrent = getDownloads(mService._getCurrentDownloads());
                 downloadPending = getDownloads(mService._getPendingDownloads());
                 adapterCurrent = new DlAdapter(ctxt, R.layout.list_current, downloadCurrent);
                 adapterPending = new DlAdapter(ctxt, R.layout.list_current, downloadPending);
+                // Set Lists
+                ListView listCurrent = (ListView) findViewById(R.id.list_current);
+                ListView listPending = (ListView) findViewById(R.id.list_pending);
+                listCurrent.setAdapter(adapterCurrent);
+                listPending.setAdapter(adapterPending);
             } catch (RemoteException e) {
                 Log.e(TAG, e.getMessage());
             }

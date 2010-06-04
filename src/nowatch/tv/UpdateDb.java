@@ -199,10 +199,19 @@ public class UpdateDb {
 
             @Override
             protected void finish(String file) {
+                Bitmap file_bitmap = null;
                 try {
-                    BitmapFactory.Options options = new BitmapFactory.Options();
-                    options.inSampleSize = 2;
-                    Bitmap file_bitmap = BitmapFactory.decodeFile(file, options);
+                    if (file_size != null && Integer.parseInt(file_size) > 150000) {
+                        BitmapFactory.Options options = new BitmapFactory.Options();
+                        options.inSampleSize = 3;
+                        options.inPurgeable = true;
+                        options.inInputShareable = true;
+                        options.inDensity = 160;
+                        options.inTargetDensity = 160;
+                        file_bitmap = BitmapFactory.decodeFile(file, options);
+                    } else {
+                        file_bitmap = BitmapFactory.decodeFile(file);
+                    }
                     if (file_bitmap != null) {
                         ByteArrayOutputStream out = new ByteArrayOutputStream();
                         file_bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);

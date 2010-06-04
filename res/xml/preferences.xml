@@ -1,0 +1,11 @@
+<PreferenceScreen
+    xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:title="Connectivité">
+        <CheckBoxPreference
+            android:key="mobile_traffic"
+            android:title="Authoriser téléchargement mobile"
+            android:summary="ATTENTION: Cette option débloque le téléchargement des vidéos lorsque vous n\'êtes pas connecté en Wifi mais en Mobile (2G/3G), soyez certain d\'avoir un abo illimité."
+            android:defaultValue="false" />
+    </PreferenceCategory>
+</PreferenceScreen>

@@ -12,7 +12,7 @@ import android.util.Log;
 public class DB extends SQLiteOpenHelper {
     private final static String TAG = "DB";
     private final static String DB_NAME = "nowatch.db";
-    private final static int DB_VERSION = 1;
+    private final static int DB_VERSION = 2;
     private final String CREATE_FEEDS = "create table feeds ("
             + "_id INTEGER PRIMARY KEY, title TEXT, description TEXT, link TEXT,"
             + "pubDate NUMERIC, etag TEXT, image BLOB);";
@@ -21,7 +21,8 @@ public class DB extends SQLiteOpenHelper {
             + "title TEXT, description TEXT, link TEXT, pubDate NUMERIC, "
             + "file_uri TEXT, file_size INTEGER, file_type TEXT);";
     private final String[] podcasts = new String[] { "cinefuzz", "geekinc", "scudstv", "zapcasttv",
-            "tom" };
+            "tom", "revuetech" };
+    private final int podcasts_len = podcasts.length;
 
     public DB(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
@@ -40,6 +41,10 @@ public class DB extends SQLiteOpenHelper {
 
     @Override
     public void onUpgrade(SQLiteDatabase db, int Old, int New) {
+        for (int id = 1; id <= podcasts_len; id++) {
+            db.execSQL("insert or ignore into feeds (\"_id\", \"title\") values (\"" + id + "\",\""
+                    + podcasts[id - 1] + "\");");
+        }
     }
 
     private void createTable(SQLiteDatabase db, String table_name, String create) {

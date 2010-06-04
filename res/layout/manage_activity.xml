@@ -6,15 +6,13 @@
     android:layout_height="fill_parent">
     <include layout="@layout/header" />
     <ListView
-        android:id="@+id/list_items"
+        android:id="@+id/list_current"
         android:layout_width="fill_parent"
         android:layout_height="0dip"
-        android:layout_weight="1"
-        android:textFilterEnabled="true" />
-    <TextView
-        android:id="@+id/loading"
+        android:layout_weight="1" />
+    <ListView
+        android:id="@+id/list_pending"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
-        android:text="@string/loading"
-        android:cacheColorHint="#000000" />
+        android:layout_height="0dip"
+        android:layout_weight="1" />
 </LinearLayout>

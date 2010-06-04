@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.TimeZone;
 
 import android.app.Activity;
-import android.app.ProgressDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
@@ -17,6 +16,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDiskIOException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.drawable.AnimationDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.util.DisplayMetrics;
@@ -28,6 +28,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.Button;
+import android.widget.Filter;
+import android.widget.Filterable;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -48,14 +51,17 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
     private ItemsAdapter adapter;
     private UpdateTask updateTask = null;
     private Context ctxt;
-    private List<Feed> feeds;
+    private static List<Feed> feeds;
     private List<Item> items = null;
     private ListView list;
+
+    // private LayoutInflater mInflater;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ctxt = getApplicationContext();
+        // mInflater = LayoutInflater.from(ctxt);
         setContentView(R.layout.items_activity);
 
         // Add all feeds
@@ -65,6 +71,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         feeds.add(new Feed(3, R.string.feed_scuds));
         feeds.add(new Feed(4, R.string.feed_zapcast));
         feeds.add(new Feed(5, R.string.feed_tom));
+        feeds.add(new Feed(6, R.string.feed_revuetech));
 
         // Screen metrics (for dip to px conversion)
         DisplayMetrics displayMetrics = new DisplayMetrics();
@@ -77,6 +84,21 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
                 resetList();
             }
         });
+        // Menu buttons
+        ((Button) findViewById(R.id.btn_search)).setVisibility(View.VISIBLE);
+        ((Button) findViewById(R.id.btn_refresh)).setVisibility(View.VISIBLE);
+        Button btn_home = (Button) findViewById(R.id.btn_refresh);
+        btn_home.setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                updateTask = new UpdateTask(ItemsActivity.this);
+                updateTask.execute();
+            }
+        });
+        // Button btn_search = (Button) findViewById(R.id.btn_search);
+        // btn_search.setOnClickListener(new View.OnClickListener() {
+        // public void onClick(View v) {
+        // }
+        // });
 
         // Set list adapter
         items = new ArrayList<Item>();
@@ -92,6 +114,12 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
             updateTask.execute();
         }
         updateList();
+    }
+
+    @Override
+    public Object onRetainNonConfigurationInstance() {
+        // TODO: Handle configuration state save
+        return super.onRetainNonConfigurationInstance();
     }
 
     @Override
@@ -117,32 +145,35 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         return false;
     }
 
-    @Override
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Intent i = new Intent(ctxt, InfoActivity.class);
         i.putExtra("item_id", items.get(position).id);
         startActivity(i);
     }
 
-    class UpdateTask extends AsyncTask<Void, Void, Void> {
+    private static class UpdateTask extends AsyncTask<Void, Void, Void> {
 
-        private ProgressDialog progress;
-        private WeakReference<Activity> mActivity;
+        // private ProgressDialog progress;
+        private WeakReference<ItemsActivity> mActivity;
         private boolean sdcarderror = false;
 
-        public UpdateTask(Activity activity) {
-            mActivity = new WeakReference<Activity>(activity);
+        public UpdateTask(ItemsActivity activity) {
+            mActivity = new WeakReference<ItemsActivity>(activity);
         }
 
         @Override
         protected void onPreExecute() {
-            final Activity a = mActivity.get();
-            progress = ProgressDialog.show(a, "", getString(R.string.dialog_update_all));
+            final ItemsActivity a = mActivity.get();
+            Button btn_refresh = (Button) a.findViewById(R.id.btn_refresh);
+            btn_refresh.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh_a, 0, 0, 0);
+            ((AnimationDrawable) btn_refresh.getCompoundDrawables()[0]).start();
+            btn_refresh.setEnabled(false);
+            btn_refresh.setClickable(false);
         }
 
         @Override
         protected Void doInBackground(Void... params) {
-            final Activity a = mActivity.get();
+            final ItemsActivity a = mActivity.get();
             try {
                 for (Feed f : feeds) {
                     UpdateDb.update(a.getApplicationContext(), "" + f._id, f._resource);
@@ -156,12 +187,27 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
 
         @Override
         protected void onPostExecute(Void unused) {
-            resetList();
-            ((TextView) findViewById(R.id.loading)).setVisibility(View.INVISIBLE);
-            progress.dismiss();
+            final ItemsActivity a = mActivity.get();
+            Button btn_refresh = (Button) a.findViewById(R.id.btn_refresh);
+            btn_refresh.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0, 0);
+            btn_refresh.setEnabled(true);
+            btn_refresh.setClickable(true);
+            a.resetList();
+            ((TextView) a.findViewById(R.id.loading)).setVisibility(View.INVISIBLE);
+            // progress.dismiss();
             if (sdcarderror) {
-                Toast.makeText(ctxt, R.string.toast_sdcard, Toast.LENGTH_LONG).show();
+                Toast.makeText(a.ctxt, R.string.toast_sdcard, Toast.LENGTH_LONG).show();
             }
+        }
+
+        @Override
+        protected void onCancelled() {
+            super.onCancelled();
+            final ItemsActivity a = mActivity.get();
+            Button btn_refresh = (Button) a.findViewById(R.id.btn_refresh);
+            btn_refresh.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0, 0);
+            btn_refresh.setEnabled(true);
+            btn_refresh.setClickable(true);
         }
     }
 
@@ -265,23 +311,32 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         for (int i = adapter.getCount(); i < len; i++) {
             adapter.add(null);
         }
+        // adapter.notifyDataSetChanged();
     }
 
-    private class ItemsAdapter extends ArrayAdapter<Item> {
+    static class ViewHolder {
+        TextView title;
+        TextView status;
+        TextView date;
+        ImageView logo;
+        // ImageButton action;
+    }
+
+    private class ItemsAdapter extends ArrayAdapter<Item> implements Filterable {
+
+        // TODO: Use a CursorAdapter ?
 
         private LayoutInflater inflater;
-
-        private class ViewHolder {
-            TextView title;
-            TextView status;
-            TextView date;
-            ImageView logo;
-            // ImageButton action;
-        }
 
         public ItemsAdapter() {
             super(ctxt, R.layout.list_items, R.id.title);
             inflater = LayoutInflater.from(ctxt);
+        }
+
+        @Override
+        public Filter getFilter() {
+            Log.v("ItemsActivity", "getFilter()");
+            return super.getFilter();
         }
 
         @Override

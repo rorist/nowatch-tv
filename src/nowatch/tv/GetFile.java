@@ -26,11 +26,13 @@ import android.util.Log;
 public class GetFile {
 
     private final String TAG = "GetFile";
-    private final String USERAGENT = "Android/Nowatch.TV/1.2";
+    private final String USERAGENT = "Android/" + android.os.Build.DISPLAY + " ("
+            + android.os.Build.MODEL + ") Nowatch.TV/1.2";
     private DefaultHttpClient httpclient;
     private int buffer_size = 8 * 1024; // in Bytes
     private boolean deleteOnFinish = false;
     protected String etag;
+    protected String file_size;
 
     public void getChannel(String src, String dst, String etag) throws IOException {
         getChannel(src, dst, etag, deleteOnFinish);
@@ -75,6 +77,7 @@ public class GetFile {
                 response = httpclient.execute(httpget);
             }
             Log.i(TAG, "Status:[" + response.getStatusLine().toString() + "] " + src);
+            Log.i("", "Useragent:[" + USERAGENT + "]");
 
             // Exit if content not modified
             if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
@@ -84,6 +87,10 @@ public class GetFile {
             else if (response.getLastHeader("ETag") != null) {
                 this.etag = response.getLastHeader("ETag").getValue();
             }
+            // Save file_size
+            if (response.getLastHeader("Content-Length") != null) {
+                this.file_size = response.getLastHeader("Content-Length").getValue();
+            }
 
             // Retrieve content
             HttpEntity entity = response.getEntity();
@@ -92,10 +99,13 @@ public class GetFile {
             }
         } catch (ClientProtocolException e) {
             Log.e(TAG, "There was a protocol based error", e);
+            return;
         } catch (UnknownHostException e) {
             Log.e(TAG, "Connectivity errror", e);
+            return;
         } catch (IOException e) {
             Log.e(TAG, "There was an IO Stream related error", e);
+            return;
         }
 
         // Get channel
@@ -142,7 +152,7 @@ public class GetFile {
     }
 
     protected void finish(String file) {
-        if (deleteOnFinish) {
+        if (deleteOnFinish && file != null) {
             new File(file).delete();
         }
     }

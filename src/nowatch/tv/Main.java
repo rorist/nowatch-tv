@@ -9,7 +9,7 @@ public class Main extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        startActivity(new Intent(this, ItemsActivity.class));
+        startActivity(new Intent(Main.this, ItemsActivity.class));
         finish();
     }
 }

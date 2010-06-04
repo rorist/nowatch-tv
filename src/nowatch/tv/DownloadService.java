@@ -1,5 +1,7 @@
 package nowatch.tv;
 
+// TODO: Use IntentService in startService() (queuing model)
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -139,15 +141,16 @@ public class DownloadService extends Service {
         @Override
         protected void onPreExecute() {
             final DownloadService service = mService.get();
-
             nf = new Notification(android.R.drawable.stat_sys_download, service
                     .getString(R.string.notif_dl_started), System.currentTimeMillis());
             rv = new RemoteViews(service.getPackageName(), R.layout.notification_download);
             rv.setImageViewResource(R.id.download_icon, R.drawable.icon);
             rv.setTextViewText(R.id.download_title, download_title);
             rv.setProgressBar(R.id.download_progress, 0, 0, true);
-            nf.contentIntent = PendingIntent.getActivity(service, 0, new Intent(service,
-                    DownloadManager.class), 0);
+            // FIXME: Add an action by Intent instead of null
+            // nf.contentIntent = PendingIntent.getActivity(service, 0, new
+            // Intent(DownloadService.this, DownloadManager.class), 0);
+            nf.contentIntent = PendingIntent.getActivity(service, 0, null, 0);
             nf.contentView = rv;
             nf.flags |= Notification.FLAG_ONGOING_EVENT;
             nf.flags |= Notification.FLAG_NO_CLEAR;

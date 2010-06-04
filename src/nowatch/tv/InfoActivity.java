@@ -1,22 +1,24 @@
 package nowatch.tv;
 
+// TODO: Do not bind to service, just send IntentService
+
 import java.io.File;
 
-import android.os.RemoteException;
-import android.content.ComponentName;
-import android.os.IBinder;
-import android.content.ServiceConnection;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
+import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.IBinder;
+import android.os.RemoteException;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -37,12 +39,13 @@ public class InfoActivity extends Activity {
     private final String PRE = "<meta http-equiv=\"Content-Type\" content=\"application/xhtml+text; charset=UTF-8\"/>"
             + STYLE;
     private final Context ctxt = this;
-    private final int IMG_DIP = 64;
+    private final int IMG_DIP = 96;
     private DisplayMetrics displayMetrics;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        startService(new Intent(InfoActivity.this, DownloadService.class));
         setContentView(R.layout.info_activity);
 
         // Screen metrics (for dip to px conversion)
@@ -80,7 +83,17 @@ public class InfoActivity extends Activity {
         c.close();
         db.close();
 
-        // Set buttons
+        // Menu buttons
+        ((Button) findViewById(R.id.btn_back)).setVisibility(View.VISIBLE);
+        ((Button) findViewById(R.id.btn_play)).setVisibility(View.VISIBLE);
+        ((Button) findViewById(R.id.btn_download)).setVisibility(View.VISIBLE);
+        ((Button) findViewById(R.id.btn_back)).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                finish();
+            }
+        });
+
+        // Buttons
         ((ImageButton) findViewById(R.id.btn_logo)).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 finish();
@@ -92,9 +105,9 @@ public class InfoActivity extends Activity {
             }
         });
         if (status == Item.STATUS_DOWNLOADING) {
-            changeButton(getString(R.string.status_downloading), false);
+            changeButton(R.id.btn_play, getString(R.string.status_downloading), false);
         } else if (status == Item.STATUS_DL_READ || status == Item.STATUS_DL_UNREAD) {
-            changeButton(getString(R.string.btn_view), true);
+            changeButton(R.id.btn_play, getString(R.string.btn_play), true);
             ((Button) findViewById(R.id.btn_download))
                     .setOnClickListener(new View.OnClickListener() {
                         public void onClick(View v) {
@@ -117,13 +130,13 @@ public class InfoActivity extends Activity {
                         }
                     });
         }
-        startService(new Intent(InfoActivity.this, DownloadService.class));
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        bindService(new Intent(InfoActivity.this, DownloadService.class), mConnection, 0); // Context.BIND_AUTO_CREATE
+         bindService(new Intent(InfoActivity.this, DownloadService.class),
+         mConnection, 0);
     }
 
     @Override
@@ -153,6 +166,10 @@ public class InfoActivity extends Activity {
     }
 
     private void viewVideo(String file, String type, int item_id) {
+        // Hack type for Apple's format
+        if (type.equals(new String("video/x-m4v"))) {
+            type = "video/mp4";
+        }
         Intent i = new Intent(Intent.ACTION_VIEW);
         try {
             i.setDataAndType(Uri.parse(file), type);
@@ -171,7 +188,7 @@ public class InfoActivity extends Activity {
         }
     }
 
-    private void changeButton(String txt, boolean clickable) {
+    private void changeButton(int id, String txt, boolean clickable) {
         Button btn = (Button) findViewById(R.id.btn_download);
         btn.setClickable(clickable);
         btn.setEnabled(clickable);

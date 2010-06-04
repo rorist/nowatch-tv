@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<LinearLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content">
+    <Button
+        android:id="@+id/btn_back"
+        android:drawableLeft="@drawable/btn_back"
+        android:text="Retour"
+        style="@style/Button_menu" />
+    <Button
+        android:id="@+id/btn_search"
+        android:drawableLeft="@drawable/btn_search"
+        android:text="Rechercher"
+        style="@style/Button_menu" />
+    <Button
+        android:id="@+id/btn_refresh"
+        android:drawableLeft="@drawable/btn_refresh"
+        android:text="@string/btn_refresh"
+        style="@style/Button_menu" />
+</LinearLayout>

@@ -7,6 +7,7 @@
     <string name="feed_zapcast">http://feeds.feedburner.com/Zapcasttv</string>
     <string name="feed_cinefuzz">http://feeds.feedburner.com/CineFuzz</string>
     <string name="feed_tom">http://feeds.feedburner.com/tonightonmars</string>
+    <string name="feed_revuetech">http://www.stockagemedias.fr/larevuetech/xml/podcast_iphone.xml</string>
     
     <string name="status_new">Nouveau</string>
     <string name="status_downloading">En téléchargement</string>
@@ -29,9 +30,12 @@
     <string name="date_days">Il y a %s jours</string>
     <string name="date_monthes">Il y a %s mois</string>
     
-    <string name="btn_view">Voir</string>
-    <string name="btn_stream">Voir en streaming</string>
+    <string name="btn_play">Voir</string>
+    <string name="btn_stream">Voir (streaming)</string>
     <string name="btn_download">Télécharger</string>
+    <string name="btn_back">Retour</string>
+    <string name="btn_refresh">Rafraichir</string>
+    <string name="btn_search">Rechercher</string>
     
 <!--    <string name=""></string>-->
     

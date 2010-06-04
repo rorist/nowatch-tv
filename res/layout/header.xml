@@ -8,13 +8,49 @@
         android:id="@+id/btn_logo"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_margin="3dip" 
+        android:layout_marginLeft="3dip"
+        android:layout_marginRight="3dip"
+        android:layout_marginTop="3dip"
         android:scaleType="fitXY"
         android:background="@drawable/btn_bg"
         android:src="@drawable/logo_nowatch" />
-<!--    <TextView-->
-<!--        android:layout_width="fill_parent"-->
-<!--        android:layout_height="wrap_content"-->
-<!--        android:background="#00ff00"-->
-<!--        android:text="Menu"/>-->
+    <LinearLayout
+        android:id="@+id/menu_top"
+        android:background="@drawable/menu_top"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="3dip"
+        android:layout_marginRight="3dip"
+        android:layout_marginBottom="3dip">
+        <Button
+            android:id="@+id/btn_back"
+            android:drawableLeft="@drawable/btn_back"
+            android:text="@string/btn_back"
+            android:visibility="gone"
+            style="@style/Button_menu" />
+        <Button
+            android:id="@+id/btn_refresh"
+            android:drawableLeft="@drawable/btn_refresh"
+            android:text="@string/btn_refresh"
+            android:visibility="gone"
+            style="@style/Button_menu" />
+        <Button
+            android:id="@+id/btn_search"
+            android:drawableLeft="@drawable/btn_search"
+            android:text="@string/btn_search"
+            android:visibility="gone"
+            style="@style/Button_menu" />
+        <Button
+            android:id="@+id/btn_download"
+            android:drawableLeft="@drawable/btn_download"
+            android:text="@string/btn_download"
+            android:visibility="gone"
+            style="@style/Button_menu" />
+        <Button
+            android:id="@+id/btn_play"
+            android:drawableLeft="@drawable/btn_play"
+            android:text="@string/btn_play"
+            android:visibility="gone"
+            style="@style/Button_menu" />
+    </LinearLayout>
 </LinearLayout>
