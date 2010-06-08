@@ -3,7 +3,6 @@ package nowatch.tv;
 // TODO: Do not bind to service, just send IntentService
 
 import java.io.File;
-
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ComponentName;
@@ -22,6 +21,7 @@ import android.os.RemoteException;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.webkit.WebView;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -72,16 +72,17 @@ public class InfoActivity extends Activity {
         } else {
             logo.setImageResource(R.drawable.icon);
         }
-
         // File
         final String file_uri = c.getString(6);
-        // final String file_size = c.getString(7);
         final String file_type = c.getString(8);
+        // final String file_size = c.getString(7);
         final int status = c.getInt(9);
 
         // Close db
         c.close();
         db.close();
+
+        // Set things
 
         // Menu buttons
         ((Button) findViewById(R.id.btn_back)).setVisibility(View.VISIBLE);
@@ -99,33 +100,48 @@ public class InfoActivity extends Activity {
                 finish();
             }
         });
-        ((Button) findViewById(R.id.btn_play)).setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                viewVideo(file_uri, file_type, item_id);
-            }
-        });
         if (status == Item.STATUS_DOWNLOADING) {
-            changeButton(R.id.btn_play, getString(R.string.status_downloading), false);
-        } else if (status == Item.STATUS_DL_READ || status == Item.STATUS_DL_UNREAD) {
-            changeButton(R.id.btn_play, getString(R.string.btn_play), true);
-            ((Button) findViewById(R.id.btn_download))
-                    .setOnClickListener(new View.OnClickListener() {
+            changeButton(R.id.btn_download, getString(R.string.btn_download), false, null);
+            changeButton(R.id.btn_play, getString(R.string.btn_stream), true,
+                    new View.OnClickListener() {
                         public void onClick(View v) {
-                            // FIXME: This is for testing
-                            viewVideo("/sdcard/" + new File(file_uri).getName(), file_type, item_id);
+                            // Stream the file
+                            if (new Network(ctxt).isMobileAllowed()) {
+                                viewVideo(file_uri, file_type, item_id);
+                            } else {
+                                noconn();
+                            }
+                        }
+                    });
+        } else if (status == Item.STATUS_DL_READ || status == Item.STATUS_DL_UNREAD) {
+            changeButton(R.id.btn_download, getString(R.string.btn_download), false, null);
+            changeButton(R.id.btn_play, getString(R.string.btn_play), true,
+                    new View.OnClickListener() {
+                        public void onClick(View v) {
+                            // Read the local file
+                            viewVideo(GetFile.PATH_PODCASTS + "/" + new File(file_uri).getName(), file_type, item_id);
                         }
                     });
         } else {
-            ((Button) findViewById(R.id.btn_download))
-                    .setOnClickListener(new View.OnClickListener() {
+            changeButton(R.id.btn_play, getString(R.string.btn_stream), true,
+                    new View.OnClickListener() {
                         public void onClick(View v) {
-                            changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
-                            if (mService != null) {
-                                try {
-                                    mService._startDownload(item_id);
-                                } catch (RemoteException e) {
-                                    Log.e(TAG, e.getMessage());
-                                }
+                            // Stream the file
+                            if (new Network(ctxt).isMobileAllowed()) {
+                                viewVideo(file_uri, file_type, item_id);
+                            } else {
+                                noconn();
+                            }
+                        }
+                    });
+            changeButton(R.id.btn_download, getString(R.string.btn_download), true,
+                    new View.OnClickListener() {
+                        public void onClick(View v) {
+                            // Download the file
+                            if (new Network(ctxt).isMobileAllowed()) {
+                                downloadVideo(item_id);
+                            } else {
+                                noconn();
                             }
                         }
                     });
@@ -135,8 +151,7 @@ public class InfoActivity extends Activity {
     @Override
     public void onStart() {
         super.onStart();
-         bindService(new Intent(InfoActivity.this, DownloadService.class),
-         mConnection, 0);
+        bindService(new Intent(InfoActivity.this, DownloadService.class), mConnection, 0);
     }
 
     @Override
@@ -165,6 +180,25 @@ public class InfoActivity extends Activity {
         db.close();
     }
 
+    private void noconn() {
+        if(new Network(ctxt).isConnected()){
+            Toast.makeText(ctxt, R.string.toast_nomobiletraffic, Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(ctxt, R.string.toast_notconnected, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void downloadVideo(int item_id) {
+        changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
+        if (mService != null) {
+            try {
+                mService._startDownload(item_id);
+            } catch (RemoteException e) {
+                Log.e(TAG, e.getMessage());
+            }
+        }
+    }
+
     private void viewVideo(String file, String type, int item_id) {
         // Hack type for Apple's format
         if (type.equals(new String("video/x-m4v"))) {
@@ -188,11 +222,14 @@ public class InfoActivity extends Activity {
         }
     }
 
-    private void changeButton(int id, String txt, boolean clickable) {
-        Button btn = (Button) findViewById(R.id.btn_download);
+    private void changeButton(int id, String txt, boolean clickable, OnClickListener onClickListener) {
+        Button btn = (Button) findViewById(id);
         btn.setClickable(clickable);
         btn.setEnabled(clickable);
         btn.setText(txt);
+        if (onClickListener != null) {
+            btn.setOnClickListener(onClickListener);
+        }
     }
 
     /**

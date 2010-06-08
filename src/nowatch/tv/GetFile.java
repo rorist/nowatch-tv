@@ -26,8 +26,10 @@ import android.util.Log;
 public class GetFile {
 
     private final String TAG = "GetFile";
-    private final String USERAGENT = "Android/" + android.os.Build.DISPLAY + " ("
-            + android.os.Build.MODEL + ") Nowatch.TV/1.2";
+    public static final String PATH_CACHE = "Android/data/nowatch.tv/cache";
+    public static final String PATH_PODCASTS = "Podcasts/Nowatch.TV";
+    public static final String USERAGENT = "Android/" + android.os.Build.VERSION.RELEASE + " ("
+            + android.os.Build.MODEL + ") Nowatch.TV/1.0beta";
     private DefaultHttpClient httpclient;
     private int buffer_size = 8 * 1024; // in Bytes
     private boolean deleteOnFinish = false;
@@ -51,8 +53,8 @@ public class GetFile {
         if (dst != null) {
             dstFile = new File(dst);
         } else {
-            dstFile = new File(Environment.getExternalStorageDirectory().getCanonicalPath()
-                    + "/Android/data/nowatch.tv/cache");
+            dstFile = new File(Environment.getExternalStorageDirectory().getCanonicalPath() + "/"
+                    + PATH_CACHE);
             dstFile.mkdirs();
             dstFile = File.createTempFile("nowatchtv", "", dstFile);
         }

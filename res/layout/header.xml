@@ -49,7 +49,7 @@
         <Button
             android:id="@+id/btn_play"
             android:drawableLeft="@drawable/btn_play"
-            android:text="@string/btn_play"
+            android:text="@string/btn_stream"
             android:visibility="gone"
             style="@style/Button_menu" />
     </LinearLayout>

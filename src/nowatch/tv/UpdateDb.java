@@ -156,11 +156,13 @@ public class UpdateDb {
                 }
             } else if (!in_items && name == "image"
                     && uri != "http://www.itunes.com/dtds/podcast-1.0.dtd") {
-                // Get image bits
-                try {
-                    new GetImage().getChannel(feedMap.getAsString("image"));
-                } catch (IOException e) {
-                    Log.e(TAG, e.getMessage());
+                // Get image bits (only if not in mobile/3g)
+                if(new Network(ctxt).isMobileAllowed()){
+                    try {
+                        new GetImage().getChannel(feedMap.getAsString("image"));
+                    } catch (IOException e) {
+                        Log.e(TAG, e.getMessage());
+                    }
                 }
             } else if (!in_items && name == "pubDate") {
                 try {

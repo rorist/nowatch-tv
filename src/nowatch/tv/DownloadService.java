@@ -88,24 +88,34 @@ public class DownloadService extends Service {
 
     private void startDownloadTask() {
         Log.v(TAG, "StopOrContinue: " + downloadCurrent + " < " + SIMULTANEOUS_DOWNLOAD);
-        if (downloadCurrent < SIMULTANEOUS_DOWNLOAD) {
-            Integer itemId = downloadQueue.poll();
-            if (itemId != null) {
-                // TODO: Check if there is enough space on device
-                // Get item information and start DownloadTask
-                SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
-                Cursor c = db.rawQuery(REQ, new String[] { "" + itemId });
-                c.moveToFirst();
-                DownloadTask task = new DownloadTask(DownloadService.this, c.getString(0), itemId);
-                task.execute(c.getString(1), c.getString(2));
-                downloadTasks.add(task);
-                c.close();
-                db.close();
+        Network net = new Network(this);
+        if (net.isConnected()) {
+            if (net.isMobileAllowed()) {
+                if (downloadCurrent < SIMULTANEOUS_DOWNLOAD) {
+                    Integer itemId = downloadQueue.poll();
+                    if (itemId != null) {
+                        // TODO: Check if there is enough space on device
+                        // Get item information and start DownloadTask
+                        SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
+                        Cursor c = db.rawQuery(REQ, new String[] { "" + itemId });
+                        c.moveToFirst();
+                        DownloadTask task = new DownloadTask(DownloadService.this, c.getString(0),
+                                itemId);
+                        task.execute(c.getString(1), c.getString(2));
+                        downloadTasks.add(task);
+                        c.close();
+                        db.close();
+                    } else {
+                        Log.i(TAG, "download queue is empty");
+                    }
+                } else {
+                    Toast.makeText(ctxt, R.string.toast_dl_added, Toast.LENGTH_SHORT);
+                }
             } else {
-                Log.i(TAG, "download queue is empty");
+                Toast.makeText(ctxt, R.string.toast_nomobiletraffic, Toast.LENGTH_LONG).show();
             }
         } else {
-            Toast.makeText(ctxt, R.string.toast_dl_added, Toast.LENGTH_SHORT);
+            Toast.makeText(ctxt, R.string.toast_notconnected, Toast.LENGTH_LONG).show();
         }
     }
 
@@ -173,7 +183,7 @@ public class DownloadService extends Service {
                     // TODO: Use getExternalStoragePublicDirectory() (API L8)
                     File dst = new File(Environment.getExternalStorageDirectory()
                             .getCanonicalPath()
-                            + "/Podcasts/Nowatch.TV");
+                            + "/" + GetFile.PATH_PODCASTS);
                     dst.mkdirs();
                     new getPodcastFile(fs).getChannel(str[0], dst.getCanonicalPath() + "/"
                             + new File(str[0]).getName());

@@ -14,6 +14,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDiskIOException;
+import android.database.sqlite.SQLiteException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.AnimationDrawable;
@@ -40,7 +41,7 @@ import android.widget.AdapterView.OnItemClickListener;
 
 public class ItemsActivity extends Activity implements OnItemClickListener {
 
-    // private final String TAG = "ItemsActivity";
+    private final String TAG = "ItemsActivity";
     private final String QUERY_ITEMS = "SELECT items._id, items.title, items.status, feeds.image, items.pubDate "
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id "
             + "ORDER BY items.pubDate DESC LIMIT ";
@@ -164,11 +165,17 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         @Override
         protected void onPreExecute() {
             final ItemsActivity a = mActivity.get();
-            Button btn_refresh = (Button) a.findViewById(R.id.btn_refresh);
-            btn_refresh.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh_a, 0, 0, 0);
-            ((AnimationDrawable) btn_refresh.getCompoundDrawables()[0]).start();
-            btn_refresh.setEnabled(false);
-            btn_refresh.setClickable(false);
+            final Network net = new Network(a);
+            if (net.isConnected()) {
+                Button btn_ref = (Button) a.findViewById(R.id.btn_refresh);
+                btn_ref.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh_a, 0, 0, 0);
+                ((AnimationDrawable) btn_ref.getCompoundDrawables()[0]).start();
+                btn_ref.setEnabled(false);
+                btn_ref.setClickable(false);
+            } else {
+                Toast.makeText(a.ctxt, R.string.toast_notconnected, Toast.LENGTH_LONG).show();
+                cancel(false);
+            }
         }
 
         @Override
@@ -188,10 +195,10 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         @Override
         protected void onPostExecute(Void unused) {
             final ItemsActivity a = mActivity.get();
-            Button btn_refresh = (Button) a.findViewById(R.id.btn_refresh);
-            btn_refresh.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0, 0);
-            btn_refresh.setEnabled(true);
-            btn_refresh.setClickable(true);
+            Button btn_ref = (Button) a.findViewById(R.id.btn_refresh);
+            btn_ref.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0, 0);
+            btn_ref.setEnabled(true);
+            btn_ref.setClickable(true);
             a.resetList();
             ((TextView) a.findViewById(R.id.loading)).setVisibility(View.INVISIBLE);
             // progress.dismiss();
@@ -212,11 +219,13 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
     }
 
     private int addToList(int offset, int limit) {
-        SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
-        Cursor c = db.rawQuery(QUERY_ITEMS + offset + "," + limit, null);
+        SQLiteDatabase db = null;
+        Cursor c = null;
         byte[] logo_byte;
         int cnt = 0;
         try {
+            db = (new DB(ctxt)).getWritableDatabase();
+            c = db.rawQuery(QUERY_ITEMS + offset + "," + limit, null);
             cnt = c.getCount();
             if (cnt > 0) {
                 c.moveToFirst();
@@ -265,9 +274,11 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
                     } else if (diff < 2678400) { // 31 days
                         item.date = String.format(getString(R.string.date_days),
                                 (diff / 60 / 60 / 24));
+                    /*
                     } else if (diff < 7776000) { // 3 monthes
                         item.date = String.format(getString(R.string.date_monthes),
-                                (diff / 60 / 60 / 24 / 30));
+                            (diff / 60 / 60 / 24 / 30));
+                    */
                     } else {
                         SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy");
                         formatter.setTimeZone(TimeZone.getDefault());
@@ -288,10 +299,19 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
             }
         } catch (SQLiteDiskIOException e) {
             // sqlite_stmt_journals partition is too small (4MB)
+            Log.e(TAG, e.getMessage());
             e.printStackTrace();
+        } catch (SQLiteException e) {
+            Log.e(TAG, e.getMessage());
+        } finally {
+
+            if (c != null) {
+                c.close();
+            }
+            if (db != null) {
+                db.close();
+            }
         }
-        c.close();
-        db.close();
         return cnt;
     }
 
@@ -322,9 +342,8 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         // ImageButton action;
     }
 
+    // TODO: Use a CursorAdapter ?
     private class ItemsAdapter extends ArrayAdapter<Item> implements Filterable {
-
-        // TODO: Use a CursorAdapter ?
 
         private LayoutInflater inflater;
 
