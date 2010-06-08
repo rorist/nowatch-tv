@@ -1,8 +1,3 @@
-/*
- * Copyright (C) 2009-2010 Aubort Jean-Baptiste (Rorist)
- * Licensed under GNU's GPL 2, see README
- */
-
 package nowatch.tv;
 
 import android.content.SharedPreferences;
@@ -21,4 +16,5 @@ public class Prefs extends PreferenceActivity implements OnSharedPreferenceChang
 
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
     }
+
 }

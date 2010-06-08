@@ -17,6 +17,7 @@
     
     <string name="menu_update_all">Mettre à jour</string>
     <string name="menu_manage">Gérer</string>
+    <string name="menu_options">Options</string>
     
     <string name="dialog_update_all">Mise à jour en cours,\nMerci de patienter ...</string>
     

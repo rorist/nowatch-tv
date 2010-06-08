@@ -167,6 +167,7 @@ public class UpdateDb {
             } else if (!in_items && name == "pubDate") {
                 try {
                     // Check publication date of channel
+                    // (this check is not supposed to happen since we use ETags)
                     if (!formatter.parse(feedMap.getAsString("pubDate")).after(lastPub)) {
                         // Stop the parser
                         db.close();

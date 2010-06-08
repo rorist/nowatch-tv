@@ -47,6 +47,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
             + "ORDER BY items.pubDate DESC LIMIT ";
     private static final int MENU_UPDATE_ALL = 1;
     private static final int MENU_MANAGE = 2;
+    private static final int MENU_OPTIONS = 3;
     private static final int ITEMS_NB = 16;
     private int image_size;
     private ItemsAdapter adapter;
@@ -129,6 +130,8 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
                 android.R.drawable.ic_menu_upload);
         menu.add(0, MENU_MANAGE, 0, R.string.menu_manage)
                 .setIcon(android.R.drawable.ic_menu_manage);
+        menu.add(0, MENU_OPTIONS, 0, R.string.menu_options)
+                .setIcon(android.R.drawable.ic_menu_preferences);
         return true;
     }
 
@@ -141,6 +144,9 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
                 return true;
             case MENU_MANAGE:
                 startActivity(new Intent(ItemsActivity.this, DownloadManager.class));
+                return true;
+            case MENU_OPTIONS:
+                startActivity(new Intent(ItemsActivity.this, Prefs.class));
                 return true;
         }
         return false;
