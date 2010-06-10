@@ -119,7 +119,8 @@ public class InfoActivity extends Activity {
                     new View.OnClickListener() {
                         public void onClick(View v) {
                             // Read the local file
-                            viewVideo(GetFile.PATH_PODCASTS + "/" + new File(file_uri).getName(), file_type, item_id);
+                            viewVideo(GetFile.PATH_PODCASTS + "/" + new File(file_uri).getName(),
+                                    file_type, item_id);
                         }
                     });
         } else {
@@ -152,6 +153,7 @@ public class InfoActivity extends Activity {
     public void onStart() {
         super.onStart();
         bindService(new Intent(InfoActivity.this, DownloadService.class), mConnection, 0);
+        // FIXME: Try again to autostart ?
     }
 
     @Override
@@ -181,7 +183,7 @@ public class InfoActivity extends Activity {
     }
 
     private void noconn() {
-        if(new Network(ctxt).isConnected()){
+        if (new Network(ctxt).isConnected()) {
             Toast.makeText(ctxt, R.string.toast_nomobiletraffic, Toast.LENGTH_LONG).show();
         } else {
             Toast.makeText(ctxt, R.string.toast_notconnected, Toast.LENGTH_LONG).show();

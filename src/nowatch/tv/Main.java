@@ -9,6 +9,7 @@ public class Main extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        startService(new Intent(Main.this, DownloadService.class));
         startActivity(new Intent(Main.this, ItemsActivity.class));
         finish();
     }

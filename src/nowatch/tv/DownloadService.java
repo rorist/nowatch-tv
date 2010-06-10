@@ -57,7 +57,7 @@ public class DownloadService extends Service {
     @Override
     public void onStart(Intent intent, int startId) {
         Log.i(TAG, "onStart()");
-        // FIXME: onStrart() is deprecated, but used for backward compatibility!
+        // FIXME: onStart() is deprecated, but used for backward compatibility!
         handleCommand(intent);
     }
 
@@ -69,6 +69,13 @@ public class DownloadService extends Service {
     }
 
     private void handleCommand(Intent intent) {
+        // Clean failed downloads
+        if (downloadCurrent == 0) {
+            Log.v(TAG, "clean failed dl");
+            SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
+            db.execSQL("update items set status=3 where status=2");
+            db.close();
+        }
         // Add item to download queue
         if (intent != null) {
             if (intent.hasExtra("item_id")) {
@@ -214,7 +221,6 @@ public class DownloadService extends Service {
             super.onPostExecute(unused);
             final DownloadService service = mService.get();
             InfoActivity.changeStatus(service, item_id, Item.STATUS_DL_UNREAD);
-            // FIXME: Use Activity.getString()
             finishNotification(service.getString(R.string.notif_dl_complete));
             service.downloadCurrent--;
             service.stopOrContinue();
@@ -225,7 +231,6 @@ public class DownloadService extends Service {
             super.onCancelled();
             final DownloadService service = mService.get();
             InfoActivity.changeStatus(service, item_id, Item.STATUS_UNREAD);
-            // FIXME: Use Activity.getString()
             finishNotification(service.getString(R.string.notif_dl_canceled));
             service.downloadCurrent--;
             service.stopOrContinue();

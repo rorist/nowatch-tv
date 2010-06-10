@@ -14,9 +14,9 @@ public class DB extends SQLiteOpenHelper {
     private final static String DB_NAME = "nowatch.db";
     private final static int DB_VERSION = 2;
     private final String CREATE_FEEDS = "create table feeds ("
-            + "_id INTEGER PRIMARY KEY,
-            + "title TEXT,
-            + "description TEXT,
+            + "_id INTEGER PRIMARY KEY,"
+            + "title TEXT,"
+            + "description TEXT,"
             + "link TEXT,"
             + "pubDate NUMERIC, etag TEXT, image BLOB);";
     private final String CREATE_ITEMS = "create table items ("
