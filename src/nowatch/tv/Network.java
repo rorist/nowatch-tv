@@ -9,6 +9,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.NetworkInfo.State;
 import android.preference.PreferenceManager;
+import android.widget.Toast;
 
 public class Network {
 
@@ -32,25 +33,31 @@ public class Network {
     public Network(Context ctxt) {
         mContext = new WeakReference<Context>(ctxt);
         final Context c = mContext.get();
-        manager = (ConnectivityManager) c.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if(c != null){
+            manager = (ConnectivityManager) c.getSystemService(Context.CONNECTIVITY_SERVICE);
+        }
     }
 
     public boolean isConnected() {
         NetworkInfo nfo = manager.getActiveNetworkInfo();
         if (nfo != null) {
-            return nfo.isConnected();
+            if(nfo.isConnected()){
+                return true;
+            }
         }
+        Toast.makeText(getContext(), R.string.toast_notconnected, Toast.LENGTH_LONG).show();
         return false;
     }
 
     public boolean isMobileAllowed() {
         // Return connection status if not in mobile mode
-        final Context ctxt = getContext();
         if (getConnectionType() == ConnectivityManager.TYPE_MOBILE) {
+            final Context ctxt = getContext();
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctxt);
             if (prefs.getBoolean(Prefs.KEY_MOBILE_TRAFFIC, Prefs.DEFAULT_MOBILE_TRAFFIC)) {
                 return true;
             }
+            Toast.makeText(ctxt, R.string.toast_nomobiletraffic, Toast.LENGTH_LONG).show();
             return false;
         }
         return isConnected();
@@ -69,6 +76,7 @@ public class Network {
     }
 
     private Context getContext() {
+        // FIXME: It's not safe to use get() without checking for null
         if (mActivity != null) {
             return mActivity.get().getApplicationContext();
         } else if (mService != null) {

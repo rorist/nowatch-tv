@@ -106,8 +106,6 @@ public class InfoActivity extends Activity {
                             // Stream the file
                             if (new Network(ctxt).isMobileAllowed()) {
                                 viewVideo(file_uri, file_type, item_id);
-                            } else {
-                                noconn();
                             }
                         }
                     });
@@ -128,8 +126,6 @@ public class InfoActivity extends Activity {
                             // Stream the file
                             if (new Network(ctxt).isMobileAllowed()) {
                                 viewVideo(file_uri, file_type, item_id);
-                            } else {
-                                noconn();
                             }
                         }
                     });
@@ -139,8 +135,6 @@ public class InfoActivity extends Activity {
                             // Download the file
                             if (new Network(ctxt).isMobileAllowed()) {
                                 downloadVideo(item_id);
-                            } else {
-                                noconn();
                             }
                         }
                     });
@@ -177,14 +171,6 @@ public class InfoActivity extends Activity {
         value.put("status", status);
         db.update("items", value, "_id=?", new String[] { id + "" });
         db.close();
-    }
-
-    private void noconn() {
-        if (new Network(ctxt).isConnected()) {
-            Toast.makeText(ctxt, R.string.toast_nomobiletraffic, Toast.LENGTH_LONG).show();
-        } else {
-            Toast.makeText(ctxt, R.string.toast_notconnected, Toast.LENGTH_LONG).show();
-        }
     }
 
     private void downloadVideo(int item_id) {
