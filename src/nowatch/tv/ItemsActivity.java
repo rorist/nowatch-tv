@@ -76,9 +76,9 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         feeds.add(new Feed(6, R.string.feed_revuetech));
 
         // Screen metrics (for dip to px conversion)
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        image_size = (int) (48 * displayMetrics.density + 0.5f);
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        image_size = (int) (48 * dm.density + 0.5f);
 
         // Title button
         ((ImageButton) findViewById(R.id.btn_logo)).setOnClickListener(new View.OnClickListener() {

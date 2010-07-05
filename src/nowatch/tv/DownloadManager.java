@@ -10,14 +10,19 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ArrayAdapter;
+import android.widget.AdapterView;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
@@ -31,6 +36,7 @@ public class DownloadManager extends Activity {
     private DlAdapter adapterPending = null;
     private List<Item> downloadCurrent;
     private List<Item> downloadPending;
+    private int image_size;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -45,6 +51,11 @@ public class DownloadManager extends Activity {
                 finish();
             }
         });
+
+        // Screen metrics (for dip to px conversion)
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        image_size = (int) (48 * dm.density + 0.5f);
     }
 
     @Override
@@ -59,23 +70,70 @@ public class DownloadManager extends Activity {
         unbindService(mConnection);
     }
 
+    private OnItemClickListener listenerCurrent = new OnItemClickListener() {
+        public void onItemClick(AdapterView<?> parent, View v, int position, long id){
+            Log.v("current", "position="+position);
+        }
+    };
+
+    private OnItemClickListener listenerPending = new OnItemClickListener() {
+        public void onItemClick(AdapterView<?> parent, View v, int position, long id){
+            Log.v("pending", "position="+position);
+        }
+    };
+
     private List<Item> getDownloads(int[] data) {
         SQLiteDatabase db = (new DB(getApplicationContext())).getWritableDatabase();
         List<Item> list = new ArrayList<Item>();
         int len = data.length;
         for (int i = 0; i < len; i++) {
-            Cursor c = db.rawQuery("select items.title from items where items._id=" + data[i] + " limit 1", null);
+            Cursor c = db.rawQuery("select items.title, feeds.image from items inner join feeds on items.feed_id=feeds._id where items._id=" + data[i] + " limit 1", null);
             c.moveToFirst();
             if(c.getCount() > 0){
                 Item item = new Item();
                 item.id = data[i];
                 item.title = c.getString(0);
+                byte[] logo_byte = c.getBlob(1);
+                if (logo_byte != null && logo_byte.length > 200) {
+                    item.logo = Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_byte,
+                            0, logo_byte.length), image_size, image_size, true);
+                } else {
+                    item.logo = BitmapFactory.decodeResource(getResources(), R.drawable.icon);
+                }
                 list.add(item);
             }
             c.close();
         }
         db.close();
         return list;
+    }
+
+    private void populateLists(){
+        try {
+            // Get data
+            downloadCurrent = getDownloads(mService._getCurrentDownloads());
+            downloadPending = getDownloads(mService._getPendingDownloads());
+
+            Log.i(TAG, "downloadCurrent=" + downloadCurrent.size());
+            Log.i(TAG, "downloadPending=" + downloadPending.size());
+
+            if (downloadCurrent.size() > 0) {
+                // Populate Lists
+                final Context ctxt = getApplicationContext();
+                adapterCurrent = new DlAdapter(ctxt, downloadCurrent);
+                adapterPending = new DlAdapter(ctxt, downloadPending);
+                ListView listCurrent = (ListView) findViewById(R.id.list_current);
+                ListView listPending = (ListView) findViewById(R.id.list_pending);
+                listCurrent.setAdapter(adapterCurrent);
+                listPending.setAdapter(adapterPending);
+                listCurrent.setOnItemClickListener(listenerCurrent);
+                listPending.setOnItemClickListener(listenerPending);
+            } else {
+                // No download
+            }
+        } catch (RemoteException e) {
+            Log.e(TAG, e.getMessage());
+        }
     }
 
     /**
@@ -86,29 +144,7 @@ public class DownloadManager extends Activity {
         public void onServiceConnected(ComponentName className, IBinder service) {
             mService = DownloadInterface.Stub.asInterface(service);
             if (mService != null) {
-                try {
-                    // Get data
-                    downloadCurrent = getDownloads(mService._getCurrentDownloads());
-                    downloadPending = getDownloads(mService._getPendingDownloads());
-
-                    Log.i(TAG, "downloadCurrent=" + downloadCurrent.size());
-                    Log.i(TAG, "downloadPending=" + downloadPending.size());
-
-                    if (downloadCurrent.size() > 0) {
-                        // Populate Lists
-                        final Context ctxt = getApplicationContext();
-                        adapterCurrent = new DlAdapter(ctxt, downloadCurrent);
-                        adapterPending = new DlAdapter(ctxt, downloadPending);
-                        ListView listCurrent = (ListView) findViewById(R.id.list_current);
-                        ListView listPending = (ListView) findViewById(R.id.list_pending);
-                        listCurrent.setAdapter(adapterCurrent);
-                        listPending.setAdapter(adapterPending);
-                    } else {
-                        // No download
-                    }
-                } catch (RemoteException e) {
-                    Log.e(TAG, e.getMessage());
-                }
+                populateLists();
             } else {
                 Log.d(TAG, "Service is null");
             }
@@ -150,8 +186,8 @@ public class DownloadManager extends Activity {
                 holder = (ViewHolder) convertView.getTag();
             }
             Item item = items.get(position);
-            holder.logo.setImageResource(R.drawable.icon);
             holder.title.setText(item.title);
+            holder.logo.setImageBitmap(item.logo);
             return convertView;
         }
     }

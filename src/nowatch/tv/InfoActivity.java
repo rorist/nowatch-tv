@@ -40,7 +40,6 @@ public class InfoActivity extends Activity {
             + STYLE;
     private final Context ctxt = this;
     private final int IMG_DIP = 96;
-    private DisplayMetrics displayMetrics;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -49,8 +48,9 @@ public class InfoActivity extends Activity {
         setContentView(R.layout.info_activity);
 
         // Screen metrics (for dip to px conversion)
-        displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
+        DisplayMetrics dm = new DisplayMetrics();
+        getWindowManager().getDefaultDisplay().getMetrics(dm);
+        int image_size = (int) (IMG_DIP * dm.density + 0.5f);
 
         // Get item information
         Bundle extra = getIntent().getExtras();
@@ -62,13 +62,11 @@ public class InfoActivity extends Activity {
         ((TextView) findViewById(R.id.title)).setText(title);
         ((WebView) findViewById(R.id.desc)).loadData(PRE + c.getString(2), "text/html", "utf-8");
         ((WebView) findViewById(R.id.desc)).setBackgroundColor(0);
-        // ((TextView) findViewById(R.id.link)).setText(c.getString(3));
         ImageView logo = (ImageView) findViewById(R.id.logo);
         byte[] logo_byte = c.getBlob(5);
         if (logo_byte != null && logo_byte.length > 200) {
-            logo.setImageBitmap(Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_byte,
-                    0, logo_byte.length), (int) (IMG_DIP * displayMetrics.density + 0.5f),
-                    (int) (IMG_DIP * displayMetrics.density + 0.5f), true));
+            logo.setImageBitmap(Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_byte, 0,
+                logo_byte.length), image_size, image_size, true));
         } else {
             logo.setImageResource(R.drawable.icon);
         }
@@ -153,7 +151,6 @@ public class InfoActivity extends Activity {
     public void onStart() {
         super.onStart();
         bindService(new Intent(InfoActivity.this, DownloadService.class), mConnection, 0);
-        // FIXME: Try again to autostart ?
     }
 
     @Override
