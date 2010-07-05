@@ -71,7 +71,6 @@ public class DownloadService extends Service {
     private void handleCommand(Intent intent) {
         // Clean failed downloads
         if (downloadCurrent == 0) {
-            Log.v(TAG, "clean failed dl");
             SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
             db.execSQL("update items set status=3 where status=2");
             db.close();

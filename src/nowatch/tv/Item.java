@@ -23,10 +23,6 @@ public class Item {
     public Item() {
     }
 
-    public Item(int _id) {
-        id = _id;
-    }
-
     public String toString() {
         return title;
     }
