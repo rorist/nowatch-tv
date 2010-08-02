@@ -4,10 +4,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.ComponentName;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.DialogInterface.OnClickListener;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
@@ -20,13 +23,13 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView.OnItemClickListener;
-import android.widget.ArrayAdapter;
 import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.AdapterView.OnItemClickListener;
 
 public class DownloadManager extends Activity {
 
@@ -71,25 +74,45 @@ public class DownloadManager extends Activity {
     }
 
     private OnItemClickListener listenerCurrent = new OnItemClickListener() {
-        public void onItemClick(AdapterView<?> parent, View v, int position, long id){
-            Log.v("current", "position="+position);
+        public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+            Log.v("current", "position=" + position);
+            cancelDialog();
         }
     };
 
     private OnItemClickListener listenerPending = new OnItemClickListener() {
-        public void onItemClick(AdapterView<?> parent, View v, int position, long id){
-            Log.v("pending", "position="+position);
+        public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+            Log.v("pending", "position=" + position);
+            cancelDialog();
         }
     };
+
+    private void cancelDialog() {
+        final Context ctxt = getApplicationContext();
+        final AlertDialog.Builder dialog = new AlertDialog.Builder(ctxt);
+        dialog.setMessage("Voulez-vous ?");
+        dialog.setPositiveButton("Oui", new OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        });
+        dialog.setNegativeButton("Non", new OnClickListener() {
+            public void onClick(DialogInterface dialog, int which) {
+            }
+        });
+        dialog.show();
+    }
 
     private List<Item> getDownloads(int[] data) {
         SQLiteDatabase db = (new DB(getApplicationContext())).getWritableDatabase();
         List<Item> list = new ArrayList<Item>();
         int len = data.length;
         for (int i = 0; i < len; i++) {
-            Cursor c = db.rawQuery("select items.title, feeds.image from items inner join feeds on items.feed_id=feeds._id where items._id=" + data[i] + " limit 1", null);
+            Cursor c = db
+                    .rawQuery(
+                            "select items.title, feeds.image from items inner join feeds on items.feed_id=feeds._id where items._id="
+                                    + data[i] + " limit 1", null);
             c.moveToFirst();
-            if(c.getCount() > 0){
+            if (c.getCount() > 0) {
                 Item item = new Item();
                 item.id = data[i];
                 item.title = c.getString(0);
@@ -108,7 +131,7 @@ public class DownloadManager extends Activity {
         return list;
     }
 
-    private void populateLists(){
+    private void populateLists() {
         try {
             // Get data
             downloadCurrent = getDownloads(mService._getCurrentDownloads());
