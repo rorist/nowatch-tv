@@ -29,6 +29,7 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
 public class DownloadManager extends Activity {
@@ -64,7 +65,8 @@ public class DownloadManager extends Activity {
     @Override
     public void onStart() {
         super.onStart();
-        bindService(new Intent(DownloadManager.this, DownloadService.class), mConnection, 0);
+        bindService(new Intent(DownloadManager.this, DownloadService.class), mConnection,
+                BIND_AUTO_CREATE);
     }
 
     @Override
@@ -75,24 +77,32 @@ public class DownloadManager extends Activity {
 
     private OnItemClickListener listenerCurrent = new OnItemClickListener() {
         public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-            Log.v("current", "position=" + position);
-            cancelDialog();
+            Log.v("current", "id=" + downloadCurrent.get(position).id);
+            cancelDialog(downloadCurrent.get(position).id);
         }
     };
 
     private OnItemClickListener listenerPending = new OnItemClickListener() {
         public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-            Log.v("pending", "position=" + position);
-            cancelDialog();
+            Log.v("pending", "id=" + downloadPending.get(position).id);
+            cancelDialog(downloadPending.get(position).id);
         }
     };
 
-    private void cancelDialog() {
-        final Context ctxt = getApplicationContext();
+    private void cancelDialog(final int id) {
+        final Context ctxt = this;
         final AlertDialog.Builder dialog = new AlertDialog.Builder(ctxt);
-        dialog.setMessage("Voulez-vous ?");
+        dialog.setMessage("Voulez-vous annuler le téléchargement ?");
         dialog.setPositiveButton("Oui", new OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
+                try {
+                    if (mService != null) {
+                        mService._cancelDownload(id);
+                    }
+                } catch (RemoteException e) {
+                    Toast.makeText(ctxt, "Erreur de communication avec le service",
+                            Toast.LENGTH_SHORT);
+                }
             }
         });
         dialog.setNegativeButton("Non", new OnClickListener() {
@@ -133,26 +143,28 @@ public class DownloadManager extends Activity {
 
     private void populateLists() {
         try {
-            // Get data
-            downloadCurrent = getDownloads(mService._getCurrentDownloads());
-            downloadPending = getDownloads(mService._getPendingDownloads());
+            if (mService != null) {
+                // Get data
+                downloadCurrent = getDownloads(mService._getCurrentDownloads());
+                downloadPending = getDownloads(mService._getPendingDownloads());
 
-            Log.i(TAG, "downloadCurrent=" + downloadCurrent.size());
-            Log.i(TAG, "downloadPending=" + downloadPending.size());
+                Log.i(TAG, "downloadCurrent=" + downloadCurrent.size());
+                Log.i(TAG, "downloadPending=" + downloadPending.size());
 
-            if (downloadCurrent.size() > 0) {
-                // Populate Lists
-                final Context ctxt = getApplicationContext();
-                adapterCurrent = new DlAdapter(ctxt, downloadCurrent);
-                adapterPending = new DlAdapter(ctxt, downloadPending);
-                ListView listCurrent = (ListView) findViewById(R.id.list_current);
-                ListView listPending = (ListView) findViewById(R.id.list_pending);
-                listCurrent.setAdapter(adapterCurrent);
-                listPending.setAdapter(adapterPending);
-                listCurrent.setOnItemClickListener(listenerCurrent);
-                listPending.setOnItemClickListener(listenerPending);
-            } else {
-                // No download
+                if (downloadCurrent.size() > 0) {
+                    // Populate Lists
+                    final Context ctxt = getApplicationContext();
+                    adapterCurrent = new DlAdapter(ctxt, downloadCurrent);
+                    adapterPending = new DlAdapter(ctxt, downloadPending);
+                    ListView listCurrent = (ListView) findViewById(R.id.list_current);
+                    ListView listPending = (ListView) findViewById(R.id.list_pending);
+                    listCurrent.setAdapter(adapterCurrent);
+                    listPending.setAdapter(adapterPending);
+                    listCurrent.setOnItemClickListener(listenerCurrent);
+                    listPending.setOnItemClickListener(listenerPending);
+                } else {
+                    // No download
+                }
             }
         } catch (RemoteException e) {
             Log.e(TAG, e.getMessage());
@@ -169,12 +181,13 @@ public class DownloadManager extends Activity {
             if (mService != null) {
                 populateLists();
             } else {
-                Log.d(TAG, "Service is null");
+                Toast.makeText(getApplicationContext(), "Service inaccessible", Toast.LENGTH_SHORT);
             }
         }
 
         public void onServiceDisconnected(ComponentName className) {
             mService = null;
+            Toast.makeText(getApplicationContext(), "Service deconnecté", Toast.LENGTH_SHORT);
         }
     };
 

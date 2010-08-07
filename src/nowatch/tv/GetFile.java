@@ -30,18 +30,22 @@ public class GetFile {
     public static final String PATH_PODCASTS = "Podcasts/Nowatch.TV";
     public static final String USERAGENT = "Android/" + android.os.Build.VERSION.RELEASE + " ("
             + android.os.Build.MODEL + ") Nowatch.TV/1.0beta";
+
     private DefaultHttpClient httpclient;
     private int buffer_size = 8 * 1024; // in Bytes
     private boolean deleteOnFinish = false;
+
+    protected boolean cancel = false;
     protected String etag;
     protected String file_size;
 
-    public void getChannel(String src, String dst, String etag) throws IOException {
+    public void getChannel(String src, String dst, String etag) throws ClientProtocolException,
+            UnknownHostException, IOException {
         getChannel(src, dst, etag, deleteOnFinish);
     }
 
     public void getChannel(String src, String dst, String etag, boolean _deleteOnFinish)
-            throws IOException {
+            throws ClientProtocolException, UnknownHostException, IOException {
         deleteOnFinish = _deleteOnFinish;
 
         if (!Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
@@ -72,42 +76,31 @@ public class GetFile {
         }
         // Execute request
         try {
-            try {
-                response = httpclient.execute(httpget);
-            } catch (SSLException e) {
-                Log.i(TAG, "SSL Certificate is not trusted");
-                response = httpclient.execute(httpget);
-            }
-            Log.i(TAG, "Status:[" + response.getStatusLine().toString() + "] " + src);
-            Log.i("", "Useragent:[" + USERAGENT + "]");
+            response = httpclient.execute(httpget);
+        } catch (SSLException e) {
+            Log.i(TAG, "SSL Certificate is not trusted");
+            response = httpclient.execute(httpget);
+        }
+        Log.i(TAG, "Status:[" + response.getStatusLine().toString() + "] " + src);
+        Log.i("", "Useragent:[" + USERAGENT + "]");
 
-            // Exit if content not modified
-            if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
-                return;
-            }
-            // Save etag
-            else if (response.getLastHeader("ETag") != null) {
-                this.etag = response.getLastHeader("ETag").getValue();
-            }
-            // Save file_size
-            if (response.getLastHeader("Content-Length") != null) {
-                this.file_size = response.getLastHeader("Content-Length").getValue();
-            }
+        // Exit if content not modified
+        if (response.getStatusLine().getStatusCode() == HttpStatus.SC_NOT_MODIFIED) {
+            return;
+        }
+        // Save etag
+        else if (response.getLastHeader("ETag") != null) {
+            this.etag = response.getLastHeader("ETag").getValue();
+        }
+        // Save file_size
+        if (response.getLastHeader("Content-Length") != null) {
+            this.file_size = response.getLastHeader("Content-Length").getValue();
+        }
 
-            // Retrieve content
-            HttpEntity entity = response.getEntity();
-            if (entity != null) {
-                in = entity.getContent();
-            }
-        } catch (ClientProtocolException e) {
-            Log.e(TAG, "There was a protocol based error", e);
-            return;
-        } catch (UnknownHostException e) {
-            Log.e(TAG, "Connectivity errror", e);
-            return;
-        } catch (IOException e) {
-            Log.e(TAG, "There was an IO Stream related error", e);
-            return;
+        // Retrieve content
+        HttpEntity entity = response.getEntity();
+        if (entity != null) {
+            in = entity.getContent();
         }
 
         // Get channel
@@ -121,6 +114,15 @@ public class GetFile {
                     final ByteBuffer buffer = ByteBuffer.allocateDirect(buffer_size);
                     int count;
                     while ((count = inputChannel.read(buffer)) != -1) {
+                        if (cancel) {
+                            Log.v(TAG, "cancelling download");
+                            inputChannel.close();
+                            outputChannel.close();
+                            in.close();
+                            out.close();
+                            finish(dstFile.getAbsolutePath());
+                            return;
+                        }
                         buffer.flip();
                         outputChannel.write(buffer);
                         buffer.compact();
@@ -146,7 +148,6 @@ public class GetFile {
             }
             return;
         }
-        finish(null);
     }
 
     protected void update(int count) {

@@ -6,10 +6,12 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
-import java.util.ArrayList;
+import java.net.UnknownHostException;
+import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import org.apache.http.client.ClientProtocolException;
 
 import android.app.Notification;
 import android.app.NotificationManager;
@@ -34,14 +36,13 @@ public class DownloadService extends Service {
     private final int SIMULTANEOUS_DOWNLOAD = 2;
     private Context ctxt;
     private ConcurrentLinkedQueue<Integer> downloadQueue = new ConcurrentLinkedQueue<Integer>();
-    private List<DownloadTask> downloadTasks;
-    private int downloadCurrent = 0;
+    private HashMap<Integer, DownloadTask> downloadTasks;
 
     @Override
     public void onCreate() {
         Log.i(TAG, "onCreate()");
         ctxt = getApplicationContext();
-        downloadTasks = new ArrayList<DownloadTask>();
+        downloadTasks = new HashMap<Integer, DownloadTask>();
     }
 
     @Override
@@ -70,7 +71,7 @@ public class DownloadService extends Service {
 
     private void handleCommand(Intent intent) {
         // Clean failed downloads
-        if (downloadCurrent == 0) {
+        if (downloadTasks.size() == 0) {
             SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
             db.execSQL("update items set status=3 where status=2");
             db.close();
@@ -93,11 +94,11 @@ public class DownloadService extends Service {
     }
 
     private void startDownloadTask() {
-        Log.v(TAG, "StopOrContinue: " + downloadCurrent + " < " + SIMULTANEOUS_DOWNLOAD);
+        Log.v(TAG, "StopOrContinue: " + downloadTasks.size() + " < " + SIMULTANEOUS_DOWNLOAD);
         Network net = new Network(this);
         if (net.isConnected()) {
             if (net.isMobileAllowed()) {
-                if (downloadCurrent < SIMULTANEOUS_DOWNLOAD) {
+                if (downloadTasks.size() < SIMULTANEOUS_DOWNLOAD) {
                     Integer itemId = downloadQueue.poll();
                     if (itemId != null) {
                         // TODO: Check if there is enough space on device
@@ -108,7 +109,7 @@ public class DownloadService extends Service {
                         DownloadTask task = new DownloadTask(DownloadService.this, c.getString(0),
                                 itemId);
                         task.execute(c.getString(1), c.getString(2));
-                        downloadTasks.add(task);
+                        downloadTasks.put(itemId, task);
                         c.close();
                         db.close();
                     } else {
@@ -126,7 +127,8 @@ public class DownloadService extends Service {
     }
 
     private void stopOrContinue() {
-        if (downloadQueue.peek() == null && downloadCurrent == 0) {
+        if (downloadQueue.peek() == null && downloadTasks.size() < 1) {
+            Log.i(TAG, "stopping service");
             stopSelf();
         } else {
             startDownloadTask();
@@ -141,6 +143,8 @@ public class DownloadService extends Service {
         private int item_id;
         private String download_title;
         private WeakReference<DownloadService> mService;
+        private String error_msg = null;
+        private getPodcastFile task = null;
 
         public DownloadTask(DownloadService activity, String title, int itemId) {
             super();
@@ -171,8 +175,6 @@ public class DownloadService extends Service {
             nf.flags |= Notification.FLAG_ONGOING_EVENT;
             nf.flags |= Notification.FLAG_NO_CLEAR;
             mNotificationManager.notify(item_id, nf);
-
-            service.downloadCurrent++;
         }
 
         @Override
@@ -191,17 +193,26 @@ public class DownloadService extends Service {
                             .getCanonicalPath()
                             + "/" + GetFile.PATH_PODCASTS);
                     dst.mkdirs();
-                    new getPodcastFile(fs).getChannel(str[0], dst.getCanonicalPath() + "/"
+                    task = new getPodcastFile(fs);
+                    task.getChannel(str[0], dst.getCanonicalPath() + "/"
                             + new File(str[0]).getName());
                 } else {
                     // FIXME: Propagate error or exception
                     cancel(false);
                 }
             } catch (MalformedURLException e) {
+                error_msg = e.getLocalizedMessage();
+                Log.e(TAG, e.getMessage());
+            } catch (ClientProtocolException e) {
+                error_msg = e.getLocalizedMessage();
+                Log.e(TAG, e.getMessage());
+            } catch (UnknownHostException e) {
+                error_msg = e.getLocalizedMessage();
                 Log.e(TAG, e.getMessage());
             } catch (IOException e) {
+                error_msg = e.getLocalizedMessage();
                 Log.e(TAG, e.getMessage());
-                e.printStackTrace();
+
             }
             return null;
         }
@@ -217,22 +228,38 @@ public class DownloadService extends Service {
 
         @Override
         protected void onPostExecute(Void unused) {
+            Log.v(TAG, "onPostExecute()");
             super.onPostExecute(unused);
-            final DownloadService service = mService.get();
-            InfoActivity.changeStatus(service, item_id, Item.STATUS_DL_UNREAD);
-            finishNotification(service.getString(R.string.notif_dl_complete));
-            service.downloadCurrent--;
-            service.stopOrContinue();
+            if (mService != null) {
+                final DownloadService service = mService.get();
+                if (service != null) {
+                    if (error_msg != null) {
+                        Toast.makeText(service.getApplicationContext(), error_msg,
+                                Toast.LENGTH_LONG);
+                    }
+                    InfoActivity.changeStatus(service, item_id, Item.STATUS_DL_UNREAD);
+                    finishNotification(service.getString(R.string.notif_dl_complete));
+                    service.stopOrContinue();
+                }
+            }
         }
 
         @Override
         protected void onCancelled() {
+            Log.v(TAG, "onCancelled()");
             super.onCancelled();
-            final DownloadService service = mService.get();
-            InfoActivity.changeStatus(service, item_id, Item.STATUS_UNREAD);
-            finishNotification(service.getString(R.string.notif_dl_canceled));
-            service.downloadCurrent--;
-            service.stopOrContinue();
+            if (mService != null) {
+                final DownloadService service = mService.get();
+                if (service != null) {
+                    if (error_msg != null) {
+                        Toast.makeText(service.getApplicationContext(), error_msg,
+                                Toast.LENGTH_LONG);
+                    }
+                    InfoActivity.changeStatus(service, item_id, Item.STATUS_UNREAD);
+                    finishNotification(service.getString(R.string.notif_dl_canceled));
+                    service.stopOrContinue();
+                }
+            }
         }
 
         private void finishNotification(String msg) {
@@ -288,18 +315,23 @@ public class DownloadService extends Service {
         }
 
         public void _cancelDownload(int id) throws RemoteException {
-            // Search current dl
+            // Search pending dl
+            Log.v(TAG, "queue size (before remove)=" + downloadQueue.size());
             if (downloadQueue.contains(new Integer(id))) {
-                downloadQueue.remove(new Integer(id));
                 InfoActivity.changeStatus(ctxt, id, Item.STATUS_UNREAD);
+                downloadQueue.remove(new Integer(id));
+                Log.v(TAG, "queue size=" + downloadQueue.size());
                 return;
             }
-            // Search pending dl
-            for (DownloadTask task : downloadTasks) {
-                if (task.item_id == id) {
-                    task.cancel(true);
-                    InfoActivity.changeStatus(ctxt, id, Item.STATUS_UNREAD);
-                    return;
+            // Search current dl
+            Log.v(TAG, "current tasks (before remove)=" + downloadTasks.size());
+            if (downloadTasks.containsKey(id)) {
+                InfoActivity.changeStatus(ctxt, id, Item.STATUS_UNREAD);
+                DownloadTask task = downloadTasks.get(id);
+                task.task.cancel = true;
+                if (task.cancel(true)) {
+                    downloadTasks.remove(id);
+                    Log.v(TAG, "current tasks=" + downloadTasks.size());
                 }
             }
             return;
@@ -310,9 +342,12 @@ public class DownloadService extends Service {
         }
 
         public int[] _getCurrentDownloads() throws RemoteException {
-            int[] current = new int[downloadCurrent];
-            for (int i = 0; i < downloadCurrent; i++) {
-                current[i] = downloadTasks.get(i).item_id;
+            int[] current = new int[downloadTasks.size()];
+            Iterator<Integer> iterator = downloadTasks.keySet().iterator();
+            int i = 0;
+            while (iterator.hasNext()) {
+                current[i] = iterator.next();
+                i++;
             }
             return current;
         }
