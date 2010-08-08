@@ -9,10 +9,10 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.NetworkInfo.State;
 import android.preference.PreferenceManager;
-import android.widget.Toast;
 
 public class Network {
 
+    // private final static String TAG = "Network";
     private ConnectivityManager manager;
     private WeakReference<Activity> mActivity = null;
     private WeakReference<Context> mContext = null;
@@ -21,19 +21,23 @@ public class Network {
     public Network(Activity activity) {
         mActivity = new WeakReference<Activity>(activity);
         final Activity a = (Activity) mActivity.get();
-        manager = (ConnectivityManager) a.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (a != null) {
+            manager = (ConnectivityManager) a.getSystemService(Context.CONNECTIVITY_SERVICE);
+        }
     }
 
     public Network(DownloadService service) {
         mService = new WeakReference<DownloadService>(service);
         final DownloadService s = mService.get();
-        manager = (ConnectivityManager) s.getSystemService(Context.CONNECTIVITY_SERVICE);
+        if (s != null) {
+            manager = (ConnectivityManager) s.getSystemService(Context.CONNECTIVITY_SERVICE);
+        }
     }
 
     public Network(Context ctxt) {
         mContext = new WeakReference<Context>(ctxt);
         final Context c = mContext.get();
-        if(c != null){
+        if (c != null) {
             manager = (ConnectivityManager) c.getSystemService(Context.CONNECTIVITY_SERVICE);
         }
     }
@@ -41,11 +45,10 @@ public class Network {
     public boolean isConnected() {
         NetworkInfo nfo = manager.getActiveNetworkInfo();
         if (nfo != null) {
-            if(nfo.isConnected()){
+            if (nfo.isConnected()) {
                 return true;
             }
         }
-        Toast.makeText(getContext(), R.string.toast_notconnected, Toast.LENGTH_LONG).show();
         return false;
     }
 
@@ -57,7 +60,6 @@ public class Network {
             if (prefs.getBoolean(Prefs.KEY_MOBILE_TRAFFIC, Prefs.DEFAULT_MOBILE_TRAFFIC)) {
                 return true;
             }
-            Toast.makeText(ctxt, R.string.toast_nomobiletraffic, Toast.LENGTH_LONG).show();
             return false;
         }
         return isConnected();

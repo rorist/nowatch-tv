@@ -130,8 +130,8 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
                 android.R.drawable.ic_menu_upload);
         menu.add(0, MENU_MANAGE, 0, R.string.menu_manage)
                 .setIcon(android.R.drawable.ic_menu_manage);
-        menu.add(0, MENU_OPTIONS, 0, R.string.menu_options)
-                .setIcon(android.R.drawable.ic_menu_preferences);
+        menu.add(0, MENU_OPTIONS, 0, R.string.menu_options).setIcon(
+                android.R.drawable.ic_menu_preferences);
         return true;
     }
 
@@ -179,7 +179,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
                 btn_ref.setEnabled(false);
                 btn_ref.setClickable(false);
             } else {
-                Toast.makeText(a.ctxt, R.string.toast_notconnected, Toast.LENGTH_LONG).show();
+                Toast.makeText(a.ctxt, R.string.toast_notconnected, Toast.LENGTH_SHORT).show();
                 cancel(false);
             }
         }
@@ -209,7 +209,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
             ((TextView) a.findViewById(R.id.loading)).setVisibility(View.INVISIBLE);
             // progress.dismiss();
             if (sdcarderror) {
-                Toast.makeText(a.ctxt, R.string.toast_sdcard, Toast.LENGTH_LONG).show();
+                Toast.makeText(a.ctxt, R.string.toast_sdcard, Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -280,11 +280,11 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
                     } else if (diff < 2678400) { // 31 days
                         item.date = String.format(getString(R.string.date_days),
                                 (diff / 60 / 60 / 24));
-                    /*
-                    } else if (diff < 7776000) { // 3 monthes
-                        item.date = String.format(getString(R.string.date_monthes),
-                            (diff / 60 / 60 / 24 / 30));
-                    */
+                        /*
+                         * } else if (diff < 7776000) { // 3 monthes item.date =
+                         * String.format(getString(R.string.date_monthes), (diff
+                         * / 60 / 60 / 24 / 30));
+                         */
                     } else {
                         SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy");
                         formatter.setTimeZone(TimeZone.getDefault());

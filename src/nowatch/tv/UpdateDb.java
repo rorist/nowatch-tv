@@ -37,13 +37,13 @@ public class UpdateDb {
     private static Date lastPub;
     private static SimpleDateFormat formatter;
 
-    public static void update(Context ct, String fid, int feed_xml) throws IOException {
-        ctxt = ct;
+    public static void update(final Context _ctxt, String fid, int feed_xml) throws IOException {
+        ctxt = _ctxt;
         feed_id = fid;
         Cursor c = null;
         try {
             // Get lastpub and etag
-            db = (new DB(ctxt)).getWritableDatabase();
+            db = (new DB(_ctxt)).getWritableDatabase();
 
             // FIXME Probleme parsing date !!!! and get local timezone ?
             // Wed, 14 Apr 2010 18:18:07 +0200
@@ -67,7 +67,7 @@ public class UpdateDb {
             }
 
             // Try to download feed
-            new GetFeed().getChannel(ctxt.getString(feed_xml), etag);
+            new GetFeed().getChannel(_ctxt.getString(feed_xml), etag);
 
         } catch (ParseException e) {
             Log.e(TAG, e.getMessage());
@@ -157,7 +157,7 @@ public class UpdateDb {
             } else if (!in_items && name == "image"
                     && uri != "http://www.itunes.com/dtds/podcast-1.0.dtd") {
                 // Get image bits (only if not in mobile/3g)
-                if(new Network(ctxt).isMobileAllowed()){
+                if (new Network(ctxt).isMobileAllowed()) {
                     try {
                         new GetImage().getChannel(feedMap.getAsString("image"));
                     } catch (IOException e) {
@@ -166,6 +166,7 @@ public class UpdateDb {
                 }
             } else if (!in_items && name == "pubDate") {
                 try {
+                    Log.i(TAG, "pubDate: This check is not supposed to happen");
                     // Check publication date of channel
                     // (this check is not supposed to happen since we use ETags)
                     if (!formatter.parse(feedMap.getAsString("pubDate")).after(lastPub)) {
