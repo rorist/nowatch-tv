@@ -3,6 +3,7 @@ package nowatch.tv;
 import java.lang.ref.WeakReference;
 
 import android.app.Activity;
+import android.app.Service;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
@@ -78,13 +79,21 @@ public class Network {
     }
 
     private Context getContext() {
-        // FIXME: It's not safe to use get() without checking for null
         if (mActivity != null) {
-            return mActivity.get().getApplicationContext();
+            final Activity a = mActivity.get();
+            if (a != null) {
+                return a.getApplicationContext();
+            }
         } else if (mService != null) {
-            return mService.get().getApplicationContext();
+            final Service s = mService.get();
+            if (s != null) {
+                return s.getApplicationContext();
+            }
         } else if (mContext != null) {
-            return mContext.get().getApplicationContext();
+            final Context c = mContext.get();
+            if (c != null) {
+                return c.getApplicationContext();
+            }
         }
         return null;
     }
