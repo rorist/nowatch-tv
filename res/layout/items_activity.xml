@@ -13,6 +13,13 @@
         android:textFilterEnabled="true"
         android:cacheColorHint="#00000000" />
     <TextView
+        android:id="@+id/list_empty"
+        android:layout_width="wrap_content"
+        android:layout_height="fill_parent"
+        android:gravity="center_vertical"
+        android:layout_gravity="center_horizontal"
+        android:text="Cliquez sur Rafraichir" />
+    <TextView
         android:id="@+id/loading"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"

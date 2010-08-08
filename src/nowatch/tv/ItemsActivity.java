@@ -109,12 +109,17 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         list.setAdapter(adapter);
         list.setItemsCanFocus(false);
         list.setOnItemClickListener(this);
+        list.setEmptyView(findViewById(R.id.list_empty));
         ((TextView) findViewById(R.id.loading)).setVisibility(View.INVISIBLE);
 
-        if (addToList(0, ITEMS_NB) == 0) {
-            updateTask = new UpdateTask(ItemsActivity.this);
-            updateTask.execute();
-        }
+        // FIXME: Do not run this in onCreate()
+        // if (addToList(0, ITEMS_NB) == 0) {
+        // updateTask = new UpdateTask(ItemsActivity.this);
+        // updateTask.execute();
+        // }
+
+        // Add existing items to list
+        addToList(0, ITEMS_NB);
         updateList();
     }
 

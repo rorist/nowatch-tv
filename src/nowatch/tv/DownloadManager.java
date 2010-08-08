@@ -60,6 +60,12 @@ public class DownloadManager extends Activity {
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
         image_size = (int) (48 * dm.density + 0.5f);
+
+        // Empty list
+        ListView listCurrent = (ListView) findViewById(R.id.list_current);
+        ListView listPending = (ListView) findViewById(R.id.list_pending);
+        listCurrent.setEmptyView(findViewById(R.id.list_current_empty));
+        listPending.setEmptyView(findViewById(R.id.list_pending_empty));
     }
 
     @Override

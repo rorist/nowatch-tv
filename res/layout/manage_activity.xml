@@ -11,10 +11,26 @@
         android:layout_height="0dip"
         android:layout_weight="1"
         android:cacheColorHint="#00000000" />
+    <TextView
+        android:id="@+id/list_current_empty"
+        android:layout_width="wrap_content"
+        android:layout_height="0dip"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:layout_gravity="center_horizontal"
+        android:text="Aucun téléchargement en cours" />
     <ListView
         android:id="@+id/list_pending"
         android:layout_width="fill_parent"
         android:layout_height="0dip"
         android:layout_weight="1"
         android:cacheColorHint="#00000000" />
+    <TextView
+        android:id="@+id/list_pending_empty"
+        android:layout_width="wrap_content"
+        android:layout_height="0dip"
+        android:layout_weight="1"
+        android:gravity="center_vertical"
+        android:layout_gravity="center_horizontal"
+        android:text="Aucun téléchargement en attente" />
 </LinearLayout>
