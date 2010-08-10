@@ -44,7 +44,6 @@ public class InfoActivity extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        startService(new Intent(InfoActivity.this, DownloadService.class));
         setContentView(R.layout.info_activity);
 
         // Screen metrics (for dip to px conversion)
@@ -54,7 +53,7 @@ public class InfoActivity extends Activity {
 
         // Get item information
         Bundle extra = getIntent().getExtras();
-        final int item_id = extra.getInt("item_id");
+        final int item_id = extra.getInt(Item.EXTRA_ITEM_ID);
         SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
         Cursor c = db.rawQuery(REQ + item_id, null);
         c.moveToFirst();
@@ -141,30 +140,6 @@ public class InfoActivity extends Activity {
         }
     }
 
-    @Override
-    public void onStart() {
-        super.onStart();
-        bindService(new Intent(InfoActivity.this, DownloadService.class), mConnection, 0);
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    protected void onStop() {
-        super.onDestroy();
-        if (mService != null) {
-            try {
-                mService._stopOrContinue();
-            } catch (RemoteException e) {
-                Log.e(TAG, e.getMessage());
-            }
-        }
-        unbindService(mConnection);
-    }
-
     public static void changeStatus(Context ctxt, int id, int status) {
         SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
         ContentValues value = new ContentValues();
@@ -175,13 +150,10 @@ public class InfoActivity extends Activity {
 
     private void downloadVideo(int item_id) {
         changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
-        if (mService != null) {
-            try {
-                mService._startDownload(item_id);
-            } catch (RemoteException e) {
-                Log.e(TAG, e.getMessage());
-            }
-        }
+        Intent intent = new Intent(InfoActivity.this, DownloadService.class);
+        intent.setAction(DownloadService.ACTION_ADD);
+        intent.putExtra(Item.EXTRA_ITEM_ID, item_id);
+        startService(intent);
     }
 
     private void viewVideo(String file, String type, int item_id) {
@@ -217,17 +189,4 @@ public class InfoActivity extends Activity {
         }
     }
 
-    /**
-     * Service Binding
-     */
-    private DownloadInterface mService = null;
-    private ServiceConnection mConnection = new ServiceConnection() {
-        public void onServiceConnected(ComponentName className, IBinder service) {
-            mService = DownloadInterface.Stub.asInterface(service);
-        }
-
-        public void onServiceDisconnected(ComponentName className) {
-            mService = null;
-        }
-    };
 }

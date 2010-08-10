@@ -7,6 +7,7 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -33,8 +34,8 @@ public class DownloadService extends Service {
 
     private final static String TAG = Main.TAG + "DownloadService";
     public static final String ACTION_UPDATE = "action_update";
-    public static final String EXTRA_UPDATE = "extra_update";
-    public static final String EXTRA_ADDITEM = "extra_additem";
+    public static final String ACTION_ADD = "action_add";
+    public static final String ACTION_CANCEL = "action_cancel";
     private final String REQ = "select title,file_uri,file_size from items where _id=? limit 1";
     private final int SIMULTANEOUS_DOWNLOAD = 2; //FIXME: Set from preferences
     private Context ctxt;
@@ -51,11 +52,18 @@ public class DownloadService extends Service {
     @Override
     public void onDestroy() {
         Log.i(TAG, "onDestroy()");
+        //cancelAll();
     }
 
     @Override
     public void onLowMemory() {
         Log.i(TAG, "onLowMemory()");
+        //cancelAll();
+    }
+
+    @Override
+    public void onStop() {
+        Log.i(TAG, "onStop()");
     }
 
     @Override
@@ -81,10 +89,15 @@ public class DownloadService extends Service {
         }
         // Handle intentions
         if (intent != null) {
-            if (intent.hasExtra(EXTRA_ADDITEM)) {
+            String action = intent.getAction();
+            Log.v(TAG, "action="+action);
+            if (ACTION_ADD.equals(action)) {
                 // Add item to download queue
-                addItem(intent.getExtras().getInt(EXTRA_ADDITEM));
-            } else if (ACTION_UPDATE.equals(intent.getAction())) {
+                addItem(intent.getExtras().getInt(Item.EXTRA_ITEM_ID));
+            } else if (ACTION_CANCEL.equals(action)) {
+                // Cancel download
+                cancelDownload(intent.getExtras().getInt(Item.EXTRA_ITEM_ID));
+            } else if (ACTION_UPDATE.equals(action)) {
                 // Check for updates
                 Log.v(TAG, "PLEASE UPDATE");
             }
@@ -101,10 +114,10 @@ public class DownloadService extends Service {
     }
 
     private void startDownloadTask() {
-        Log.v(TAG, "StopOrContinue: " + downloadTasks.size() + " < " + SIMULTANEOUS_DOWNLOAD);
         Network net = new Network(this);
         if (net.isConnected()) {
             if (net.isMobileAllowed()) {
+                Log.v(TAG, "Tasks size=" + downloadTasks.size() + " and < " + SIMULTANEOUS_DOWNLOAD);
                 if (downloadTasks.size() < SIMULTANEOUS_DOWNLOAD) {
                     Integer itemId = downloadQueue.poll();
                     if (itemId != null) {
@@ -120,8 +133,6 @@ public class DownloadService extends Service {
                         c.close();
                         db.close();
                         InfoActivity.changeStatus(ctxt, itemId, Item.STATUS_DOWNLOADING);
-                    } else {
-                        Log.i(TAG, "download queue is empty");
                     }
                 } else {
                     Toast.makeText(ctxt, R.string.toast_dl_added, Toast.LENGTH_SHORT);
@@ -131,6 +142,42 @@ public class DownloadService extends Service {
             }
         } else {
             Toast.makeText(ctxt, R.string.toast_notconnected, Toast.LENGTH_LONG).show();
+        }
+    }
+
+    private void cancelAll(){
+        Collection<DownloadTask> tasks = downloadTasks.values();
+        Iterator iterator = tasks.iterator();
+        while (iterator.hasNext()) {
+            DownloadTask task = (DownloadTask) iterator.next();
+            task.cancel(true);
+            tasks.remove(task);
+        }
+        iterator = downloadQueue.iterator();
+        while (iterator.hasNext()) {
+           downloadQueue.remove((Integer) iterator.next());
+        }
+    }
+
+    private void cancelDownload(Integer id) {
+        // Search pending dl
+        Log.v(TAG, "queue size (before remove)=" + downloadQueue.size());
+        if (downloadQueue.contains(id)) {
+            InfoActivity.changeStatus(ctxt, id, Item.STATUS_UNREAD);
+            downloadQueue.remove(id);
+            Log.v(TAG, "queue size=" + downloadQueue.size());
+            return;
+        }
+        // Search current dl
+        Log.v(TAG, "current tasks (before remove)=" + downloadTasks.size());
+        if (downloadTasks.containsKey(id)) {
+            InfoActivity.changeStatus(ctxt, id, Item.STATUS_UNREAD);
+            DownloadTask task = downloadTasks.get(id);
+            task.task.cancel = true;
+            if (task.cancel(true)) {
+                downloadTasks.remove(id);
+                Log.v(TAG, "current tasks=" + downloadTasks.size());
+            }
         }
     }
 
@@ -317,37 +364,6 @@ public class DownloadService extends Service {
      * Service control (IPC) using AIDL interface
      */
     private final DownloadInterface.Stub mBinder = new DownloadInterface.Stub() {
-
-        public void _startDownload(int id) throws RemoteException {
-            addItem(id);
-        }
-
-        public void _cancelDownload(int id) throws RemoteException {
-            // Search pending dl
-            Log.v(TAG, "queue size (before remove)=" + downloadQueue.size());
-            if (downloadQueue.contains(new Integer(id))) {
-                InfoActivity.changeStatus(ctxt, id, Item.STATUS_UNREAD);
-                downloadQueue.remove(new Integer(id));
-                Log.v(TAG, "queue size=" + downloadQueue.size());
-                return;
-            }
-            // Search current dl
-            Log.v(TAG, "current tasks (before remove)=" + downloadTasks.size());
-            if (downloadTasks.containsKey(id)) {
-                InfoActivity.changeStatus(ctxt, id, Item.STATUS_UNREAD);
-                DownloadTask task = downloadTasks.get(id);
-                task.task.cancel = true;
-                if (task.cancel(true)) {
-                    downloadTasks.remove(id);
-                    Log.v(TAG, "current tasks=" + downloadTasks.size());
-                }
-            }
-            return;
-        }
-
-        public void _stopOrContinue() throws RemoteException {
-            stopOrContinue();
-        }
 
         public int[] _getCurrentDownloads() throws RemoteException {
             int[] current = new int[downloadTasks.size()];

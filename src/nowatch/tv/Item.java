@@ -5,6 +5,7 @@ import android.view.View.OnClickListener;
 
 public class Item {
 
+    public static final String EXTRA_ITEM_ID = "extra_item_id";
     public static final int STATUS_NEW = 1;
     public static final int STATUS_DOWNLOADING = 2;
     public static final int STATUS_UNREAD = 3;

@@ -66,31 +66,21 @@ public class DownloadManager extends Activity {
         ListView listPending = (ListView) findViewById(R.id.list_pending);
         listCurrent.setEmptyView(findViewById(R.id.list_current_empty));
         listPending.setEmptyView(findViewById(R.id.list_pending_empty));
-    }
 
-    @Override
-    public void onStart() {
-        super.onStart();
+        // Populate list
         bindService(new Intent(DownloadManager.this, DownloadService.class), mConnection,
                 BIND_AUTO_CREATE);
-    }
-
-    @Override
-    public void onStop() {
-        super.onStop();
         unbindService(mConnection);
     }
 
     private OnItemClickListener listenerCurrent = new OnItemClickListener() {
         public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-            Log.v("current", "id=" + downloadCurrent.get(position).id);
             cancelDialog(downloadCurrent.get(position).id);
         }
     };
 
     private OnItemClickListener listenerPending = new OnItemClickListener() {
         public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-            Log.v("pending", "id=" + downloadPending.get(position).id);
             cancelDialog(downloadPending.get(position).id);
         }
     };
@@ -101,14 +91,10 @@ public class DownloadManager extends Activity {
         dialog.setMessage("Voulez-vous annuler le téléchargement ?");
         dialog.setPositiveButton("Oui", new OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
-                try {
-                    if (mService != null) {
-                        mService._cancelDownload(id);
-                    }
-                } catch (RemoteException e) {
-                    Toast.makeText(ctxt, "Erreur de communication avec le service",
-                            Toast.LENGTH_SHORT);
-                }
+                Intent intent = new Intent(ctxt, DownloadService.class);
+                intent.setAction(DownloadService.ACTION_CANCEL);
+                intent.putExtra(Item.EXTRA_ITEM_ID, id);
+                startService(intent);
             }
         });
         dialog.setNegativeButton("Non", new OnClickListener() {

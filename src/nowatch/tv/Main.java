@@ -7,12 +7,12 @@ import android.os.Bundle;
 
 public class Main extends Activity {
 
-    private final static String TAG = "NWTV:";
+    public static final String TAG = "NWTV:";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        startService(new Intent(Main.this, DownloadService.class));
+        //startService(new Intent(Main.this, DownloadService.class));
         startActivity(new Intent(Main.this, ItemsActivity.class));
         finish();
     }
