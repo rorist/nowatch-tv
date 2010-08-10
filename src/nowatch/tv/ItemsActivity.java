@@ -41,7 +41,7 @@ import android.widget.AdapterView.OnItemClickListener;
 
 public class ItemsActivity extends Activity implements OnItemClickListener {
 
-    private final String TAG = "ItemsActivity";
+    private final String TAG = Main.TAG + "ItemsActivity";
     private final String QUERY_ITEMS = "SELECT items._id, items.title, items.status, feeds.image, items.pubDate "
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id "
             + "ORDER BY items.pubDate DESC LIMIT ";

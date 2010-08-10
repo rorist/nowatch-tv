@@ -31,7 +31,7 @@ import android.widget.Toast;
 
 public class InfoActivity extends Activity {
 
-    private final String TAG = "InfoActivity";
+    private final String TAG = Main.TAG + "InfoActivity";
     private final String REQ = "SELECT feeds.title, items.title, items.description, "
             + "items.link, feeds.link, image, file_uri, file_size, file_type, items.status "
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id WHERE items._id=";

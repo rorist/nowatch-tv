@@ -10,7 +10,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.util.Log;
 
 public class DB extends SQLiteOpenHelper {
-    private final static String TAG = "DB";
+    private final static String TAG = Main.TAG + "DB";
     private final static String DB_NAME = "nowatch.db";
     private final static int DB_VERSION = 2;
     private final String CREATE_FEEDS = "create table feeds ("

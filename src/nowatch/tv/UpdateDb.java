@@ -29,7 +29,7 @@ import android.util.Log;
 
 public class UpdateDb {
 
-    private static final String TAG = "UpdateDb";
+    private static final String TAG = Main.TAG + "UpdateDb";
     private static SQLiteDatabase db;
     private static Context ctxt;
     private static String feed_id;

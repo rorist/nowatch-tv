@@ -13,7 +13,7 @@ import android.preference.PreferenceManager;
 
 public class Network {
 
-    // private final static String TAG = "Network";
+    // private final static String TAG = Main.TAG + "Network";
     private ConnectivityManager manager;
     private WeakReference<Activity> mActivity = null;
     private WeakReference<Context> mContext = null;

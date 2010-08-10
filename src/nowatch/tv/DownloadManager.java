@@ -34,7 +34,7 @@ import android.widget.AdapterView.OnItemClickListener;
 
 public class DownloadManager extends Activity {
 
-    private final String TAG = "DownloadManager";
+    private final String TAG = Main.TAG + "DownloadManager";
     private static LayoutInflater mInflater;
     private DlAdapter adapterCurrent = null;
     private DlAdapter adapterPending = null;

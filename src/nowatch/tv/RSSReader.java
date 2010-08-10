@@ -13,7 +13,7 @@ import android.util.Log;
 
 public class RSSReader extends DefaultHandler {
 
-    private final String TAG = "RSSReader";
+    private final String TAG = Main.TAG + "RSSReader";
     private final boolean LOG_INFO = false;
     private final List<String> feeds_fields = Arrays.asList("_id", "title", "description", "link",
             "pubDate", "image");

@@ -31,7 +31,7 @@ import android.widget.Toast;
 
 public class DownloadService extends Service {
 
-    private final static String TAG = "DownloadService";
+    private final static String TAG = Main.TAG + "DownloadService";
     public static final String ACTION_UPDATE = "action_update";
     public static final String EXTRA_UPDATE = "extra_update";
     public static final String EXTRA_ADDITEM = "extra_additem";

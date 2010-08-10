@@ -25,7 +25,7 @@ import android.util.Log;
 
 public class GetFile {
 
-    private final String TAG = "GetFile";
+    private final String TAG = Main.TAG + "GetFile";
     public static final String PATH_CACHE = "Android/data/nowatch.tv/cache";
     public static final String PATH_PODCASTS = "Podcasts/Nowatch.TV";
     public static final String USERAGENT = "Android/" + android.os.Build.VERSION.RELEASE + " ("
