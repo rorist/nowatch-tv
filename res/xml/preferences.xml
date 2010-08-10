@@ -1,7 +1,12 @@
 <PreferenceScreen
     xmlns:android="http://schemas.android.com/apk/res/android">
     <PreferenceCategory
-        android:title="Connectivité">
+        android:title="Général">
+        <CheckBoxPreference
+            android:key="notification"
+            android:title="Notification"
+            android:summary="TODO"
+            android:defaultValue="false" />
         <CheckBoxPreference
             android:key="mobile_traffic"
             android:title="Authoriser téléchargement mobile"

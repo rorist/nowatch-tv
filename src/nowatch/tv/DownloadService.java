@@ -32,8 +32,11 @@ import android.widget.Toast;
 public class DownloadService extends Service {
 
     private final static String TAG = "DownloadService";
+    public static final String ACTION_UPDATE = "action_update";
+    public static final String EXTRA_UPDATE = "extra_update";
+    public static final String EXTRA_ADDITEM = "extra_additem";
     private final String REQ = "select title,file_uri,file_size from items where _id=? limit 1";
-    private final int SIMULTANEOUS_DOWNLOAD = 2;
+    private final int SIMULTANEOUS_DOWNLOAD = 2; //FIXME: Set from preferences
     private Context ctxt;
     private ConcurrentLinkedQueue<Integer> downloadQueue = new ConcurrentLinkedQueue<Integer>();
     private HashMap<Integer, DownloadTask> downloadTasks;
@@ -58,7 +61,7 @@ public class DownloadService extends Service {
     @Override
     public void onStart(Intent intent, int startId) {
         Log.i(TAG, "onStart()");
-        // FIXME: onStart() is deprecated, but used for backward compatibility!
+        // onStart() is deprecated, but used for backward compatibility!
         handleCommand(intent);
     }
 
@@ -76,12 +79,18 @@ public class DownloadService extends Service {
             db.execSQL("update items set status=3 where status=2");
             db.close();
         }
-        // Add item to download queue
+        // Handle intentions
         if (intent != null) {
-            if (intent.hasExtra("item_id")) {
-                addItem(intent.getExtras().getInt("item_id"));
+            if (intent.hasExtra(EXTRA_ADDITEM)) {
+                // Add item to download queue
+                addItem(intent.getExtras().getInt(EXTRA_ADDITEM));
+            } else if (ACTION_UPDATE.equals(intent.getAction())) {
+                // Check for updates
+                Log.v(TAG, "PLEASE UPDATE");
             }
         }
+        // Start pending task or exit
+        stopOrContinue();
     }
 
     private void addItem(int item_id) {
@@ -89,8 +98,6 @@ public class DownloadService extends Service {
             downloadQueue.add(new Integer(item_id));
             Log.i(TAG, "Item added to queue=" + item_id);
         }
-        startDownloadTask();
-        InfoActivity.changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
     }
 
     private void startDownloadTask() {
@@ -112,6 +119,7 @@ public class DownloadService extends Service {
                         downloadTasks.put(itemId, task);
                         c.close();
                         db.close();
+                        InfoActivity.changeStatus(ctxt, itemId, Item.STATUS_DOWNLOADING);
                     } else {
                         Log.i(TAG, "download queue is empty");
                     }

@@ -159,7 +159,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
 
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
         Intent i = new Intent(ctxt, InfoActivity.class);
-        i.putExtra("item_id", items.get(position).id);
+        i.putExtra(DownloadService.EXTRA_ADDITEM, items.get(position).id);
         startActivity(i);
     }
 
