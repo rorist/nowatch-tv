@@ -9,7 +9,7 @@ public class Receiver extends BroadcastReceiver {
     @Override
     public void onReceive(Context context, Intent intent) {
         if(Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())){
-            new Notification(context).startNotification();
+            new UpdateNotification(context).startNotification();
         }
     }
 

@@ -3,21 +3,18 @@ package nowatch.tv;
 // TODO: Do not bind to service, just send IntentService
 
 import java.io.File;
+
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
-import android.content.ComponentName;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.os.RemoteException;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -64,8 +61,8 @@ public class InfoActivity extends Activity {
         ImageView logo = (ImageView) findViewById(R.id.logo);
         byte[] logo_byte = c.getBlob(5);
         if (logo_byte != null && logo_byte.length > 200) {
-            logo.setImageBitmap(Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_byte, 0,
-                logo_byte.length), image_size, image_size, true));
+            logo.setImageBitmap(Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_byte,
+                    0, logo_byte.length), image_size, image_size, true));
         } else {
             logo.setImageResource(R.drawable.icon);
         }
@@ -82,10 +79,10 @@ public class InfoActivity extends Activity {
         // Set things
 
         // Menu buttons
-        ((Button) findViewById(R.id.btn_back)).setVisibility(View.VISIBLE);
-        ((Button) findViewById(R.id.btn_play)).setVisibility(View.VISIBLE);
-        ((Button) findViewById(R.id.btn_download)).setVisibility(View.VISIBLE);
-        ((Button) findViewById(R.id.btn_back)).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.btn_back).setVisibility(View.VISIBLE);
+        findViewById(R.id.btn_play).setVisibility(View.VISIBLE);
+        findViewById(R.id.btn_download).setVisibility(View.VISIBLE);
+        findViewById(R.id.btn_back).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 finish();
             }

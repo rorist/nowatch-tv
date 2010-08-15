@@ -7,7 +7,6 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -52,6 +51,7 @@ public class DownloadService extends Service {
     @Override
     public void onDestroy() {
         Log.i(TAG, "onDestroy()");
+        clean();
         //cancelAll();
     }
 
@@ -59,11 +59,6 @@ public class DownloadService extends Service {
     public void onLowMemory() {
         Log.i(TAG, "onLowMemory()");
         //cancelAll();
-    }
-
-    @Override
-    public void onStop() {
-        Log.i(TAG, "onStop()");
     }
 
     @Override
@@ -80,13 +75,17 @@ public class DownloadService extends Service {
         return START_NOT_STICKY;
     }
 
-    private void handleCommand(Intent intent) {
+    private void clean() {
         // Clean failed downloads
         if (downloadTasks.size() == 0) {
             SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
             db.execSQL("update items set status=3 where status=2");
             db.close();
         }
+    }
+
+    private void handleCommand(Intent intent) {
+        clean();
         // Handle intentions
         if (intent != null) {
             String action = intent.getAction();
@@ -101,9 +100,9 @@ public class DownloadService extends Service {
                 // Check for updates
                 Log.v(TAG, "PLEASE UPDATE");
             }
+            // Start pending task or exit
+            stopOrContinue();
         }
-        // Start pending task or exit
-        stopOrContinue();
     }
 
     private void addItem(int item_id) {
@@ -118,7 +117,7 @@ public class DownloadService extends Service {
         if (net.isConnected()) {
             if (net.isMobileAllowed()) {
                 Log.v(TAG, "Tasks size=" + downloadTasks.size() + " and < " + SIMULTANEOUS_DOWNLOAD);
-                if (downloadTasks.size() < SIMULTANEOUS_DOWNLOAD) {
+                if (downloadTasks.size() < SIMULTANEOUS_DOWNLOAD && downloadQueue.size() > 0) {
                     Integer itemId = downloadQueue.poll();
                     if (itemId != null) {
                         // TODO: Check if there is enough space on device
@@ -135,27 +134,13 @@ public class DownloadService extends Service {
                         InfoActivity.changeStatus(ctxt, itemId, Item.STATUS_DOWNLOADING);
                     }
                 } else {
-                    Toast.makeText(ctxt, R.string.toast_dl_added, Toast.LENGTH_SHORT);
+                    Toast.makeText(ctxt, R.string.toast_dl_added, Toast.LENGTH_SHORT).show();
                 }
             } else {
                 Toast.makeText(ctxt, R.string.toast_nomobiletraffic, Toast.LENGTH_LONG).show();
             }
         } else {
             Toast.makeText(ctxt, R.string.toast_notconnected, Toast.LENGTH_LONG).show();
-        }
-    }
-
-    private void cancelAll(){
-        Collection<DownloadTask> tasks = downloadTasks.values();
-        Iterator iterator = tasks.iterator();
-        while (iterator.hasNext()) {
-            DownloadTask task = (DownloadTask) iterator.next();
-            task.cancel(true);
-            tasks.remove(task);
-        }
-        iterator = downloadQueue.iterator();
-        while (iterator.hasNext()) {
-           downloadQueue.remove((Integer) iterator.next());
         }
     }
 
@@ -171,14 +156,14 @@ public class DownloadService extends Service {
         // Search current dl
         Log.v(TAG, "current tasks (before remove)=" + downloadTasks.size());
         if (downloadTasks.containsKey(id)) {
-            InfoActivity.changeStatus(ctxt, id, Item.STATUS_UNREAD);
             DownloadTask task = downloadTasks.get(id);
-            task.task.cancel = true;
             if (task.cancel(true)) {
                 downloadTasks.remove(id);
                 Log.v(TAG, "current tasks=" + downloadTasks.size());
+                InfoActivity.changeStatus(ctxt, id, Item.STATUS_UNREAD);
             }
         }
+        stopOrContinue();
     }
 
     private void stopOrContinue() {
@@ -290,7 +275,7 @@ public class DownloadService extends Service {
                 if (service != null) {
                     if (error_msg != null) {
                         Toast.makeText(service.getApplicationContext(), error_msg,
-                                Toast.LENGTH_LONG);
+                                Toast.LENGTH_LONG).show();
                     }
                     InfoActivity.changeStatus(service, item_id, Item.STATUS_DL_UNREAD);
                     finishNotification(service.getString(R.string.notif_dl_complete));
@@ -308,7 +293,7 @@ public class DownloadService extends Service {
                 if (service != null) {
                     if (error_msg != null) {
                         Toast.makeText(service.getApplicationContext(), error_msg,
-                                Toast.LENGTH_LONG);
+                                Toast.LENGTH_LONG).show();
                     }
                     InfoActivity.changeStatus(service, item_id, Item.STATUS_UNREAD);
                     finishNotification(service.getString(R.string.notif_dl_canceled));

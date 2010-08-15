@@ -35,6 +35,8 @@ import android.widget.AdapterView.OnItemClickListener;
 public class DownloadManager extends Activity {
 
     private final String TAG = Main.TAG + "DownloadManager";
+    private final int TYPE_CURRENT = 1;
+    private final int TYPE_PENDING = 2;
     private static LayoutInflater mInflater;
     private DlAdapter adapterCurrent = null;
     private DlAdapter adapterPending = null;
@@ -67,33 +69,56 @@ public class DownloadManager extends Activity {
         listCurrent.setEmptyView(findViewById(R.id.list_current_empty));
         listPending.setEmptyView(findViewById(R.id.list_pending_empty));
 
-        // Populate list
+        // Hide menu
+        findViewById(R.id.menu_top).setVisibility(View.INVISIBLE);
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
         bindService(new Intent(DownloadManager.this, DownloadService.class), mConnection,
                 BIND_AUTO_CREATE);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
         unbindService(mConnection);
     }
 
     private OnItemClickListener listenerCurrent = new OnItemClickListener() {
         public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-            cancelDialog(downloadCurrent.get(position).id);
+            cancelDialog(position, TYPE_CURRENT);
         }
     };
 
     private OnItemClickListener listenerPending = new OnItemClickListener() {
         public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-            cancelDialog(downloadPending.get(position).id);
+            cancelDialog(position, TYPE_PENDING);
         }
     };
 
-    private void cancelDialog(final int id) {
+    private void cancelDialog(final int position, final int type) {
         final Context ctxt = this;
         final AlertDialog.Builder dialog = new AlertDialog.Builder(ctxt);
         dialog.setMessage("Voulez-vous annuler le téléchargement ?");
         dialog.setPositiveButton("Oui", new OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
+                Item item = null;
+                // Remove item from list
+                if (type == TYPE_CURRENT) {
+                    item = downloadCurrent.get(position);
+                    adapterCurrent.remove(item);
+                    // downloadCurrent.remove(position);
+                } else if (type == TYPE_PENDING) {
+                    item = downloadPending.get(position);
+                    adapterPending.remove(item);
+                    // downloadPending.remove(position);
+                }
+                // Send intent to service
                 Intent intent = new Intent(ctxt, DownloadService.class);
                 intent.setAction(DownloadService.ACTION_CANCEL);
-                intent.putExtra(Item.EXTRA_ITEM_ID, id);
+                intent.putExtra(Item.EXTRA_ITEM_ID, item.id);
                 startService(intent);
             }
         });

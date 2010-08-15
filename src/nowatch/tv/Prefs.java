@@ -29,7 +29,7 @@ public class Prefs extends PreferenceActivity implements OnSharedPreferenceChang
 
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
         if(key.equals(KEY_NOTIFICATION)){
-            Notification notif = new Notification(ctxt);
+            UpdateNotification notif = new UpdateNotification(ctxt);
             CheckBoxPreference cb = (CheckBoxPreference) ps.findPreference(KEY_NOTIFICATION);
             if(cb.isChecked()){
                notif.startNotification(); 

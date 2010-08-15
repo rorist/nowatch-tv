@@ -6,7 +6,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.os.SystemClock;
 
-public class Notification {
+public class UpdateNotification {
 
     private final int REQUEST = 0;
     private AlarmManager am;
@@ -15,7 +15,7 @@ public class Notification {
 
     private final long INTERVAL = 60000; // FIXME: 1mn, get from prefs
 
-    public Notification(final Context ctxt) {
+    public UpdateNotification(final Context ctxt) {
         // this.ctxt = ctxt;
         am = (AlarmManager) ctxt.getSystemService(Context.ALARM_SERVICE);
         // Prepare Intention
