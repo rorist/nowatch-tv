@@ -36,7 +36,7 @@ public class DownloadService extends Service {
     public static final String ACTION_ADD = "action_add";
     public static final String ACTION_CANCEL = "action_cancel";
     private final String REQ = "select title,file_uri,file_size from items where _id=? limit 1";
-    private final int SIMULTANEOUS_DOWNLOAD = 2; //FIXME: Set from preferences
+    private final int SIMULTANEOUS_DOWNLOAD = 2; // FIXME: Set from preferences
     private Context ctxt;
     private ConcurrentLinkedQueue<Integer> downloadQueue = new ConcurrentLinkedQueue<Integer>();
     private HashMap<Integer, DownloadTask> downloadTasks;
@@ -52,13 +52,13 @@ public class DownloadService extends Service {
     public void onDestroy() {
         Log.i(TAG, "onDestroy()");
         clean();
-        //cancelAll();
+        // cancelAll();
     }
 
     @Override
     public void onLowMemory() {
         Log.i(TAG, "onLowMemory()");
-        //cancelAll();
+        // cancelAll();
     }
 
     @Override
@@ -89,7 +89,7 @@ public class DownloadService extends Service {
         // Handle intentions
         if (intent != null) {
             String action = intent.getAction();
-            Log.v(TAG, "action="+action);
+            Log.v(TAG, "action=" + action);
             if (ACTION_ADD.equals(action)) {
                 // Add item to download queue
                 addItem(intent.getExtras().getInt(Item.EXTRA_ITEM_ID));
@@ -116,7 +116,9 @@ public class DownloadService extends Service {
         Network net = new Network(this);
         if (net.isConnected()) {
             if (net.isMobileAllowed()) {
-                Log.v(TAG, "Tasks size=" + downloadTasks.size() + " and < " + SIMULTANEOUS_DOWNLOAD);
+                Log
+                        .v(TAG, "Tasks size=" + downloadTasks.size() + " and < "
+                                + SIMULTANEOUS_DOWNLOAD);
                 if (downloadTasks.size() < SIMULTANEOUS_DOWNLOAD && downloadQueue.size() > 0) {
                     Integer itemId = downloadQueue.poll();
                     if (itemId != null) {
@@ -157,6 +159,7 @@ public class DownloadService extends Service {
         Log.v(TAG, "current tasks (before remove)=" + downloadTasks.size());
         if (downloadTasks.containsKey(id)) {
             DownloadTask task = downloadTasks.get(id);
+            task.task.isCancelled = true;
             if (task.cancel(true)) {
                 downloadTasks.remove(id);
                 Log.v(TAG, "current tasks=" + downloadTasks.size());
@@ -224,6 +227,14 @@ public class DownloadService extends Service {
                 fs = Integer.parseInt(str[1]);
             } catch (NumberFormatException e) {
             }
+            // Get Context
+            Context ctxt = null;
+            if (mService != null) {
+                final DownloadService service = mService.get();
+                if (service != null) {
+                    ctxt = service.getApplicationContext();
+                }
+            }
             // Download file
             try {
                 String state = Environment.getExternalStorageState();
@@ -233,7 +244,7 @@ public class DownloadService extends Service {
                             .getCanonicalPath()
                             + "/" + GetFile.PATH_PODCASTS);
                     dst.mkdirs();
-                    task = new getPodcastFile(fs);
+                    task = new getPodcastFile(ctxt, fs);
                     task.getChannel(str[0], dst.getCanonicalPath() + "/"
                             + new File(str[0]).getName());
                 } else {
@@ -259,7 +270,6 @@ public class DownloadService extends Service {
 
         @Override
         protected void onProgressUpdate(Integer... values) {
-
             rv.setProgressBar(R.id.download_progress, 100, values[0], false);
             rv.setTextViewText(R.id.download_status, values[0] + "% " + values[1] + "kB/s");
             mNotificationManager.notify(item_id, nf);
@@ -322,8 +332,9 @@ public class DownloadService extends Service {
             private int progress = 0;
             private long start;
 
-            public getPodcastFile(long file_size) {
-                if (file_size != 0) {
+            public getPodcastFile(final Context ctxt, long file_size) {
+                super(ctxt);
+                if (file_size > 0) {
                     this.file_size = file_size;
                 }
                 start = System.nanoTime();

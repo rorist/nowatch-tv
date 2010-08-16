@@ -28,24 +28,36 @@ import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 
+import android.content.Context;
+import android.content.pm.PackageManager.NameNotFoundException;
 import android.os.Environment;
 import android.util.Log;
 
 public class GetFile {
 
     private final String TAG = Main.TAG + "GetFile";
-    public static final String PATH_CACHE = "Android/data/nowatch.tv/cache";
-    public static final String PATH_PODCASTS = "Podcasts/Nowatch.TV";
-    // FIXME: Grab a context and get real version
-    public static final String USERAGENT = "Android/" + android.os.Build.VERSION.RELEASE + " ("
-            + android.os.Build.MODEL + ") Nowatch.TV/1.0beta";
-
+    private static final String USERAGENT = "Android/" + android.os.Build.VERSION.RELEASE + " ("
+            + android.os.Build.MODEL + ") Nowatch.TV/";
+    private String version = "0.3.x";
     private DefaultHttpClient httpclient = null;
     private int buffer_size = 8 * 1024; // in Bytes
     private boolean deleteOnFinish = false;
 
     protected String etag;
     protected long file_size = 0;
+
+    public boolean isCancelled;
+    public static final String PATH_CACHE = "Android/data/nowatch.tv/cache";
+    public static final String PATH_PODCASTS = "Podcasts/Nowatch.TV";
+
+    public GetFile(final Context ctxt) {
+        if (ctxt != null) {
+            try {
+                version = ctxt.getPackageManager().getPackageInfo("nowatch.tv", 0).versionName;
+            } catch (NameNotFoundException e) {
+            }
+        }
+    }
 
     private HttpEntity openUrl(String src, String etag) {
         // Set HTTP Client params
@@ -55,7 +67,7 @@ public class GetFile {
         HttpConnectionParams.setSoTimeout(params, 20 * 1000);
         HttpConnectionParams.setSocketBufferSize(params, 8192);
         HttpClientParams.setRedirecting(params, true);
-        params.setParameter("http.useragent", USERAGENT);
+        params.setParameter("http.useragent", USERAGENT + version);
 
         // Register standard protocols
         SchemeRegistry schemeRegistry = new SchemeRegistry();
@@ -120,8 +132,7 @@ public class GetFile {
         return null;
     }
 
-    // Method for small file download (images, xml, ..)
-
+    // Non-Blocking download (large files?)
     public void getChannel(String src, String dst, String etag) throws ClientProtocolException,
             UnknownHostException, IOException {
         getChannel(src, dst, etag, deleteOnFinish);
@@ -167,15 +178,20 @@ public class GetFile {
                     // ByteBuffer.allocateDirect(buffer_size);
                     final ByteBuffer buffer = ByteBuffer.allocate(buffer_size);
                     int count;
-                    while ((count = inputChannel.read(buffer)) != -1) {
+                    cancelled: {
+                        while ((count = inputChannel.read(buffer)) != -1) {
+                            if (isCancelled == true) {
+                                break cancelled;
+                            }
+                            buffer.flip();
+                            outputChannel.write(buffer);
+                            buffer.compact();
+                            update(count);
+                        }
                         buffer.flip();
-                        outputChannel.write(buffer);
-                        buffer.compact();
-                        update(count);
-                    }
-                    buffer.flip();
-                    while (buffer.hasRemaining()) {
-                        outputChannel.write(buffer);
+                        while (buffer.hasRemaining()) {
+                            update(outputChannel.write(buffer));
+                        }
                     }
                 }
             } catch (NullPointerException e) {
@@ -210,7 +226,7 @@ public class GetFile {
         }
     }
 
-    // Method for podcast download
+    // Blocking download (small files?)
     public void getBlocking(String src, String dst) {
         /*
          * if

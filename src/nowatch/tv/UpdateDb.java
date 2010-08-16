@@ -30,17 +30,15 @@ public class UpdateDb {
 
     private static final String TAG = Main.TAG + "UpdateDb";
     private static SQLiteDatabase db;
-    // private static Context ctxt;
     private static String feed_id;
     private static String etag = null;
 
-    public static void update(final Context _ctxt, String fid, int feed_xml) throws IOException {
-        // ctxt = _ctxt;
+    public static void update(final Context ctxt, String fid, int feed_xml) throws IOException {
         feed_id = fid;
         Cursor c = null;
         try {
             // Get lastpub and etag
-            db = (new DB(_ctxt)).getWritableDatabase();
+            db = (new DB(ctxt)).getWritableDatabase();
 
             c = db.rawQuery("select etag,pubDate from feeds where _id=? limit 1",
                     new String[] { fid });
@@ -58,7 +56,7 @@ public class UpdateDb {
             }
 
             // Try to download feed
-            new GetFeed(pubDate).getChannel(_ctxt.getString(feed_xml), etag);
+            new GetFeed(ctxt, pubDate).getChannel(ctxt.getString(feed_xml), etag);
 
         } catch (SQLiteException e) {
             Log.e(TAG, e.getMessage());
@@ -81,9 +79,11 @@ public class UpdateDb {
     private static class GetFeed extends GetFile {
 
         private String pubDate;
+        private Context ctxt;
 
-        public GetFeed(String pubDate) {
-            super();
+        public GetFeed(final Context ctxt, String pubDate) {
+            super(ctxt);
+            this.ctxt = ctxt;
             this.pubDate = pubDate;
         }
 
@@ -106,7 +106,7 @@ public class UpdateDb {
                     // Start the parser
                     try {
                         XMLReader xr = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
-                        RSS handler = new RSS(pubDate);
+                        RSS handler = new RSS(ctxt, pubDate);
                         xr.setContentHandler(handler);
                         xr.setErrorHandler(handler);
                         xr.parse(new InputSource(new FileReader(file)));
@@ -133,8 +133,10 @@ public class UpdateDb {
         private Date lastPub;
         private Date item_date;
         private Calendar cal = Calendar.getInstance();
+        private Context ctxt;
 
-        public RSS(String pubDate) {
+        public RSS(final Context ctxt, String pubDate) {
+            this.ctxt = ctxt;
             formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss ZZZ");
             // formatter.setTimeZone(TimeZone.getDefault()); // FIXME
             try {
@@ -157,7 +159,7 @@ public class UpdateDb {
                 // Get image bits (only if not in mobile/3g)
                 // if (new Network(ctxt).isMobileAllowed()) {
                 try {
-                    new GetImage().getChannel(feedMap.getAsString("image"));
+                    new GetImage(ctxt).getChannel(feedMap.getAsString("image"));
                 } catch (IOException e) {
                     Log.e(TAG, e.getMessage());
                 }
@@ -192,6 +194,10 @@ public class UpdateDb {
 
         // TODO: Being static
         class GetImage extends GetFile {
+
+            public GetImage(Context ctxt) {
+                super(ctxt);
+            }
 
             public void getChannel(String src) throws IOException {
                 getChannel(src, null, null, true);
