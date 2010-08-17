@@ -41,7 +41,7 @@ import android.widget.AdapterView.OnItemClickListener;
 
 public class ItemsActivity extends Activity implements OnItemClickListener {
 
-    private final String TAG = Main.TAG + "ItemsActivity";
+    private static final String TAG = Main.TAG + "ItemsActivity";
     private final String QUERY_ITEMS = "SELECT items._id, items.title, items.status, feeds.image, items.pubDate "
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id "
             + "ORDER BY items.pubDate DESC LIMIT ";
@@ -197,7 +197,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
                     UpdateDb.update(a.getApplicationContext(), "" + f._id, f._resource);
                 }
             } catch (IOException e) {
-                Log.e("UpdateTask", e.getMessage());
+                Log.e(TAG, e.getMessage());
                 sdcarderror = true;
             }
             return null;
@@ -365,7 +365,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
 
         @Override
         public Filter getFilter() {
-            Log.v("ItemsActivity", "getFilter()");
+            //Log.v(TAG, "getFilter()");
             return super.getFilter();
         }
 

@@ -39,6 +39,7 @@ public class GetFile {
     private static final String USERAGENT = "Android/" + android.os.Build.VERSION.RELEASE + " ("
             + android.os.Build.MODEL + ") Nowatch.TV/";
     private String version = "0.3.x";
+    private HttpGet httpget = null;
     private DefaultHttpClient httpclient = null;
     private int buffer_size = 8 * 1024; // in Bytes
     private boolean deleteOnFinish = false;
@@ -75,7 +76,7 @@ public class GetFile {
         ClientConnectionManager manager = new ThreadSafeClientConnManager(params, schemeRegistry);
 
         // Init Client
-        final HttpGet httpget = new HttpGet(src);
+        httpget = new HttpGet(src);
         httpclient = new DefaultHttpClient(manager, params);
 
         try {
@@ -108,9 +109,6 @@ public class GetFile {
         } catch (Exception e) {
             Log.e(TAG, e.getMessage());
             httpget.abort();
-            /*
-             * if (httpclient != null) { httpclient.close(); }
-             */
             return null;
         }
     }
@@ -201,20 +199,27 @@ public class GetFile {
                 Log.e(TAG, e.getMessage());
                 e.printStackTrace();
             } finally {
-                if (inputChannel != null) {
-                    inputChannel.close();
-                }
-                if (outputChannel != null) {
-                    outputChannel.close();
-                }
-                if (in != null) {
-                    in.close();
-                }
-                if (out != null) {
-                    out.close();
-                }
-                if (entity != null) {
-                    entity.consumeContent();
+                try {
+                    if (httpget != null) {
+                        httpget.abort();
+                    }
+                    if (entity != null) {
+                        entity.consumeContent();
+                    }
+                    if (in != null) {
+                        in.close();
+                    }
+                    if (out != null) {
+                        out.close();
+                    }
+                    if (inputChannel != null) {
+                        inputChannel.close();
+                    }
+                    if (outputChannel != null) {
+                        outputChannel.close();
+                    }
+                } catch (Exception e) {
+                    Log.e(TAG, e.getMessage());
                 }
                 finish(dstFile.getAbsolutePath());
             }

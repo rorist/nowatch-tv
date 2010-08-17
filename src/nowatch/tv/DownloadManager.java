@@ -35,8 +35,6 @@ import android.widget.AdapterView.OnItemClickListener;
 public class DownloadManager extends Activity {
 
     private final String TAG = Main.TAG + "DownloadManager";
-    private final int TYPE_CURRENT = 1;
-    private final int TYPE_PENDING = 2;
     private static LayoutInflater mInflater;
     private DlAdapter adapterCurrent = null;
     private DlAdapter adapterPending = null;
@@ -88,13 +86,13 @@ public class DownloadManager extends Activity {
 
     private OnItemClickListener listenerCurrent = new OnItemClickListener() {
         public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-            cancelDialog(position, TYPE_CURRENT);
+            cancelDialog(position, DownloadService.TYPE_CURRENT);
         }
     };
 
     private OnItemClickListener listenerPending = new OnItemClickListener() {
         public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-            cancelDialog(position, TYPE_PENDING);
+            cancelDialog(position, DownloadService.TYPE_PENDING);
         }
     };
 
@@ -106,19 +104,18 @@ public class DownloadManager extends Activity {
             public void onClick(DialogInterface dialog, int which) {
                 Item item = null;
                 // Remove item from list
-                if (type == TYPE_CURRENT) {
+                if (type == DownloadService.TYPE_CURRENT) {
                     item = downloadCurrent.get(position);
                     adapterCurrent.remove(item);
-                    // downloadCurrent.remove(position);
-                } else if (type == TYPE_PENDING) {
+                } else if (type == DownloadService.TYPE_PENDING) {
                     item = downloadPending.get(position);
                     adapterPending.remove(item);
-                    // downloadPending.remove(position);
                 }
                 // Send intent to service
                 Intent intent = new Intent(ctxt, DownloadService.class);
                 intent.setAction(DownloadService.ACTION_CANCEL);
                 intent.putExtra(Item.EXTRA_ITEM_ID, item.id);
+                intent.putExtra(Item.EXTRA_ITEM_TYPE, type);
                 startService(intent);
             }
         });
@@ -184,7 +181,11 @@ public class DownloadManager extends Activity {
                 }
             }
         } catch (RemoteException e) {
-            Log.e(TAG, e.getMessage());
+            if (e.getMessage() != null) {
+                Log.e(TAG, e.getMessage());
+            } else {
+                Log.e(TAG, "RemoteException");
+            }
         }
     }
 
@@ -198,13 +199,15 @@ public class DownloadManager extends Activity {
             if (mService != null) {
                 populateLists();
             } else {
-                Toast.makeText(getApplicationContext(), "Service inaccessible", Toast.LENGTH_SHORT);
+                Toast.makeText(getApplicationContext(), "Service inaccessible", Toast.LENGTH_SHORT)
+                        .show();
             }
         }
 
         public void onServiceDisconnected(ComponentName className) {
             mService = null;
-            Toast.makeText(getApplicationContext(), "Service deconnecté", Toast.LENGTH_SHORT);
+            Toast.makeText(getApplicationContext(), "Service deconnecté", Toast.LENGTH_SHORT)
+                    .show();
         }
     };
 
