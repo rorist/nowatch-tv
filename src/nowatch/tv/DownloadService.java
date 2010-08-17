@@ -109,7 +109,6 @@ public class DownloadService extends Service {
     private void addItem(int item_id) {
         if (!downloadQueue.contains(new Integer(item_id))) {
             downloadQueue.add(new Integer(item_id));
-            Log.i(TAG, "Item added to queue=" + item_id);
             Toast.makeText(ctxt, R.string.toast_dl_added, Toast.LENGTH_SHORT).show();
         }
     }
@@ -150,7 +149,6 @@ public class DownloadService extends Service {
             if (downloadQueue.contains(id)) {
                 InfoActivity.changeStatus(ctxt, id, Item.STATUS_UNREAD);
                 downloadQueue.remove(id);
-                Log.v(TAG, "queue size=" + downloadQueue.size());
                 return;
             }
         } else if (type == TYPE_CURRENT) {
@@ -161,7 +159,6 @@ public class DownloadService extends Service {
                 }
                 if (AsyncTask.Status.RUNNING.equals(task.getStatus()) && task.cancel(true)) {
                     downloadTasks.remove(id);
-                    Log.v(TAG, "current tasks=" + downloadTasks.size());
                     InfoActivity.changeStatus(ctxt, id, Item.STATUS_UNREAD);
                 }
             }
@@ -170,7 +167,6 @@ public class DownloadService extends Service {
 
     private void stopOrContinue() {
         if (downloadQueue.peek() == null && downloadTasks.size() < 1) {
-            Log.i(TAG, "stopping service");
             stopSelf();
         } else {
             startDownloadTask();
