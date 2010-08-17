@@ -16,8 +16,10 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.os.RemoteException;
+import android.os.Message;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -106,15 +108,14 @@ public class DownloadManager extends Activity {
                 // Remove item from list
                 if (type == DownloadService.TYPE_CURRENT) {
                     item = downloadCurrent.get(position);
-                    adapterCurrent.remove(item);
                 } else if (type == DownloadService.TYPE_PENDING) {
                     item = downloadPending.get(position);
-                    adapterPending.remove(item);
                 }
                 // Send intent to service
                 Intent intent = new Intent(ctxt, DownloadService.class);
                 intent.setAction(DownloadService.ACTION_CANCEL);
                 intent.putExtra(Item.EXTRA_ITEM_ID, item.id);
+                intent.putExtra(Item.EXTRA_ITEM_POSITION, position);
                 intent.putExtra(Item.EXTRA_ITEM_TYPE, type);
                 startService(intent);
             }
@@ -165,8 +166,9 @@ public class DownloadManager extends Activity {
                 Log.i(TAG, "downloadCurrent=" + downloadCurrent.size());
                 Log.i(TAG, "downloadPending=" + downloadPending.size());
 
-                if (downloadCurrent.size() > 0) {
-                    // Populate Lists
+                // Populate Lists
+                if(adapterCurrent == null || adapterPending == null){
+                    // Create adapters
                     final Context ctxt = getApplicationContext();
                     adapterCurrent = new DlAdapter(ctxt, downloadCurrent);
                     adapterPending = new DlAdapter(ctxt, downloadPending);
@@ -177,7 +179,9 @@ public class DownloadManager extends Activity {
                     listCurrent.setOnItemClickListener(listenerCurrent);
                     listPending.setOnItemClickListener(listenerPending);
                 } else {
-                    // No download
+                    // Update adapter
+                    adapterCurrent.notifyDataSetChanged();
+                    adapterPending.notifyDataSetChanged();
                 }
             }
         } catch (RemoteException e) {
@@ -197,6 +201,10 @@ public class DownloadManager extends Activity {
         public void onServiceConnected(ComponentName className, IBinder service) {
             mService = DownloadInterface.Stub.asInterface(service);
             if (mService != null) {
+                try {
+                    mService._registerCallback(mCallback);
+                } catch (RemoteException e) {
+                }
                 populateLists();
             } else {
                 Toast.makeText(getApplicationContext(), "Service inaccessible", Toast.LENGTH_SHORT)
@@ -205,11 +213,51 @@ public class DownloadManager extends Activity {
         }
 
         public void onServiceDisconnected(ComponentName className) {
+            try {
+                mService._unregisterCallback(mCallback);
+            } catch (RemoteException e) {
+            }
             mService = null;
             Toast.makeText(getApplicationContext(), "Service deconnecté", Toast.LENGTH_SHORT)
                     .show();
         }
     };
+
+    private DownloadInterfaceCallback mCallback = new DownloadInterfaceCallback.Stub() {
+        public void _valueChanged(String action, int id, int position) {
+            if(DownloadService.ACTION_UPDATE.equals(action)) {
+                mHandler.sendMessage(mHandler.obtainMessage(MSG_UPDATE));
+            } else if(DownloadService.ACTION_CANCEL.equals(action)) {
+                mHandler.sendMessage(mHandler.obtainMessage(MSG_CANCEL, id, position));
+            }
+
+        }
+    };
+
+    private static final int MSG_UPDATE = 1;
+    private static final int MSG_CANCEL = 2;
+    private Handler mHandler = new Handler() {
+        @Override public void handleMessage(Message msg) {
+            switch (msg.what) {
+                case MSG_UPDATE:
+                    populateLists();
+                    break;
+                case MSG_CANCEL:
+                    if (msg.arg1 == DownloadService.TYPE_CURRENT) {
+                        adapterCurrent.remove(downloadCurrent.get(msg.arg2));
+                    } else if (msg.arg1 == DownloadService.TYPE_PENDING) {
+                        adapterPending.remove(downloadPending.get(msg.arg2));
+                    } else {
+                        Log.i(TAG, "Nothing to do");
+                    }
+                    break;
+                default:
+                    super.handleMessage(msg);
+            }
+        }
+
+    };
+
 
     /**
      * Adapters

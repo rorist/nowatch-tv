@@ -26,6 +26,7 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.IBinder;
+import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -34,23 +35,24 @@ import android.widget.Toast;
 public class DownloadService extends Service {
 
     private final static String TAG = Main.TAG + "DownloadService";
+    private final int SIMULTANEOUS_DOWNLOAD = 2; // FIXME: Set from preferences
+    private final String REQ = "select title,file_uri,file_size from items where _id=? limit 1";
+    private final RemoteCallbackList<DownloadInterfaceCallback> mCallbacks = new RemoteCallbackList<DownloadInterfaceCallback>();
+    private final ConcurrentLinkedQueue<Integer> downloadQueue = new ConcurrentLinkedQueue<Integer>();
+    private final HashMap<Integer, DownloadTask> downloadTasks = new HashMap<Integer, DownloadTask>();
+    private Context ctxt;
+
     public static final String ACTION_UPDATE = "action_update";
     public static final String ACTION_ADD = "action_add";
     public static final String ACTION_CANCEL = "action_cancel";
     public static final int TYPE_CURRENT = 1;
     public static final int TYPE_PENDING = 2;
-    private final String REQ = "select title,file_uri,file_size from items where _id=? limit 1";
-    private final int SIMULTANEOUS_DOWNLOAD = 2; // FIXME: Set from preferences
-    private Context ctxt;
-    private ConcurrentLinkedQueue<Integer> downloadQueue = new ConcurrentLinkedQueue<Integer>();
-    private HashMap<Integer, DownloadTask> downloadTasks;
     public NotificationManager notificationManager;
 
     @Override
     public void onCreate() {
         Log.i(TAG, "onCreate()");
         ctxt = getApplicationContext();
-        downloadTasks = new HashMap<Integer, DownloadTask>();
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
     }
 
@@ -59,6 +61,7 @@ public class DownloadService extends Service {
         Log.i(TAG, "onDestroy()");
         cancelAll();
         clean();
+        mCallbacks.kill();
     }
 
     @Override
@@ -96,7 +99,7 @@ public class DownloadService extends Service {
                 // Cancel download
                 Bundle extras = intent.getExtras();
                 cancelDownload(extras.getInt(Item.EXTRA_ITEM_TYPE), extras
-                        .getInt(Item.EXTRA_ITEM_ID));
+                        .getInt(Item.EXTRA_ITEM_ID), extras.getInt(Item.EXTRA_ITEM_POSITION));
             } else if (ACTION_UPDATE.equals(action)) {
                 // Check for updates
                 Log.v(TAG, "PLEASE UPDATE");
@@ -109,7 +112,7 @@ public class DownloadService extends Service {
     private void addItem(int item_id) {
         if (!downloadQueue.contains(new Integer(item_id))) {
             downloadQueue.add(new Integer(item_id));
-            Toast.makeText(ctxt, R.string.toast_dl_added, Toast.LENGTH_SHORT).show();
+            //Toast.makeText(ctxt, R.string.toast_dl_added, Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -144,11 +147,12 @@ public class DownloadService extends Service {
         }
     }
 
-    private void cancelDownload(int type, Integer id) {
+    private void cancelDownload(int type, Integer id, int position) {
         if (type == TYPE_PENDING) {
             if (downloadQueue.contains(id)) {
                 InfoActivity.changeStatus(ctxt, id, Item.STATUS_UNREAD);
                 downloadQueue.remove(id);
+                clientCallback(ACTION_CANCEL, TYPE_PENDING, position);
                 return;
             }
         } else if (type == TYPE_CURRENT) {
@@ -161,8 +165,21 @@ public class DownloadService extends Service {
                     downloadTasks.remove(id);
                     InfoActivity.changeStatus(ctxt, id, Item.STATUS_UNREAD);
                 }
+                clientCallback(ACTION_CANCEL, TYPE_CURRENT, position);
             }
         }
+    }
+
+    private void clientCallback(String action, int id, int position) {
+        // Broadcast to all clients the new value.
+        final int N = mCallbacks.beginBroadcast();
+        for (int i=0; i<N; i++) {
+            try {
+                mCallbacks.getBroadcastItem(i)._valueChanged(action, id, position);
+            } catch (RemoteException e) {
+            }
+        }
+        mCallbacks.finishBroadcast();
     }
 
     private void stopOrContinue() {
@@ -325,19 +342,19 @@ public class DownloadService extends Service {
         @Override
         protected void onCancelled() {
             Log.v(TAG, "onCancelled()");
-            super.onCancelled();
             if (mService != null) {
                 final DownloadService service = mService.get();
                 if (service != null) {
+                    finishNotification(service.getString(R.string.notif_dl_canceled));
                     if (error_msg != null) {
                         Toast.makeText(service.getApplicationContext(), error_msg,
                                 Toast.LENGTH_LONG).show();
                     }
                     InfoActivity.changeStatus(service, item_id, Item.STATUS_UNREAD);
-                    finishNotification(service.getString(R.string.notif_dl_canceled));
                     service.stopOrContinue();
                 }
             }
+            super.onCancelled();
         }
 
         private void finishNotification(String msg) {
@@ -395,6 +412,18 @@ public class DownloadService extends Service {
      * Service control (IPC) using AIDL interface
      */
     private final DownloadInterface.Stub mBinder = new DownloadInterface.Stub() {
+
+        public void _registerCallback(DownloadInterfaceCallback cb) {
+            if (cb != null) {
+                mCallbacks.register(cb);
+            }
+        }
+        
+        public void _unregisterCallback(DownloadInterfaceCallback cb) {
+            if (cb != null) {
+                mCallbacks.unregister(cb);
+            }
+        }
 
         public int[] _getCurrentDownloads() throws RemoteException {
             int[] current = new int[downloadTasks.size()];
