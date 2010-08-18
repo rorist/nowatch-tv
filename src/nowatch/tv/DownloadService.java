@@ -348,7 +348,8 @@ public class DownloadService extends Service {
                                 Toast.LENGTH_LONG).show();
                     }
                     InfoActivity.changeStatus(service, item_id, Item.STATUS_DL_UNREAD);
-                    finishNotification(service.getString(R.string.notif_dl_complete));
+                    finishNotification("Téléchargement terminé!", service
+                            .getString(R.string.notif_dl_complete));
                     service.stopOrContinue();
                 }
             }
@@ -360,7 +361,8 @@ public class DownloadService extends Service {
             if (mService != null) {
                 final DownloadService service = mService.get();
                 if (service != null) {
-                    finishNotification(service.getString(R.string.notif_dl_canceled));
+                    finishNotification("Téléchargement annulé!", service
+                            .getString(R.string.notif_dl_canceled));
                     if (error_msg != null) {
                         Toast.makeText(service.getApplicationContext(), error_msg,
                                 Toast.LENGTH_LONG).show();
@@ -372,7 +374,7 @@ public class DownloadService extends Service {
             super.onCancelled();
         }
 
-        private void finishNotification(String msg) {
+        private void finishNotification(String title, String msg) {
             if (mService != null) {
                 final DownloadService service = mService.get();
                 if (service != null) {
@@ -381,8 +383,8 @@ public class DownloadService extends Service {
                     } catch (Exception e) {
                         Log.v(TAG, e.getMessage());
                     } finally {
-                        nf = new Notification(android.R.drawable.stat_sys_download_done, "", System
-                                .currentTimeMillis());
+                        nf = new Notification(android.R.drawable.stat_sys_download_done, title,
+                                System.currentTimeMillis());
                         nf.setLatestEventInfo(service, download_title, msg, PendingIntent
                                 .getActivity(service, 0,
                                         new Intent(service, DownloadManager.class), 0));

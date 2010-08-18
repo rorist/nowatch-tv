@@ -5,6 +5,17 @@
     android:layout_width="fill_parent"
     android:layout_height="fill_parent">
     <include layout="@layout/header" />
+
+    <TextView
+        android:id="@+id/menu_top"
+        android:background="@color/grey"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="3dip"
+        android:layout_marginRight="3dip"
+        android:padding="1dip"
+        android:textColor="#000"
+        android:text="En cours" />
     <ListView
         android:id="@+id/list_current"
         android:layout_width="fill_parent"
@@ -18,7 +29,19 @@
         android:layout_weight="1"
         android:gravity="center_vertical"
         android:layout_gravity="center_horizontal"
-        android:text="Aucun téléchargement en cours" />
+        android:text="Rien" />
+
+    <TextView
+        android:id="@+id/menu_top"
+        android:background="@color/grey"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="3dip"
+        android:layout_marginLeft="3dip"
+        android:layout_marginRight="3dip"
+        android:padding="1dip"
+        android:textColor="#000"
+        android:text="En attente" />
     <ListView
         android:id="@+id/list_pending"
         android:layout_width="fill_parent"
@@ -32,5 +55,5 @@
         android:layout_weight="1"
         android:gravity="center_vertical"
         android:layout_gravity="center_horizontal"
-        android:text="Aucun téléchargement en attente" />
+        android:text="Rien" />
 </LinearLayout>
