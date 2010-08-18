@@ -51,7 +51,13 @@ public class DownloadManager extends Activity {
         setContentView(R.layout.manage_activity);
         mInflater = LayoutInflater.from(getApplicationContext());
 
-        // Title button
+        // Buttons
+        findViewById(R.id.btn_back).setVisibility(View.VISIBLE);
+        ((ImageButton) findViewById(R.id.btn_logo)).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                finish();
+            }
+        });
         ((ImageButton) findViewById(R.id.btn_logo)).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 finish();
@@ -68,9 +74,6 @@ public class DownloadManager extends Activity {
         ListView listPending = (ListView) findViewById(R.id.list_pending);
         listCurrent.setEmptyView(findViewById(R.id.list_current_empty));
         listPending.setEmptyView(findViewById(R.id.list_pending_empty));
-
-        // Hide menu
-        findViewById(R.id.menu_top).setVisibility(View.INVISIBLE);
     }
 
     @Override
@@ -167,7 +170,7 @@ public class DownloadManager extends Activity {
                 Log.i(TAG, "downloadPending=" + downloadPending.size());
 
                 // Populate Lists
-                if(adapterCurrent == null || adapterPending == null){
+                if (adapterCurrent == null || adapterPending == null) {
                     // Create adapters
                     final Context ctxt = getApplicationContext();
                     adapterCurrent = new DlAdapter(ctxt, downloadCurrent);
@@ -225,9 +228,9 @@ public class DownloadManager extends Activity {
 
     private DownloadInterfaceCallback mCallback = new DownloadInterfaceCallback.Stub() {
         public void _valueChanged(String action, int id, int position) {
-            if(DownloadService.ACTION_UPDATE.equals(action)) {
+            if (DownloadService.ACTION_UPDATE.equals(action)) {
                 mHandler.sendMessage(mHandler.obtainMessage(MSG_UPDATE));
-            } else if(DownloadService.ACTION_CANCEL.equals(action)) {
+            } else if (DownloadService.ACTION_CANCEL.equals(action)) {
                 mHandler.sendMessage(mHandler.obtainMessage(MSG_CANCEL, id, position));
             }
 
@@ -237,7 +240,8 @@ public class DownloadManager extends Activity {
     private static final int MSG_UPDATE = 1;
     private static final int MSG_CANCEL = 2;
     private Handler mHandler = new Handler() {
-        @Override public void handleMessage(Message msg) {
+        @Override
+        public void handleMessage(Message msg) {
             switch (msg.what) {
                 case MSG_UPDATE:
                     populateLists();
@@ -257,7 +261,6 @@ public class DownloadManager extends Activity {
         }
 
     };
-
 
     /**
      * Adapters

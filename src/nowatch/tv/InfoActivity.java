@@ -77,7 +77,7 @@ public class InfoActivity extends Activity {
         db.close();
 
         // Set status
-        if (status == Item.STATUS_NEW){
+        if (status == Item.STATUS_NEW) {
             changeStatus(ctxt, item_id, Item.STATUS_UNREAD);
         }
 

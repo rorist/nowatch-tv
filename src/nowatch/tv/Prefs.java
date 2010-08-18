@@ -1,19 +1,18 @@
 package nowatch.tv;
 
 import android.content.Context;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.PreferenceActivity;
-import android.content.SharedPreferences;
-import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.preference.PreferenceManager;
 import android.preference.PreferenceScreen;
 
 public class Prefs extends PreferenceActivity implements OnSharedPreferenceChangeListener {
 
     private Context ctxt;
     private PreferenceScreen ps;
-    private SharedPreferences prefs;
+    // private SharedPreferences prefs;
 
     public final static String KEY_MOBILE_TRAFFIC = "mobile_traffic";
     public final static boolean DEFAULT_MOBILE_TRAFFIC = false;
@@ -33,17 +32,18 @@ public class Prefs extends PreferenceActivity implements OnSharedPreferenceChang
         ctxt = getApplicationContext();
         ps = getPreferenceScreen();
         ps.getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
-        prefs = PreferenceManager.getDefaultSharedPreferences(ctxt);
+        // prefs = PreferenceManager.getDefaultSharedPreferences(ctxt);
     }
 
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-        if(key.equals(KEY_NOTIFICATION)){
+        if (key.equals(KEY_NOTIFICATION)) {
             UpdateNotification notif = new UpdateNotification(ctxt);
             CheckBoxPreference cb = (CheckBoxPreference) ps.findPreference(KEY_NOTIFICATION);
-            if(cb.isChecked()){
-               notif.startNotification(prefs.getLong(KEY_NOTIFICATION_INTV, DEFAULT_NOTIFICATION_INTV)); 
+            if (cb.isChecked()) {
+                notif.startNotification(prefs.getLong(KEY_NOTIFICATION_INTV,
+                        DEFAULT_NOTIFICATION_INTV));
             } else {
-               notif.cancelNotification(); 
+                notif.cancelNotification();
             }
         }
     }

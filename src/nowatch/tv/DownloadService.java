@@ -38,9 +38,11 @@ public class DownloadService extends Service {
 
     private final static String TAG = Main.TAG + "DownloadService";
     private final static int NOTIFICATION_UPDATE = -1;
-    private final static String REQ_NEW = "select count(_id) from items where status=" + Item.STATUS_NEW;
+    private final static String REQ_NEW = "select count(_id) from items where status="
+            + Item.STATUS_NEW;
     private final String REQ_ITEM = "select title,file_uri,file_size from items where _id=? limit 1";
-    private final String REQ_CLEAN = "update items set status=" + Item.STATUS_UNREAD + " where status=" + Item.STATUS_DOWNLOADING;
+    private final String REQ_CLEAN = "update items set status=" + Item.STATUS_UNREAD
+            + " where status=" + Item.STATUS_DOWNLOADING;
     private final RemoteCallbackList<DownloadInterfaceCallback> mCallbacks = new RemoteCallbackList<DownloadInterfaceCallback>();
     private final ConcurrentLinkedQueue<Integer> downloadQueue = new ConcurrentLinkedQueue<Integer>();
     private final HashMap<Integer, DownloadTask> downloadTasks = new HashMap<Integer, DownloadTask>();
@@ -123,7 +125,8 @@ public class DownloadService extends Service {
     private void addItem(int item_id) {
         if (!downloadQueue.contains(new Integer(item_id))) {
             downloadQueue.add(new Integer(item_id));
-            //Toast.makeText(ctxt, R.string.toast_dl_added, Toast.LENGTH_SHORT).show();
+            // Toast.makeText(ctxt, R.string.toast_dl_added,
+            // Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -136,12 +139,9 @@ public class DownloadService extends Service {
             db.close();
             // Remove notifications
             /*
-            try {
-                notificationManager.cancelAll();
-            } catch (Exception e) {
-                Log.v(TAG, e.getMessage());
-            }
-            */
+             * try { notificationManager.cancelAll(); } catch (Exception e) {
+             * Log.v(TAG, e.getMessage()); }
+             */
         }
     }
 
@@ -185,7 +185,7 @@ public class DownloadService extends Service {
     private void clientCallback(String action, int id, int position) {
         // Broadcast to all clients the new value.
         final int N = mCallbacks.beginBroadcast();
-        for (int i=0; i<N; i++) {
+        for (int i = 0; i < N; i++) {
             try {
                 mCallbacks.getBroadcastItem(i)._valueChanged(action, id, position);
             } catch (RemoteException e) {
@@ -207,7 +207,9 @@ public class DownloadService extends Service {
         if (net.isConnected()) {
             if (net.isMobileAllowed()) {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctxt);
-                if (downloadTasks.size() < prefs.getInt(Prefs.KEY_SIMULTANEOUS_DL, Prefs.DEFAULT_SIMULTANEOUS_DL) && downloadQueue.size() > 0) {
+                if (downloadTasks.size() < prefs.getInt(Prefs.KEY_SIMULTANEOUS_DL,
+                        Prefs.DEFAULT_SIMULTANEOUS_DL)
+                        && downloadQueue.size() > 0) {
                     Integer itemId = downloadQueue.poll();
                     if (itemId != null) {
                         // TODO: Check if there is enough space on device
@@ -424,13 +426,9 @@ public class DownloadService extends Service {
     /**
      * Update
      */
-    private void update() {
-        // Update
-    }
-
     private static class UpdateTaskNotif extends UpdateTask {
 
-        public UpdateTaskNotif(DownloadService s){
+        public UpdateTaskNotif(DownloadService s) {
             super(s);
         }
 
@@ -446,8 +444,11 @@ public class DownloadService extends Service {
                 int nb = c.getInt(0);
                 c.close();
                 db.close();
-                Notification nf = new Notification(R.drawable.icon_scream_48, "Nouveaux podcasts", System.currentTimeMillis());
-                nf.setLatestEventInfo(service, "Podcasts disponibles", nb + " nouveaux éléments", PendingIntent.getActivity(service, 0, new Intent(service, ItemsActivity.class), 0));
+                Notification nf = new Notification(R.drawable.icon_scream_48, "Nouveaux podcasts",
+                        System.currentTimeMillis());
+                nf.setLatestEventInfo(service, "Podcasts disponibles", nb + " nouveaux éléments",
+                        PendingIntent.getActivity(service, 0, new Intent(service,
+                                ItemsActivity.class), 0));
                 service.notificationManager.notify(NOTIFICATION_UPDATE, nf);
                 // Download items
                 service.stopOrContinue();
@@ -475,7 +476,7 @@ public class DownloadService extends Service {
                 mCallbacks.register(cb);
             }
         }
-        
+
         public void _unregisterCallback(DownloadInterfaceCallback cb) {
             if (cb != null) {
                 mCallbacks.unregister(cb);

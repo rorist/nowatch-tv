@@ -1,7 +1,5 @@
 package nowatch.tv;
 
-import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -36,7 +34,6 @@ import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
 public class ItemsActivity extends Activity implements OnItemClickListener {
@@ -45,8 +42,9 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
     private final String REQ_ITEMS = "SELECT items._id, items.title, items.status, feeds.image, items.pubDate "
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id "
             + "ORDER BY items.pubDate DESC LIMIT ";
-    private final String REQ_MARK_ALL = "update items set status=" + Item.STATUS_UNREAD + " where status=" + Item.STATUS_NEW;
-    private static final int MENU_MARK_ALL= 1;
+    private final String REQ_MARK_ALL = "update items set status=" + Item.STATUS_UNREAD
+            + " where status=" + Item.STATUS_NEW;
+    private static final int MENU_MARK_ALL = 1;
     private static final int MENU_OPTIONS = 2;
     private static final int ITEMS_NB = 16;
     private int image_size;
@@ -96,11 +94,15 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         list.setItemsCanFocus(false);
         list.setOnItemClickListener(this);
         list.setEmptyView(findViewById(R.id.list_empty));
-        ((TextView) findViewById(R.id.loading)).setVisibility(View.INVISIBLE);
+        findViewById(R.id.loading).setVisibility(View.INVISIBLE);
+    }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        // FIXME: Find better solution to refresh
         // Add existing items to list
-        addToList(0, ITEMS_NB);
-        updateList();
+        resetList();
     }
 
     @Override
@@ -272,7 +274,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
 
         @Override
         public Filter getFilter() {
-            //Log.v(TAG, "getFilter()");
+            // Log.v(TAG, "getFilter()");
             return super.getFilter();
         }
 
@@ -309,10 +311,10 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
 
     private static class UpdateTaskBtn extends UpdateTask {
 
-        public UpdateTaskBtn(ItemsActivity a){
+        public UpdateTaskBtn(ItemsActivity a) {
             super(a);
         }
-    
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -343,9 +345,9 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         protected void onCancelled() {
             super.onCancelled();
             if (mActivity != null) {
-                final Context ctxt = getContext();
                 Button btn_refresh = (Button) getActivity().findViewById(R.id.btn_refresh);
-                btn_refresh.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0, 0);
+                btn_refresh
+                        .setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0, 0);
                 btn_refresh.setEnabled(true);
                 btn_refresh.setClickable(true);
             }

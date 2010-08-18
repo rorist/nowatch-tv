@@ -8,12 +8,8 @@ import java.util.List;
 import android.app.Activity;
 import android.app.Service;
 import android.content.Context;
-import android.graphics.drawable.AnimationDrawable;
 import android.os.AsyncTask;
-import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
 import android.widget.Toast;
 
 class UpdateTask extends AsyncTask<Void, Void, Void> {
