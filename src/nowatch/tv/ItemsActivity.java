@@ -45,9 +45,8 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
     private final String QUERY_ITEMS = "SELECT items._id, items.title, items.status, feeds.image, items.pubDate "
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id "
             + "ORDER BY items.pubDate DESC LIMIT ";
-    private static final int MENU_UPDATE_ALL = 1;
-    private static final int MENU_MANAGE = 2;
-    private static final int MENU_OPTIONS = 3;
+    private static final int MENU_MARK_ALL= 1;
+    private static final int MENU_OPTIONS = 2;
     private static final int ITEMS_NB = 16;
     private int image_size;
     private ItemsAdapter adapter;
@@ -130,10 +129,8 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        menu.add(0, MENU_UPDATE_ALL, 0, R.string.menu_update_all).setIcon(
-                android.R.drawable.ic_menu_upload);
-        menu.add(0, MENU_MANAGE, 0, R.string.menu_manage)
-                .setIcon(android.R.drawable.ic_menu_manage);
+        menu.add(0, MENU_MARK_ALL, 0, R.string.menu_mark_all).setIcon(
+                android.R.drawable.ic_menu_agenda);
         menu.add(0, MENU_OPTIONS, 0, R.string.menu_options).setIcon(
                 android.R.drawable.ic_menu_preferences);
         return true;
@@ -142,12 +139,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
-            case MENU_UPDATE_ALL:
-                updateTask = new UpdateTask(ItemsActivity.this);
-                updateTask.execute();
-                return true;
-            case MENU_MANAGE:
-                startActivity(new Intent(ItemsActivity.this, DownloadManager.class));
+            case MENU_MARK_ALL:
                 return true;
             case MENU_OPTIONS:
                 startActivity(new Intent(ItemsActivity.this, Prefs.class));
