@@ -51,18 +51,15 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
     private static final int ITEMS_NB = 16;
     private int image_size;
     private ItemsAdapter adapter;
-    private UpdateTask updateTask = null;
+    private UpdateTaskBtn updateTask = null;
     private Context ctxt;
     private List<Item> items = null;
     private ListView list;
-
-    // private LayoutInflater mInflater;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ctxt = getApplicationContext();
-        // mInflater = LayoutInflater.from(ctxt);
         setContentView(R.layout.items_activity);
 
         // Screen metrics (for dip to px conversion)
@@ -81,7 +78,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         findViewById(R.id.btn_refresh).setVisibility(View.VISIBLE);
         findViewById(R.id.btn_refresh).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                updateTask = new UpdateTask(ItemsActivity.this);
+                updateTask = new UpdateTaskBtn(ItemsActivity.this);
                 updateTask.execute();
             }
         });
@@ -100,12 +97,6 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         list.setOnItemClickListener(this);
         list.setEmptyView(findViewById(R.id.list_empty));
         ((TextView) findViewById(R.id.loading)).setVisibility(View.INVISIBLE);
-
-        // FIXME: Do not run this in onCreate()
-        // if (addToList(0, ITEMS_NB) == 0) {
-        // updateTask = new UpdateTask(ItemsActivity.this);
-        // updateTask.execute();
-        // }
 
         // Add existing items to list
         addToList(0, ITEMS_NB);
@@ -234,7 +225,6 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         } catch (SQLiteException e) {
             Log.e(TAG, e.getMessage());
         } finally {
-
             if (c != null) {
                 c.close();
             }
@@ -261,7 +251,6 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         for (int i = adapter.getCount(); i < len; i++) {
             adapter.add(null);
         }
-        // adapter.notifyDataSetChanged();
     }
 
     static class ViewHolder {
@@ -272,7 +261,6 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         // ImageButton action;
     }
 
-    // TODO: Use a CursorAdapter ?
     private class ItemsAdapter extends ArrayAdapter<Item> implements Filterable {
 
         private LayoutInflater inflater;
@@ -317,6 +305,52 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
             }
             return convertView;
         }
+    }
+
+    private static class UpdateTaskBtn extends UpdateTask {
+
+        public UpdateTaskBtn(ItemsActivity a){
+            super(a);
+        }
+    
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            if (mActivity != null) {
+                Button btn_ref = (Button) getActivity().findViewById(R.id.btn_refresh);
+                btn_ref.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh_a, 0, 0, 0);
+                ((AnimationDrawable) btn_ref.getCompoundDrawables()[0]).start();
+                btn_ref.setEnabled(false);
+                btn_ref.setClickable(false);
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Void unused) {
+            super.onPostExecute(unused);
+            if (mActivity != null) {
+                ItemsActivity a = getActivity();
+                Button btn_ref = (Button) a.findViewById(R.id.btn_refresh);
+                btn_ref.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0, 0);
+                btn_ref.setEnabled(true);
+                btn_ref.setClickable(true);
+                a.findViewById(R.id.loading).setVisibility(View.INVISIBLE);
+                a.resetList();
+            }
+        }
+
+        @Override
+        protected void onCancelled() {
+            super.onCancelled();
+            if (mActivity != null) {
+                final Context ctxt = getContext();
+                Button btn_refresh = (Button) getActivity().findViewById(R.id.btn_refresh);
+                btn_refresh.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0, 0);
+                btn_refresh.setEnabled(true);
+                btn_refresh.setClickable(true);
+            }
+        }
+
     }
 
     class EndlessTask extends AsyncTask<Integer, Void, Void> {

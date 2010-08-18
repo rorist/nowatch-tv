@@ -19,10 +19,10 @@ import android.widget.Toast;
 class UpdateTask extends AsyncTask<Void, Void, Void> {
 
     private static final String TAG = Main.TAG + "UpdateTask";
-    private WeakReference<ItemsActivity> mActivity = null;
-    private WeakReference<DownloadService> mService = null;
     private boolean sdcarderror = false;
     private List<Feed> feeds;
+    protected WeakReference<ItemsActivity> mActivity = null;
+    protected WeakReference<DownloadService> mService = null;
 
     public UpdateTask(ItemsActivity activity) {
         mActivity = new WeakReference<ItemsActivity>(activity);
@@ -49,15 +49,7 @@ class UpdateTask extends AsyncTask<Void, Void, Void> {
     protected void onPreExecute() {
         final Context ctxt = getContext();
         final Network net = new Network(ctxt);
-        if (net.isConnected()) {
-            if (mActivity != null) {
-                Button btn_ref = (Button) getActivity().findViewById(R.id.btn_refresh);
-                btn_ref.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh_a, 0, 0, 0);
-                ((AnimationDrawable) btn_ref.getCompoundDrawables()[0]).start();
-                btn_ref.setEnabled(false);
-                btn_ref.setClickable(false);
-            }
-        } else {
+        if (!net.isConnected()) {
             Toast.makeText(ctxt, R.string.toast_notconnected, Toast.LENGTH_SHORT).show();
             cancel(false);
         }
@@ -79,30 +71,9 @@ class UpdateTask extends AsyncTask<Void, Void, Void> {
 
     @Override
     protected void onPostExecute(Void unused) {
-        final Context ctxt = getContext();
-        if (mActivity != null) {
-            ItemsActivity a = getActivity();
-            Button btn_ref = (Button) a.findViewById(R.id.btn_refresh);
-            btn_ref.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0, 0);
-            btn_ref.setEnabled(true);
-            btn_ref.setClickable(true);
-            a.findViewById(R.id.loading).setVisibility(View.INVISIBLE);
-            a.resetList();
-        }
         if (sdcarderror) {
-            Toast.makeText(ctxt, R.string.toast_sdcard, Toast.LENGTH_SHORT).show();
-        }
-    }
-
-    @Override
-    protected void onCancelled() {
-        super.onCancelled();
-        if (mActivity != null) {
             final Context ctxt = getContext();
-            Button btn_refresh = (Button) getActivity().findViewById(R.id.btn_refresh);
-            btn_refresh.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0, 0);
-            btn_refresh.setEnabled(true);
-            btn_refresh.setClickable(true);
+            Toast.makeText(ctxt, R.string.toast_sdcard, Toast.LENGTH_SHORT).show();
         }
     }
 
