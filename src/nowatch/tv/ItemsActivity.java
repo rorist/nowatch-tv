@@ -87,20 +87,19 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
             }
         });
         // Menu buttons
-        findViewById(R.id.btn_search).setVisibility(View.VISIBLE);
+        findViewById(R.id.btn_manage).setVisibility(View.VISIBLE);
         findViewById(R.id.btn_refresh).setVisibility(View.VISIBLE);
-        View btn_home = findViewById(R.id.btn_refresh);
-        btn_home.setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.btn_refresh).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 updateTask = new UpdateTask(ItemsActivity.this);
                 updateTask.execute();
             }
         });
-        // Button btn_search = (Button) findViewById(R.id.btn_search);
-        // btn_search.setOnClickListener(new View.OnClickListener() {
-        // public void onClick(View v) {
-        // }
-        // });
+        findViewById(R.id.btn_manage).setOnClickListener(new View.OnClickListener() {
+            public void onClick(View v) {
+                startActivity(new Intent(ItemsActivity.this, DownloadManager.class));
+            }
+        });
 
         // Set list adapter
         items = new ArrayList<Item>();

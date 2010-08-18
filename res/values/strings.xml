@@ -38,6 +38,7 @@
     
     <string name="btn_play">Voir</string>
     <string name="btn_stream">Voir (streaming)</string>
+    <string name="btn_manage">Gérer</string>
     <string name="btn_download">Télécharger</string>
     <string name="btn_back">Retour</string>
     <string name="btn_refresh">Rafraichir</string>

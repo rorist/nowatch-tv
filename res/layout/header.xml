@@ -41,6 +41,12 @@
             android:visibility="gone"
             style="@style/Button_menu" />
         <Button
+            android:id="@+id/btn_manage"
+            android:drawableLeft="@drawable/btn_manage"
+            android:text="@string/btn_manage"
+            android:visibility="gone"
+            style="@style/Button_menu" />
+        <Button
             android:id="@+id/btn_download"
             android:drawableLeft="@drawable/btn_download"
             android:text="@string/btn_download"
