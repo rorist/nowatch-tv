@@ -110,7 +110,13 @@ public class DownloadService extends Service {
                 // Check for updates
                 UpdateTaskNotif updateTask = new UpdateTaskNotif(DownloadService.this);
                 updateTask.execute();
+            } else {
+                // Nothing to do
+                stopOrContinue();
             }
+        } else {
+            // Nothing to do
+            stopOrContinue();
         }
     }
 
