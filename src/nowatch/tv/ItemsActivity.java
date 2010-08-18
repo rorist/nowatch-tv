@@ -42,9 +42,10 @@ import android.widget.AdapterView.OnItemClickListener;
 public class ItemsActivity extends Activity implements OnItemClickListener {
 
     private static final String TAG = Main.TAG + "ItemsActivity";
-    private final String QUERY_ITEMS = "SELECT items._id, items.title, items.status, feeds.image, items.pubDate "
+    private final String REQ_ITEMS = "SELECT items._id, items.title, items.status, feeds.image, items.pubDate "
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id "
             + "ORDER BY items.pubDate DESC LIMIT ";
+    private final String REQ_MARK_ALL = "update items set status=" + Item.STATUS_UNREAD + " where status=" + Item.STATUS_NEW;
     private static final int MENU_MARK_ALL= 1;
     private static final int MENU_OPTIONS = 2;
     private static final int ITEMS_NB = 16;
@@ -130,6 +131,9 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case MENU_MARK_ALL:
+                SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
+                db.execSQL(REQ_MARK_ALL);
+                db.close();
                 return true;
             case MENU_OPTIONS:
                 startActivity(new Intent(ItemsActivity.this, Prefs.class));
@@ -151,7 +155,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         int cnt = 0;
         try {
             db = (new DB(ctxt)).getWritableDatabase();
-            c = db.rawQuery(QUERY_ITEMS + offset + "," + limit, null);
+            c = db.rawQuery(REQ_ITEMS + offset + "," + limit, null);
             cnt = c.getCount();
             if (cnt > 0) {
                 c.moveToFirst();
