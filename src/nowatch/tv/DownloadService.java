@@ -37,6 +37,7 @@ import android.widget.Toast;
 public class DownloadService extends Service {
 
     private final static String TAG = Main.TAG + "DownloadService";
+    private final static int NOTIFICATION_UPDATE = -1;
     private final String REQ_ITEM = "select title,file_uri,file_size from items where _id=? limit 1";
     private final String REQ_CLEAN = "update items set status=" + Item.STATUS_UNREAD + " where status=" + Item.STATUS_DOWNLOADING;
     private final String REQ_NEW = "select count(_id) from items where status=" + Item.STATUS_NEW;
@@ -418,17 +419,28 @@ public class DownloadService extends Service {
      */
     private void update() {
         // Update
-        UpdateTask updateTask = new UpdateTask(DownloadService.this);
+        UpdateTaskNotif updateTask = new UpdateTaskNotif(DownloadService.this);
         updateTask.execute();
-        // Show notification about new items
-        SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
-        Cursor c = db.rawQuery(REQ_NEW, null);
-        c.moveToFirst();
-        int nb = c.getInt(0);
-        c.close();
-        db.close();
-        Log.v(TAG, "new items=" + nb);
-        // Download items
+    }
+
+    private static class UpdateTaskNotif extends UpdateTask {
+
+        @Override
+        protected void onPostExecute(Void unused) {
+            super.onPostExecute(unused);
+            // Show notification about new items
+            SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
+            Cursor c = db.rawQuery(REQ_NEW, null);
+            c.moveToFirst();
+            int nb = c.getInt(0);
+            c.close();
+            db.close();
+            Notification nf = new Notification(R.drawable.icon_scream_48, "Nouveaux podcasts", System.currentTimeMillis());
+            nf.setLatestEventInfo(DownloadService.this, "Nouveau podcasts disponibles", nb + " nouveaux éléments", PendingIntent.getActivity(DownloadService.this, 0, new Intent(DownloadService.this, ItemsActivity.class), 0));
+            notificationManager.notify(NOTIFICATION_UPDATE, nf);
+            // Download items
+        }
+
     }
 
     /**

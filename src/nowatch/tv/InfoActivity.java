@@ -76,7 +76,10 @@ public class InfoActivity extends Activity {
         c.close();
         db.close();
 
-        // Set things
+        // Set status
+        if (status == Item.STATUS_NEW){
+            changeStatus(ctxt, item_id, Item.STATUS_UNREAD);
+        }
 
         // Menu buttons
         findViewById(R.id.btn_back).setVisibility(View.VISIBLE);
