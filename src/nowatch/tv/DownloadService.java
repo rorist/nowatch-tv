@@ -129,12 +129,13 @@ public class DownloadService extends Service {
             db.execSQL(REQ_CLEAN);
             db.close();
             // Remove notifications
+            /*
             try {
                 notificationManager.cancelAll();
-                // mNotificationManager.cancel(item_id);
             } catch (Exception e) {
                 Log.v(TAG, e.getMessage());
             }
+            */
         }
     }
 
@@ -440,7 +441,7 @@ public class DownloadService extends Service {
                 c.close();
                 db.close();
                 Notification nf = new Notification(R.drawable.icon_scream_48, "Nouveaux podcasts", System.currentTimeMillis());
-                nf.setLatestEventInfo(service, "Nouveau podcasts disponibles", nb + " nouveaux éléments", PendingIntent.getActivity(service, 0, new Intent(service, ItemsActivity.class), 0));
+                nf.setLatestEventInfo(service, "Podcasts disponibles", nb + " nouveaux éléments", PendingIntent.getActivity(service, 0, new Intent(service, ItemsActivity.class), 0));
                 service.notificationManager.notify(NOTIFICATION_UPDATE, nf);
                 // Download items
                 service.stopOrContinue();

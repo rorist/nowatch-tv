@@ -16,7 +16,7 @@ public class UpdateNotification {
         am = (AlarmManager) ctxt.getSystemService(Context.ALARM_SERVICE);
         Intent i = new Intent(ctxt, DownloadService.class);
         i.setAction(DownloadService.ACTION_UPDATE);
-        pi = PendingIntent.getService(ctxt, REQUEST, i, PendingIntent.FLAG_CANCEL_CURRENT);
+        pi = PendingIntent.getService(ctxt, REQUEST, i, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     public void startNotification(final long interval) {
