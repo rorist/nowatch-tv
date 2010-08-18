@@ -24,9 +24,9 @@ public class UpdateNotification {
         pi = PendingIntent.getService(ctxt, REQUEST, i, PendingIntent.FLAG_CANCEL_CURRENT);
     }
 
-    public void startNotification() {
+    public void startNotification(final long interval) {
         am.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(),
-                INTERVAL, pi);
+                interval, pi);
     }
 
     public void cancelNotification() {

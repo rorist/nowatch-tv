@@ -36,7 +36,9 @@ public class DownloadService extends Service {
 
     private final static String TAG = Main.TAG + "DownloadService";
     private final int SIMULTANEOUS_DOWNLOAD = 2; // FIXME: Set from preferences
-    private final String REQ = "select title,file_uri,file_size from items where _id=? limit 1";
+    private final String REQ_ITEM = "select title,file_uri,file_size from items where _id=? limit 1";
+    private final String REQ_CLEAN = "update items set status=" + Item.STATUS_UNREAD + " where status=" + Item.STATUS_DOWNLOADING;
+    private final String REQ_NEW = "select count(_id) from items where status=" + Item.STATUS_NEW;
     private final RemoteCallbackList<DownloadInterfaceCallback> mCallbacks = new RemoteCallbackList<DownloadInterfaceCallback>();
     private final ConcurrentLinkedQueue<Integer> downloadQueue = new ConcurrentLinkedQueue<Integer>();
     private final HashMap<Integer, DownloadTask> downloadTasks = new HashMap<Integer, DownloadTask>();
@@ -102,6 +104,7 @@ public class DownloadService extends Service {
                         .getInt(Item.EXTRA_ITEM_ID), extras.getInt(Item.EXTRA_ITEM_POSITION));
             } else if (ACTION_UPDATE.equals(action)) {
                 // Check for updates
+                update();
                 Log.v(TAG, "PLEASE UPDATE");
             }
             // Start pending task or exit
@@ -121,7 +124,7 @@ public class DownloadService extends Service {
         if (downloadTasks.size() == 0) {
             // Reset state
             SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
-            db.execSQL("update items set status=3 where status=2");
+            db.execSQL(REQ_CLEAN);
             db.close();
             // Remove notifications
             try {
@@ -200,7 +203,7 @@ public class DownloadService extends Service {
                         // TODO: Check if there is enough space on device
                         // Get item information and start DownloadTask
                         SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
-                        Cursor c = db.rawQuery(REQ, new String[] { "" + itemId });
+                        Cursor c = db.rawQuery(REQ_ITEM, new String[] { "" + itemId });
                         c.moveToFirst();
                         DownloadTask task = new DownloadTask(DownloadService.this, c.getString(0),
                                 itemId);
@@ -406,6 +409,24 @@ public class DownloadService extends Service {
                 }
             }
         }
+    }
+
+    /**
+     * Update
+     */
+    private void update() {
+        // Update
+        UpdateTask updateTask = new UpdateTask(DownloadService.this);
+        updateTask.execute();
+        // Show notification about new items
+        SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
+        Cursor c = db.rawQuery(REQ_NEW, null);
+        c.moveToFirst();
+        int nb = c.getInt(0);
+        c.close();
+        db.close();
+        Log.v(TAG, "new items=" + nb);
+        // Download items
     }
 
     /**

@@ -1,15 +1,22 @@
 <PreferenceScreen
     xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory android:title="Général">
+    <PreferenceCategory android:title="Notifications">
         <CheckBoxPreference
             android:key="notification"
             android:title="Notification"
             android:summary="TODO"
             android:defaultValue="false" />
         <CheckBoxPreference
+            android:key="auto_dl"
+            android:title="Téléchargement auto"
+            android:summary="TODO"
+            android:defaultValue="false" />
+    </PreferenceCategory>
+    <PreferenceCategory android:title="Général">
+        <CheckBoxPreference
             android:key="mobile_traffic"
-            android:title="Authoriser téléchargement mobile"
-            android:summary="ATTENTION: Cette option débloque le téléchargement des vidéos lorsque vous n\'êtes pas connecté en Wifi mais en Mobile (2G/3G), soyez certain d\'avoir un abo illimité."
+            android:title="Traffic mobile"
+            android:summary="ATTENTION: Débloque le téléchargement mobile (2G/3G)"
             android:defaultValue="false" />
     </PreferenceCategory>
 </PreferenceScreen>

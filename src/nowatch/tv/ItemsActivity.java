@@ -52,7 +52,6 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
     private ItemsAdapter adapter;
     private UpdateTask updateTask = null;
     private Context ctxt;
-    private static List<Feed> feeds;
     private List<Item> items = null;
     private ListView list;
 
@@ -64,15 +63,6 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         ctxt = getApplicationContext();
         // mInflater = LayoutInflater.from(ctxt);
         setContentView(R.layout.items_activity);
-
-        // Add all feeds
-        feeds = new ArrayList<Feed>();
-        feeds.add(new Feed(1, R.string.feed_cinefuzz));
-        feeds.add(new Feed(2, R.string.feed_geekinc));
-        feeds.add(new Feed(3, R.string.feed_scuds));
-        feeds.add(new Feed(4, R.string.feed_zapcast));
-        feeds.add(new Feed(5, R.string.feed_tom));
-        feeds.add(new Feed(6, R.string.feed_revuetech));
 
         // Screen metrics (for dip to px conversion)
         DisplayMetrics dm = new DisplayMetrics();
@@ -152,72 +142,6 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         Intent i = new Intent(ctxt, InfoActivity.class);
         i.putExtra(Item.EXTRA_ITEM_ID, items.get(position).id);
         startActivity(i);
-    }
-
-    private static class UpdateTask extends AsyncTask<Void, Void, Void> {
-
-        // private ProgressDialog progress;
-        private WeakReference<ItemsActivity> mActivity;
-        private boolean sdcarderror = false;
-
-        public UpdateTask(ItemsActivity activity) {
-            mActivity = new WeakReference<ItemsActivity>(activity);
-        }
-
-        @Override
-        protected void onPreExecute() {
-            final ItemsActivity a = mActivity.get();
-            final Network net = new Network(a);
-            if (net.isConnected()) {
-                Button btn_ref = (Button) a.findViewById(R.id.btn_refresh);
-                btn_ref.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh_a, 0, 0, 0);
-                ((AnimationDrawable) btn_ref.getCompoundDrawables()[0]).start();
-                btn_ref.setEnabled(false);
-                btn_ref.setClickable(false);
-            } else {
-                Toast.makeText(a.ctxt, R.string.toast_notconnected, Toast.LENGTH_SHORT).show();
-                cancel(false);
-            }
-        }
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            final ItemsActivity a = mActivity.get();
-            try {
-                for (Feed f : feeds) {
-                    UpdateDb.update(a.getApplicationContext(), "" + f._id, f._resource);
-                }
-            } catch (IOException e) {
-                Log.e(TAG, e.getMessage());
-                sdcarderror = true;
-            }
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void unused) {
-            final ItemsActivity a = mActivity.get();
-            Button btn_ref = (Button) a.findViewById(R.id.btn_refresh);
-            btn_ref.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0, 0);
-            btn_ref.setEnabled(true);
-            btn_ref.setClickable(true);
-            a.resetList();
-            ((TextView) a.findViewById(R.id.loading)).setVisibility(View.INVISIBLE);
-            // progress.dismiss();
-            if (sdcarderror) {
-                Toast.makeText(a.ctxt, R.string.toast_sdcard, Toast.LENGTH_SHORT).show();
-            }
-        }
-
-        @Override
-        protected void onCancelled() {
-            super.onCancelled();
-            final ItemsActivity a = mActivity.get();
-            Button btn_refresh = (Button) a.findViewById(R.id.btn_refresh);
-            btn_refresh.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0, 0);
-            btn_refresh.setEnabled(true);
-            btn_refresh.setClickable(true);
-        }
     }
 
     private int addToList(int offset, int limit) {
@@ -317,7 +241,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         return cnt;
     }
 
-    private void resetList() {
+    public void resetList() {
         if (updateTask != null) {
             updateTask.cancel(true);
         }
