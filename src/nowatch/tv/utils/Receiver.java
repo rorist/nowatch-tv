@@ -1,4 +1,4 @@
-package nowatch.tv;
+package nowatch.tv.utils;
 
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -10,9 +10,10 @@ public class Receiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context ctxt, Intent intent) {
-        if(Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())){
+        if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctxt);
-            new UpdateNotification(ctxt).startNotification(prefs.getLong(Prefs.KEY_NOTIFICATION_INTV, Prefs.DEFAULT_NOTIFICATION_INTV));
+            new Notify(ctxt).startNotification(prefs.getLong(Prefs.KEY_NOTIFICATION_INTV,
+                    Prefs.DEFAULT_NOTIFICATION_INTV));
         }
     }
 

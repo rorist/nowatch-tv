@@ -1,9 +1,16 @@
-package nowatch.tv;
+package nowatch.tv.ui;
 
 // TODO: Do not bind to service, just send IntentService
 
 import java.io.File;
 
+import nowatch.tv.Main;
+import nowatch.tv.R;
+import nowatch.tv.network.GetFile;
+import nowatch.tv.network.Network;
+import nowatch.tv.service.NWService;
+import nowatch.tv.utils.DB;
+import nowatch.tv.utils.Item;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
@@ -26,7 +33,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
-public class InfoActivity extends Activity {
+public class ItemInfo extends Activity {
 
     private final String TAG = Main.TAG + "InfoActivity";
     private final String REQ = "SELECT feeds.title, items.title, items.description, "
@@ -150,8 +157,8 @@ public class InfoActivity extends Activity {
 
     private void downloadVideo(int item_id) {
         changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
-        Intent intent = new Intent(InfoActivity.this, DownloadService.class);
-        intent.setAction(DownloadService.ACTION_ADD);
+        Intent intent = new Intent(ItemInfo.this, NWService.class);
+        intent.setAction(NWService.ACTION_ADD);
         intent.putExtra(Item.EXTRA_ITEM_ID, item_id);
         startService(intent);
     }

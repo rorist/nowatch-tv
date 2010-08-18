@@ -1,8 +1,15 @@
-package nowatch.tv;
+package nowatch.tv.ui;
 
 import java.util.ArrayList;
 import java.util.List;
 
+import nowatch.tv.DownloadInterface;
+import nowatch.tv.DownloadInterfaceCallback;
+import nowatch.tv.Main;
+import nowatch.tv.R;
+import nowatch.tv.service.NWService;
+import nowatch.tv.utils.DB;
+import nowatch.tv.utils.Item;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;
@@ -33,7 +40,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.AdapterView.OnItemClickListener;
 
-public class DownloadManager extends Activity {
+public class Manage extends Activity {
 
     private final String TAG = Main.TAG + "DownloadManager";
     private static LayoutInflater mInflater;
@@ -46,7 +53,7 @@ public class DownloadManager extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        startService(new Intent(DownloadManager.this, DownloadService.class));
+        startService(new Intent(Manage.this, NWService.class));
         setContentView(R.layout.manage_activity);
         mInflater = LayoutInflater.from(getApplicationContext());
 
@@ -78,8 +85,7 @@ public class DownloadManager extends Activity {
     @Override
     public void onStart() {
         super.onStart();
-        bindService(new Intent(DownloadManager.this, DownloadService.class), mConnection,
-                BIND_AUTO_CREATE);
+        bindService(new Intent(Manage.this, NWService.class), mConnection, BIND_AUTO_CREATE);
     }
 
     @Override
@@ -90,13 +96,13 @@ public class DownloadManager extends Activity {
 
     private OnItemClickListener listenerCurrent = new OnItemClickListener() {
         public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-            cancelDialog(position, DownloadService.TYPE_CURRENT);
+            cancelDialog(position, NWService.TYPE_CURRENT);
         }
     };
 
     private OnItemClickListener listenerPending = new OnItemClickListener() {
         public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-            cancelDialog(position, DownloadService.TYPE_PENDING);
+            cancelDialog(position, NWService.TYPE_PENDING);
         }
     };
 
@@ -108,14 +114,14 @@ public class DownloadManager extends Activity {
             public void onClick(DialogInterface dialog, int which) {
                 Item item = null;
                 // Remove item from list
-                if (type == DownloadService.TYPE_CURRENT) {
+                if (type == NWService.TYPE_CURRENT) {
                     item = downloadCurrent.get(position);
-                } else if (type == DownloadService.TYPE_PENDING) {
+                } else if (type == NWService.TYPE_PENDING) {
                     item = downloadPending.get(position);
                 }
                 // Send intent to service
-                Intent intent = new Intent(ctxt, DownloadService.class);
-                intent.setAction(DownloadService.ACTION_CANCEL);
+                Intent intent = new Intent(ctxt, NWService.class);
+                intent.setAction(NWService.ACTION_CANCEL);
                 intent.putExtra(Item.EXTRA_ITEM_ID, item.id);
                 intent.putExtra(Item.EXTRA_ITEM_POSITION, position);
                 intent.putExtra(Item.EXTRA_ITEM_TYPE, type);
@@ -205,9 +211,9 @@ public class DownloadManager extends Activity {
             if (mService != null) {
                 try {
                     mService._registerCallback(mCallback);
+                    populateLists();
                 } catch (RemoteException e) {
                 }
-                populateLists();
             } else {
                 Toast.makeText(getApplicationContext(), "Service inaccessible", Toast.LENGTH_SHORT)
                         .show();
@@ -226,37 +232,15 @@ public class DownloadManager extends Activity {
     };
 
     private DownloadInterfaceCallback mCallback = new DownloadInterfaceCallback.Stub() {
-        public void _valueChanged(String action, int id, int position) {
-            if (DownloadService.ACTION_UPDATE.equals(action)) {
-                mHandler.sendMessage(mHandler.obtainMessage(MSG_UPDATE));
-            } else if (DownloadService.ACTION_CANCEL.equals(action)) {
-                mHandler.sendMessage(mHandler.obtainMessage(MSG_CANCEL, id, position));
-            }
-
+        public void _valueChanged() {
+            mHandler.sendMessage(mHandler.obtainMessage());
         }
     };
 
-    private static final int MSG_UPDATE = 1;
-    private static final int MSG_CANCEL = 2;
     private Handler mHandler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            switch (msg.what) {
-                case MSG_UPDATE:
-                    populateLists();
-                    break;
-                case MSG_CANCEL:
-                    if (msg.arg1 == DownloadService.TYPE_CURRENT) {
-                        adapterCurrent.remove(downloadCurrent.get(msg.arg2));
-                    } else if (msg.arg1 == DownloadService.TYPE_PENDING) {
-                        adapterPending.remove(downloadPending.get(msg.arg2));
-                    } else {
-                        Log.i(TAG, "Nothing to do");
-                    }
-                    break;
-                default:
-                    super.handleMessage(msg);
-            }
+            populateLists();
         }
 
     };

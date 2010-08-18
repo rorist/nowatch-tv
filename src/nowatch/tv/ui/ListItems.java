@@ -1,4 +1,4 @@
-package nowatch.tv;
+package nowatch.tv.ui;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -6,6 +6,12 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+import nowatch.tv.Main;
+import nowatch.tv.R;
+import nowatch.tv.service.UpdateTask;
+import nowatch.tv.utils.DB;
+import nowatch.tv.utils.Item;
+import nowatch.tv.utils.Prefs;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -36,7 +42,7 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.AdapterView.OnItemClickListener;
 
-public class ItemsActivity extends Activity implements OnItemClickListener {
+public class ListItems extends Activity implements OnItemClickListener {
 
     private static final String TAG = Main.TAG + "ItemsActivity";
     private final String REQ_ITEMS = "SELECT items._id, items.title, items.status, feeds.image, items.pubDate "
@@ -76,13 +82,13 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         findViewById(R.id.btn_refresh).setVisibility(View.VISIBLE);
         findViewById(R.id.btn_refresh).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                updateTask = new UpdateTaskBtn(ItemsActivity.this);
+                updateTask = new UpdateTaskBtn(ListItems.this);
                 updateTask.execute();
             }
         });
         findViewById(R.id.btn_manage).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                startActivity(new Intent(ItemsActivity.this, DownloadManager.class));
+                startActivity(new Intent(ListItems.this, Manage.class));
             }
         });
 
@@ -98,8 +104,8 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
     }
 
     @Override
-    public void onResume() {
-        super.onResume();
+    public void onStart() {
+        super.onStart();
         // FIXME: Find better solution to refresh
         // Add existing items to list
         resetList();
@@ -129,14 +135,14 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
                 db.close();
                 return true;
             case MENU_OPTIONS:
-                startActivity(new Intent(ItemsActivity.this, Prefs.class));
+                startActivity(new Intent(ListItems.this, Prefs.class));
                 return true;
         }
         return false;
     }
 
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Intent i = new Intent(ctxt, InfoActivity.class);
+        Intent i = new Intent(ctxt, ItemInfo.class);
         i.putExtra(Item.EXTRA_ITEM_ID, items.get(position).id);
         startActivity(i);
     }
@@ -311,7 +317,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
 
     private static class UpdateTaskBtn extends UpdateTask {
 
-        public UpdateTaskBtn(ItemsActivity a) {
+        public UpdateTaskBtn(ListItems a) {
             super(a);
         }
 
@@ -331,7 +337,7 @@ public class ItemsActivity extends Activity implements OnItemClickListener {
         protected void onPostExecute(Void unused) {
             super.onPostExecute(unused);
             if (mActivity != null) {
-                ItemsActivity a = getActivity();
+                ListItems a = getActivity();
                 Button btn_ref = (Button) a.findViewById(R.id.btn_refresh);
                 btn_ref.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0, 0);
                 btn_ref.setEnabled(true);

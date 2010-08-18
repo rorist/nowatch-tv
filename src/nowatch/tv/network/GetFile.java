@@ -1,6 +1,6 @@
 // HTTP Client based on AndroidHttpClient (API level 8)
 
-package nowatch.tv;
+package nowatch.tv.network;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -11,6 +11,8 @@ import java.nio.ByteBuffer;
 import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
+
+import nowatch.tv.Main;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;

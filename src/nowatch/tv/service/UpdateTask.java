@@ -1,10 +1,16 @@
-package nowatch.tv;
+package nowatch.tv.service;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
+import nowatch.tv.Main;
+import nowatch.tv.R;
+import nowatch.tv.network.Network;
+import nowatch.tv.ui.ListItems;
+import nowatch.tv.utils.Feed;
+import nowatch.tv.utils.UpdateDb;
 import android.app.Activity;
 import android.app.Service;
 import android.content.Context;
@@ -12,25 +18,25 @@ import android.os.AsyncTask;
 import android.util.Log;
 import android.widget.Toast;
 
-class UpdateTask extends AsyncTask<Void, Void, Void> {
+public class UpdateTask extends AsyncTask<Void, Void, Void> {
 
     private static final String TAG = Main.TAG + "UpdateTask";
     private boolean sdcarderror = false;
     private List<Feed> feeds;
-    protected WeakReference<ItemsActivity> mActivity = null;
-    protected WeakReference<DownloadService> mService = null;
+    protected WeakReference<ListItems> mActivity = null;
+    protected WeakReference<NWService> mService = null;
 
-    public UpdateTask(ItemsActivity activity) {
-        mActivity = new WeakReference<ItemsActivity>(activity);
+    public UpdateTask(ListItems activity) {
+        mActivity = new WeakReference<ListItems>(activity);
         initFeeds();
     }
 
-    public UpdateTask(DownloadService service) {
-        mService = new WeakReference<DownloadService>(service);
+    public UpdateTask(NWService service) {
+        mService = new WeakReference<NWService>(service);
         initFeeds();
     }
 
-    private void initFeeds(){
+    private void initFeeds() {
         // Add all feeds
         feeds = new ArrayList<Feed>();
         feeds.add(new Feed(1, R.string.feed_cinefuzz));
@@ -73,7 +79,7 @@ class UpdateTask extends AsyncTask<Void, Void, Void> {
         }
     }
 
-    protected Context getContext(){
+    protected Context getContext() {
         if (mActivity != null) {
             final Activity a = mActivity.get();
             if (a != null) {
@@ -88,9 +94,9 @@ class UpdateTask extends AsyncTask<Void, Void, Void> {
         return null;
     }
 
-    protected ItemsActivity getActivity(){
+    protected ListItems getActivity() {
         if (mActivity != null) {
-            final ItemsActivity a = mActivity.get();
+            final ListItems a = mActivity.get();
             if (a != null) {
                 return a;
             }
@@ -98,9 +104,9 @@ class UpdateTask extends AsyncTask<Void, Void, Void> {
         return null;
     }
 
-    protected DownloadService getService(){
+    protected NWService getService() {
         if (mService != null) {
-            final DownloadService s = mService.get();
+            final NWService s = mService.get();
             if (s != null) {
                 return s;
             }
@@ -109,4 +115,3 @@ class UpdateTask extends AsyncTask<Void, Void, Void> {
     }
 
 }
-

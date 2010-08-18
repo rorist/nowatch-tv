@@ -1,5 +1,6 @@
-package nowatch.tv;
+package nowatch.tv.utils;
 
+import nowatch.tv.Main;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;

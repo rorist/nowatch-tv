@@ -1,4 +1,4 @@
-package nowatch.tv;
+package nowatch.tv.service;
 
 // TODO: Use IntentService in startService() (queuing model)
 
@@ -8,9 +8,23 @@ import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
 import java.util.Collection;
+import java.util.ConcurrentModificationException;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
+
+import nowatch.tv.DownloadInterface;
+import nowatch.tv.DownloadInterfaceCallback;
+import nowatch.tv.Main;
+import nowatch.tv.R;
+import nowatch.tv.network.GetFile;
+import nowatch.tv.network.Network;
+import nowatch.tv.ui.ItemInfo;
+import nowatch.tv.ui.ListItems;
+import nowatch.tv.ui.Manage;
+import nowatch.tv.utils.DB;
+import nowatch.tv.utils.Item;
+import nowatch.tv.utils.Prefs;
 
 import org.apache.http.client.ClientProtocolException;
 
@@ -34,7 +48,7 @@ import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
-public class DownloadService extends Service {
+public class NWService extends Service {
 
     private final static String TAG = Main.TAG + "DownloadService";
     private final static int NOTIFICATION_UPDATE = -1;
@@ -67,7 +81,6 @@ public class DownloadService extends Service {
         Log.i(TAG, "onDestroy()");
         cancelAll();
         clean();
-        mCallbacks.kill();
     }
 
     @Override
@@ -110,7 +123,7 @@ public class DownloadService extends Service {
                 stopOrContinue();
             } else if (ACTION_UPDATE.equals(action)) {
                 // Check for updates
-                UpdateTaskNotif updateTask = new UpdateTaskNotif(DownloadService.this);
+                UpdateTaskNotif updateTask = new UpdateTaskNotif(NWService.this);
                 updateTask.execute();
             } else {
                 // Nothing to do
@@ -133,15 +146,17 @@ public class DownloadService extends Service {
     private void clean() {
         // Clean failed downloads
         if (downloadTasks.size() == 0) {
+            mCallbacks.kill();
             // Reset state
             SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
             db.execSQL(REQ_CLEAN);
             db.close();
             // Remove notifications
-            /*
-             * try { notificationManager.cancelAll(); } catch (Exception e) {
-             * Log.v(TAG, e.getMessage()); }
-             */
+            // try {
+            // notificationManager.cancelAll();
+            // } catch (Exception e) {
+            // Log.v(TAG, e.getMessage());
+            // }
         }
     }
 
@@ -149,12 +164,17 @@ public class DownloadService extends Service {
         // Cancel current downloads
         if (downloadTasks != null && downloadTasks.size() > 0) {
             Collection<DownloadTask> tasks = downloadTasks.values();
-            for (DownloadTask task : tasks) {
-                task.task.isCancelled = true;
-                if (AsyncTask.Status.RUNNING.equals(task.getStatus()) && task.cancel(true)) {
-                    downloadTasks.remove(task.item_id);
-                    InfoActivity.changeStatus(ctxt, task.item_id, Item.STATUS_UNREAD);
+            try {
+                synchronized (tasks) {
+                    for (DownloadTask task : tasks) {
+                        if (AsyncTask.Status.RUNNING.equals(task.getStatus()) && task.cancel(true)) {
+                            downloadTasks.remove(task.item_id);
+                            ItemInfo.changeStatus(ctxt, task.item_id, Item.STATUS_UNREAD);
+                        }
+                    }
                 }
+            } catch (ConcurrentModificationException e) {
+                Log.e(TAG, "FIXME: ConcurrentModificationException");
             }
         }
     }
@@ -162,10 +182,8 @@ public class DownloadService extends Service {
     private void cancelDownload(int type, Integer id, int position) {
         if (type == TYPE_PENDING) {
             if (downloadQueue.contains(id)) {
-                InfoActivity.changeStatus(ctxt, id, Item.STATUS_UNREAD);
+                ItemInfo.changeStatus(ctxt, id, Item.STATUS_UNREAD);
                 downloadQueue.remove(id);
-                clientCallback(ACTION_CANCEL, TYPE_PENDING, position);
-                return;
             }
         } else if (type == TYPE_CURRENT) {
             if (downloadTasks.containsKey(id)) {
@@ -175,19 +193,19 @@ public class DownloadService extends Service {
                 }
                 if (AsyncTask.Status.RUNNING.equals(task.getStatus()) && task.cancel(true)) {
                     downloadTasks.remove(id);
-                    InfoActivity.changeStatus(ctxt, id, Item.STATUS_UNREAD);
+                    ItemInfo.changeStatus(ctxt, id, Item.STATUS_UNREAD);
                 }
-                clientCallback(ACTION_CANCEL, TYPE_CURRENT, position);
             }
         }
+        clientCallback();
     }
 
-    private void clientCallback(String action, int id, int position) {
+    private void clientCallback() {
         // Broadcast to all clients the new value.
         final int N = mCallbacks.beginBroadcast();
         for (int i = 0; i < N; i++) {
             try {
-                mCallbacks.getBroadcastItem(i)._valueChanged(action, id, position);
+                mCallbacks.getBroadcastItem(i)._valueChanged();
             } catch (RemoteException e) {
             }
         }
@@ -207,8 +225,8 @@ public class DownloadService extends Service {
         if (net.isConnected()) {
             if (net.isMobileAllowed()) {
                 SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctxt);
-                if (downloadTasks.size() < prefs.getInt(Prefs.KEY_SIMULTANEOUS_DL,
-                        Prefs.DEFAULT_SIMULTANEOUS_DL)
+                if (downloadTasks.size() < Integer.parseInt(prefs.getString(
+                        Prefs.KEY_SIMULTANEOUS_DL, Prefs.DEFAULT_SIMULTANEOUS_DL))
                         && downloadQueue.size() > 0) {
                     Integer itemId = downloadQueue.poll();
                     if (itemId != null) {
@@ -217,13 +235,12 @@ public class DownloadService extends Service {
                         SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
                         Cursor c = db.rawQuery(REQ_ITEM, new String[] { "" + itemId });
                         c.moveToFirst();
-                        DownloadTask task = new DownloadTask(DownloadService.this, c.getString(0),
-                                itemId);
+                        DownloadTask task = new DownloadTask(NWService.this, c.getString(0), itemId);
                         task.execute(c.getString(1), c.getString(2));
                         downloadTasks.put(itemId, task);
                         c.close();
                         db.close();
-                        InfoActivity.changeStatus(ctxt, itemId, Item.STATUS_DOWNLOADING);
+                        ItemInfo.changeStatus(ctxt, itemId, Item.STATUS_DOWNLOADING);
                     }
                 }
             } else {
@@ -240,15 +257,15 @@ public class DownloadService extends Service {
         private Notification nf;
         private int item_id;
         private String download_title;
-        private WeakReference<DownloadService> mService;
+        private WeakReference<NWService> mService;
         private String error_msg = null;
         private getPodcastFile task = null;
 
-        public DownloadTask(DownloadService activity, String title, int itemId) {
+        public DownloadTask(NWService activity, String title, int itemId) {
             super();
-            mService = new WeakReference<DownloadService>(activity);
+            mService = new WeakReference<NWService>(activity);
             if (mService != null) {
-                final DownloadService service = mService.get();
+                final NWService service = mService.get();
                 if (service != null) {
                     service.notificationManager = (NotificationManager) service
                             .getSystemService(Context.NOTIFICATION_SERVICE);
@@ -260,7 +277,7 @@ public class DownloadService extends Service {
 
         @Override
         protected void onPreExecute() {
-            final DownloadService service = mService.get();
+            final NWService service = mService.get();
             nf = new Notification(android.R.drawable.stat_sys_download, service
                     .getString(R.string.notif_dl_started), System.currentTimeMillis());
             rv = new RemoteViews(service.getPackageName(), R.layout.notification_download);
@@ -287,7 +304,7 @@ public class DownloadService extends Service {
             // Get Context
             Context ctxt = null;
             if (mService != null) {
-                final DownloadService service = mService.get();
+                final NWService service = mService.get();
                 if (service != null) {
                     ctxt = service.getApplicationContext();
                 }
@@ -327,7 +344,7 @@ public class DownloadService extends Service {
         @Override
         protected void onProgressUpdate(Integer... values) {
             if (mService != null) {
-                final DownloadService service = mService.get();
+                final NWService service = mService.get();
                 if (service != null) {
                     rv.setProgressBar(R.id.download_progress, 100, values[0], false);
                     rv.setTextViewText(R.id.download_status, values[0] + "% " + values[1] + "kB/s");
@@ -341,13 +358,13 @@ public class DownloadService extends Service {
             Log.v(TAG, "onPostExecute()");
             super.onPostExecute(unused);
             if (mService != null) {
-                final DownloadService service = mService.get();
+                final NWService service = mService.get();
                 if (service != null) {
                     if (error_msg != null) {
                         Toast.makeText(service.getApplicationContext(), error_msg,
                                 Toast.LENGTH_LONG).show();
                     }
-                    InfoActivity.changeStatus(service, item_id, Item.STATUS_DL_UNREAD);
+                    ItemInfo.changeStatus(service, item_id, Item.STATUS_DL_UNREAD);
                     finishNotification("Téléchargement terminé!", service
                             .getString(R.string.notif_dl_complete));
                     service.stopOrContinue();
@@ -359,7 +376,7 @@ public class DownloadService extends Service {
         protected void onCancelled() {
             Log.v(TAG, "onCancelled()");
             if (mService != null) {
-                final DownloadService service = mService.get();
+                final NWService service = mService.get();
                 if (service != null) {
                     finishNotification("Téléchargement annulé!", service
                             .getString(R.string.notif_dl_canceled));
@@ -367,7 +384,7 @@ public class DownloadService extends Service {
                         Toast.makeText(service.getApplicationContext(), error_msg,
                                 Toast.LENGTH_LONG).show();
                     }
-                    InfoActivity.changeStatus(service, item_id, Item.STATUS_UNREAD);
+                    ItemInfo.changeStatus(service, item_id, Item.STATUS_UNREAD);
                     service.stopOrContinue();
                 }
             }
@@ -376,7 +393,7 @@ public class DownloadService extends Service {
 
         private void finishNotification(String title, String msg) {
             if (mService != null) {
-                final DownloadService service = mService.get();
+                final NWService service = mService.get();
                 if (service != null) {
                     try {
                         service.notificationManager.cancel(item_id);
@@ -386,8 +403,7 @@ public class DownloadService extends Service {
                         nf = new Notification(android.R.drawable.stat_sys_download_done, title,
                                 System.currentTimeMillis());
                         nf.setLatestEventInfo(service, download_title, msg, PendingIntent
-                                .getActivity(service, 0,
-                                        new Intent(service, DownloadManager.class), 0));
+                                .getActivity(service, 0, new Intent(service, Manage.class), 0));
                         service.notificationManager.notify(item_id, nf);
                     }
                 }
@@ -430,14 +446,14 @@ public class DownloadService extends Service {
      */
     private static class UpdateTaskNotif extends UpdateTask {
 
-        public UpdateTaskNotif(DownloadService s) {
+        public UpdateTaskNotif(NWService s) {
             super(s);
         }
 
         @Override
         protected void onPostExecute(Void unused) {
             super.onPostExecute(unused);
-            final DownloadService service = getService();
+            final NWService service = getService();
             // Show notification about new items
             if (service != null) {
                 SQLiteDatabase db = (new DB(service.getApplicationContext())).getWritableDatabase();
@@ -449,8 +465,8 @@ public class DownloadService extends Service {
                 Notification nf = new Notification(R.drawable.icon_scream_48, "Nouveaux podcasts",
                         System.currentTimeMillis());
                 nf.setLatestEventInfo(service, "Podcasts disponibles", nb + " nouveaux éléments",
-                        PendingIntent.getActivity(service, 0, new Intent(service,
-                                ItemsActivity.class), 0));
+                        PendingIntent.getActivity(service, 0, new Intent(service, ListItems.class),
+                                0));
                 service.notificationManager.notify(NOTIFICATION_UPDATE, nf);
                 // Download items
                 service.stopOrContinue();
@@ -460,7 +476,7 @@ public class DownloadService extends Service {
         @Override
         protected void onCancelled() {
             super.onCancelled();
-            final DownloadService service = getService();
+            final NWService service = getService();
             if (service != null) {
                 service.stopOrContinue();
             }

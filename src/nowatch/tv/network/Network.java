@@ -1,6 +1,9 @@
-package nowatch.tv;
+package nowatch.tv.network;
 
 import java.lang.ref.WeakReference;
+
+import nowatch.tv.service.NWService;
+import nowatch.tv.utils.Prefs;
 
 import android.app.Activity;
 import android.app.Service;
@@ -17,7 +20,7 @@ public class Network {
     private ConnectivityManager manager;
     private WeakReference<Activity> mActivity = null;
     private WeakReference<Context> mContext = null;
-    private WeakReference<DownloadService> mService = null;
+    private WeakReference<NWService> mService = null;
 
     public Network(Activity activity) {
         mActivity = new WeakReference<Activity>(activity);
@@ -27,9 +30,9 @@ public class Network {
         }
     }
 
-    public Network(DownloadService service) {
-        mService = new WeakReference<DownloadService>(service);
-        final DownloadService s = mService.get();
+    public Network(NWService service) {
+        mService = new WeakReference<NWService>(service);
+        final NWService s = mService.get();
         if (s != null) {
             manager = (ConnectivityManager) s.getSystemService(Context.CONNECTIVITY_SERVICE);
         }

@@ -1,10 +1,12 @@
-package nowatch.tv;
+package nowatch.tv.utils;
 
+import nowatch.tv.R;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
+import android.preference.EditTextPreference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 
@@ -12,7 +14,6 @@ public class Prefs extends PreferenceActivity implements OnSharedPreferenceChang
 
     private Context ctxt;
     private PreferenceScreen ps;
-    // private SharedPreferences prefs;
 
     public final static String KEY_MOBILE_TRAFFIC = "mobile_traffic";
     public final static boolean DEFAULT_MOBILE_TRAFFIC = false;
@@ -24,7 +25,7 @@ public class Prefs extends PreferenceActivity implements OnSharedPreferenceChang
     public final static long DEFAULT_NOTIFICATION_INTV = 60000; // [ms]
 
     public final static String KEY_SIMULTANEOUS_DL = "simultaneous_download";
-    public final static int DEFAULT_SIMULTANEOUS_DL = 3;
+    public final static String DEFAULT_SIMULTANEOUS_DL = "3";
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -32,18 +33,23 @@ public class Prefs extends PreferenceActivity implements OnSharedPreferenceChang
         ctxt = getApplicationContext();
         ps = getPreferenceScreen();
         ps.getSharedPreferences().registerOnSharedPreferenceChangeListener(this);
-        // prefs = PreferenceManager.getDefaultSharedPreferences(ctxt);
     }
 
     public void onSharedPreferenceChanged(SharedPreferences prefs, String key) {
-        if (key.equals(KEY_NOTIFICATION)) {
-            UpdateNotification notif = new UpdateNotification(ctxt);
-            CheckBoxPreference cb = (CheckBoxPreference) ps.findPreference(KEY_NOTIFICATION);
+        if (KEY_NOTIFICATION.equals(key)) {
+            Notify notif = new Notify(ctxt);
+            CheckBoxPreference cb = (CheckBoxPreference) ps.findPreference(key);
             if (cb.isChecked()) {
                 notif.startNotification(prefs.getLong(KEY_NOTIFICATION_INTV,
                         DEFAULT_NOTIFICATION_INTV));
             } else {
                 notif.cancelNotification();
+            }
+        } else if (KEY_SIMULTANEOUS_DL.equals(key)) {
+            try {
+                Integer.parseInt(prefs.getString(key, DEFAULT_SIMULTANEOUS_DL));
+            } catch (NumberFormatException e) {
+                ((EditTextPreference) ps.findPreference(key)).setText(DEFAULT_SIMULTANEOUS_DL);
             }
         }
     }

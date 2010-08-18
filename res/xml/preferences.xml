@@ -13,6 +13,12 @@
             android:defaultValue="false" />
     </PreferenceCategory>
     <PreferenceCategory android:title="Général">
+        <EditTextPreference
+            android:key="simultaneous_download"
+            android:title="Download simultanés"
+            android:summary="TODO"
+            android:defaultValue="2"
+            android:inputType="number" />
         <CheckBoxPreference
             android:key="mobile_traffic"
             android:title="Traffic mobile"
