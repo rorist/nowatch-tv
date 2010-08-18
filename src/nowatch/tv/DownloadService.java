@@ -38,9 +38,9 @@ public class DownloadService extends Service {
 
     private final static String TAG = Main.TAG + "DownloadService";
     private final static int NOTIFICATION_UPDATE = -1;
+    private final static String REQ_NEW = "select count(_id) from items where status=" + Item.STATUS_NEW;
     private final String REQ_ITEM = "select title,file_uri,file_size from items where _id=? limit 1";
     private final String REQ_CLEAN = "update items set status=" + Item.STATUS_UNREAD + " where status=" + Item.STATUS_DOWNLOADING;
-    private final String REQ_NEW = "select count(_id) from items where status=" + Item.STATUS_NEW;
     private final RemoteCallbackList<DownloadInterfaceCallback> mCallbacks = new RemoteCallbackList<DownloadInterfaceCallback>();
     private final ConcurrentLinkedQueue<Integer> downloadQueue = new ConcurrentLinkedQueue<Integer>();
     private final HashMap<Integer, DownloadTask> downloadTasks = new HashMap<Integer, DownloadTask>();
@@ -425,19 +425,26 @@ public class DownloadService extends Service {
 
     private static class UpdateTaskNotif extends UpdateTask {
 
+        public UpdateTaskNotif(DownloadService s){
+            super(s);
+        }
+
         @Override
         protected void onPostExecute(Void unused) {
             super.onPostExecute(unused);
+            final DownloadService service = getService();
             // Show notification about new items
-            SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
-            Cursor c = db.rawQuery(REQ_NEW, null);
-            c.moveToFirst();
-            int nb = c.getInt(0);
-            c.close();
-            db.close();
-            Notification nf = new Notification(R.drawable.icon_scream_48, "Nouveaux podcasts", System.currentTimeMillis());
-            nf.setLatestEventInfo(DownloadService.this, "Nouveau podcasts disponibles", nb + " nouveaux éléments", PendingIntent.getActivity(DownloadService.this, 0, new Intent(DownloadService.this, ItemsActivity.class), 0));
-            notificationManager.notify(NOTIFICATION_UPDATE, nf);
+            if (service != null) {
+                SQLiteDatabase db = (new DB(service.getApplicationContext())).getWritableDatabase();
+                Cursor c = db.rawQuery(REQ_NEW, null);
+                c.moveToFirst();
+                int nb = c.getInt(0);
+                c.close();
+                db.close();
+                Notification nf = new Notification(R.drawable.icon_scream_48, "Nouveaux podcasts", System.currentTimeMillis());
+                nf.setLatestEventInfo(service, "Nouveau podcasts disponibles", nb + " nouveaux éléments", PendingIntent.getActivity(service, 0, new Intent(service, ItemsActivity.class), 0));
+                service.notificationManager.notify(NOTIFICATION_UPDATE, nf);
+            }
             // Download items
         }
 

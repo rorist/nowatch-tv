@@ -20,7 +20,7 @@ class UpdateTask extends AsyncTask<Void, Void, Void> {
 
     private static final String TAG = Main.TAG + "UpdateTask";
     private WeakReference<ItemsActivity> mActivity = null;
-    private WeakReference<Service> mService = null;
+    private WeakReference<DownloadService> mService = null;
     private boolean sdcarderror = false;
     private List<Feed> feeds;
 
@@ -29,8 +29,8 @@ class UpdateTask extends AsyncTask<Void, Void, Void> {
         initFeeds();
     }
 
-    public UpdateTask(Service service) {
-        mService = new WeakReference<Service>(service);
+    public UpdateTask(DownloadService service) {
+        mService = new WeakReference<DownloadService>(service);
         initFeeds();
     }
 
@@ -106,17 +106,7 @@ class UpdateTask extends AsyncTask<Void, Void, Void> {
         }
     }
 
-    private ItemsActivity getActivity(){
-        if (mActivity != null) {
-            final ItemsActivity a = mActivity.get();
-            if (a != null) {
-                return a;
-            }
-        }
-        return null;
-    }
-
-    private Context getContext(){
+    protected Context getContext(){
         if (mActivity != null) {
             final Activity a = mActivity.get();
             if (a != null) {
@@ -130,5 +120,26 @@ class UpdateTask extends AsyncTask<Void, Void, Void> {
         }
         return null;
     }
+
+    protected ItemsActivity getActivity(){
+        if (mActivity != null) {
+            final ItemsActivity a = mActivity.get();
+            if (a != null) {
+                return a;
+            }
+        }
+        return null;
+    }
+
+    protected DownloadService getService(){
+        if (mService != null) {
+            final DownloadService s = mService.get();
+            if (s != null) {
+                return s;
+            }
+        }
+        return null;
+    }
+
 }
 
