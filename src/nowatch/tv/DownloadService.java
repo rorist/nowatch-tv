@@ -99,18 +99,18 @@ public class DownloadService extends Service {
             if (ACTION_ADD.equals(action)) {
                 // Add item to download queue
                 addItem(intent.getExtras().getInt(Item.EXTRA_ITEM_ID));
+                stopOrContinue();
             } else if (ACTION_CANCEL.equals(action)) {
                 // Cancel download
                 Bundle extras = intent.getExtras();
                 cancelDownload(extras.getInt(Item.EXTRA_ITEM_TYPE), extras
                         .getInt(Item.EXTRA_ITEM_ID), extras.getInt(Item.EXTRA_ITEM_POSITION));
+                stopOrContinue();
             } else if (ACTION_UPDATE.equals(action)) {
                 // Check for updates
-                update();
-                Log.v(TAG, "PLEASE UPDATE");
+                UpdateTaskNotif updateTask = new UpdateTaskNotif(DownloadService.this);
+                updateTask.execute();
             }
-            // Start pending task or exit
-            stopOrContinue();
         }
     }
 
@@ -419,8 +419,6 @@ public class DownloadService extends Service {
      */
     private void update() {
         // Update
-        UpdateTaskNotif updateTask = new UpdateTaskNotif(DownloadService.this);
-        updateTask.execute();
     }
 
     private static class UpdateTaskNotif extends UpdateTask {
@@ -444,8 +442,9 @@ public class DownloadService extends Service {
                 Notification nf = new Notification(R.drawable.icon_scream_48, "Nouveaux podcasts", System.currentTimeMillis());
                 nf.setLatestEventInfo(service, "Nouveau podcasts disponibles", nb + " nouveaux éléments", PendingIntent.getActivity(service, 0, new Intent(service, ItemsActivity.class), 0));
                 service.notificationManager.notify(NOTIFICATION_UPDATE, nf);
+                // Download items
+                service.stopOrContinue();
             }
-            // Download items
         }
 
     }
