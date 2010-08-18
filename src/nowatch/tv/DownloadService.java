@@ -454,6 +454,15 @@ public class DownloadService extends Service {
             }
         }
 
+        @Override
+        protected void onCancelled() {
+            super.onCancelled();
+            final DownloadService service = getService();
+            if (service != null) {
+                service.stopOrContinue();
+            }
+        }
+
     }
 
     /**

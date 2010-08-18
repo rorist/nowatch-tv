@@ -1,7 +1,5 @@
 package nowatch.tv;
 
-// TODO: Use ETags instead of relying on pubDate only
-
 import android.content.Context;
 import android.database.Cursor;
 import android.database.SQLException;
@@ -18,7 +16,9 @@ public class DB extends SQLiteOpenHelper {
             + "title TEXT,"
             + "description TEXT,"
             + "link TEXT,"
-            + "pubDate NUMERIC, etag TEXT, image BLOB);";
+            + "pubDate NUMERIC,"
+            + "etag TEXT,"
+            + "image BLOB);";
     private final String CREATE_ITEMS = "create table items ("
             + "_id INTEGER PRIMARY KEY,"
             + "feed_id INTEGER,"
