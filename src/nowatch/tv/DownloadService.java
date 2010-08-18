@@ -20,6 +20,7 @@ import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.AsyncTask;
@@ -28,6 +29,7 @@ import android.os.Environment;
 import android.os.IBinder;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.Toast;
@@ -35,7 +37,6 @@ import android.widget.Toast;
 public class DownloadService extends Service {
 
     private final static String TAG = Main.TAG + "DownloadService";
-    private final int SIMULTANEOUS_DOWNLOAD = 2; // FIXME: Set from preferences
     private final String REQ_ITEM = "select title,file_uri,file_size from items where _id=? limit 1";
     private final String REQ_CLEAN = "update items set status=" + Item.STATUS_UNREAD + " where status=" + Item.STATUS_DOWNLOADING;
     private final String REQ_NEW = "select count(_id) from items where status=" + Item.STATUS_NEW;
@@ -197,7 +198,8 @@ public class DownloadService extends Service {
         Network net = new Network(this);
         if (net.isConnected()) {
             if (net.isMobileAllowed()) {
-                if (downloadTasks.size() < SIMULTANEOUS_DOWNLOAD && downloadQueue.size() > 0) {
+                SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctxt);
+                if (downloadTasks.size() < prefs.getInt(Prefs.KEY_SIMULTANEOUS_DL, Prefs.DEFAULT_SIMULTANEOUS_DL) && downloadQueue.size() > 0) {
                     Integer itemId = downloadQueue.poll();
                     if (itemId != null) {
                         // TODO: Check if there is enough space on device

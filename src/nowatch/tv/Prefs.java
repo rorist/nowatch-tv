@@ -24,6 +24,9 @@ public class Prefs extends PreferenceActivity implements OnSharedPreferenceChang
     public final static String KEY_NOTIFICATION_INTV = "notification_interval";
     public final static long DEFAULT_NOTIFICATION_INTV = 60000; // [ms]
 
+    public final static String KEY_SIMULTANEOUS_DL = "simultaneous_download";
+    public final static int DEFAULT_SIMULTANEOUS_DL = 3;
+
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         addPreferencesFromResource(R.xml.preferences);
