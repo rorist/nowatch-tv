@@ -64,7 +64,7 @@ public class ItemInfo extends Activity {
         final String title = c.getString(1);
         ((TextView) findViewById(R.id.title)).setText(title);
         ((WebView) findViewById(R.id.desc)).loadData(PRE + c.getString(2), "text/html", "utf-8");
-        ((WebView) findViewById(R.id.desc)).setBackgroundColor(0);
+        findViewById(R.id.desc).setBackgroundColor(0);
         ImageView logo = (ImageView) findViewById(R.id.logo);
         byte[] logo_byte = c.getBlob(5);
         if (logo_byte != null && logo_byte.length > 200) {

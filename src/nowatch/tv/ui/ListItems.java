@@ -75,7 +75,7 @@ public class ListItems extends Activity implements OnItemClickListener {
         image_size = (int) (48 * dm.density + 0.5f);
 
         // Title button
-        ((ImageButton) findViewById(R.id.btn_logo)).setOnClickListener(new View.OnClickListener() {
+        findViewById(R.id.btn_logo).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 resetList();
             }
@@ -451,7 +451,7 @@ public class ListItems extends Activity implements OnItemClickListener {
 
         @Override
         protected void onPreExecute() {
-            ((TextView) findViewById(R.id.loading)).setVisibility(View.VISIBLE);
+            findViewById(R.id.loading).setVisibility(View.VISIBLE);
         }
 
         @Override
@@ -463,7 +463,7 @@ public class ListItems extends Activity implements OnItemClickListener {
         @Override
         protected void onPostExecute(Void unused) {
             updateList();
-            ((TextView) findViewById(R.id.loading)).setVisibility(View.INVISIBLE);
+            findViewById(R.id.loading).setVisibility(View.INVISIBLE);
         }
 
     }
