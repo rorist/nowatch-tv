@@ -94,11 +94,11 @@ public class UpdateDb {
         }
 
         public void getChannel(String src, String etag) throws IOException {
-            getChannel(src, null, etag, true);
+            getChannel(src, null, etag, true, false);
         }
 
         @Override
-        protected void finish(String file) {
+        protected void finish(boolean delete, String file) {
             Log.v(TAG, "FINISH FEED");
             try {
                 if (file != null) {
@@ -129,7 +129,7 @@ public class UpdateDb {
                     db.close();
                 }
             }
-            super.finish(file);
+            super.finish(delete, file);
         }
     }
 
@@ -206,11 +206,11 @@ public class UpdateDb {
             }
 
             public void getChannel(String src) throws IOException {
-                getChannel(src, null, null, true);
+                getChannel(src, null, null, true, false);
             }
 
             @Override
-            protected void finish(String file) {
+            protected void finish(boolean delete, String file) {
                 Log.v(TAG, "FINISH IMAGE");
                 Bitmap file_bitmap = null;
                 try {
@@ -241,7 +241,7 @@ public class UpdateDb {
                 } catch (IllegalArgumentException e) {
                     Log.e(TAG, e.getMessage());
                 }
-                super.finish(file);
+                super.finish(delete, file);
             }
         }
     }

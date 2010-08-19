@@ -94,8 +94,8 @@ public class Manage extends Activity {
 
     private OnItemClickListener listenerCurrent = new OnItemClickListener() {
         public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-            //cancelDialog(position, NWService.TYPE_CURRENT);
-            pauseDialog(position);
+            cancelDialog(position, NWService.TYPE_CURRENT);
+            // pauseDialog(position);
         }
     };
 
@@ -105,14 +105,14 @@ public class Manage extends Activity {
         }
     };
 
-    private void pauseDialog(final int position) {
-        // Send intent to service
-        final Context ctxt = Manage.this;
-        Intent intent = new Intent(ctxt, NWService.class);
-        intent.setAction(NWService.ACTION_PAUSE);
-        intent.putExtra(Item.EXTRA_ITEM_ID, downloadCurrent.get(position).id);
-        startService(intent);
-    }
+    // private void pauseDialog(final int position) {
+    // // Send intent to service
+    // final Context ctxt = Manage.this;
+    // Intent intent = new Intent(ctxt, NWService.class);
+    // intent.setAction(NWService.ACTION_PAUSE);
+    // intent.putExtra(Item.EXTRA_ITEM_ID, downloadCurrent.get(position).id);
+    // startService(intent);
+    // }
 
     private void cancelDialog(final int position, final int type) {
         // TODO: Create a context menu and propose cancel and pause actions
@@ -184,22 +184,22 @@ public class Manage extends Activity {
                 Log.i(TAG, "downloadPending=" + downloadPending.size());
 
                 // Populate Lists
-//                if (adapterCurrent == null || adapterPending == null) {
-                    // Create adapters
-                    final Context ctxt = getApplicationContext();
-                    adapterCurrent = new DlAdapter(ctxt, downloadCurrent);
-                    adapterPending = new DlAdapter(ctxt, downloadPending);
-                    ListView listCurrent = (ListView) findViewById(R.id.list_current);
-                    ListView listPending = (ListView) findViewById(R.id.list_pending);
-                    listCurrent.setAdapter(adapterCurrent);
-                    listPending.setAdapter(adapterPending);
-                    listCurrent.setOnItemClickListener(listenerCurrent);
-                    listPending.setOnItemClickListener(listenerPending);
-//                } else {
-                    // Update adapter
-//                    adapterCurrent.notifyDataSetChanged();
-//                    adapterPending.notifyDataSetChanged();
-//                }
+                // if (adapterCurrent == null || adapterPending == null) {
+                // Create adapters
+                final Context ctxt = getApplicationContext();
+                adapterCurrent = new DlAdapter(ctxt, downloadCurrent);
+                adapterPending = new DlAdapter(ctxt, downloadPending);
+                ListView listCurrent = (ListView) findViewById(R.id.list_current);
+                ListView listPending = (ListView) findViewById(R.id.list_pending);
+                listCurrent.setAdapter(adapterCurrent);
+                listPending.setAdapter(adapterPending);
+                listCurrent.setOnItemClickListener(listenerCurrent);
+                listPending.setOnItemClickListener(listenerPending);
+                // } else {
+                // Update adapter
+                // adapterCurrent.notifyDataSetChanged();
+                // adapterPending.notifyDataSetChanged();
+                // }
             }
         } catch (RemoteException e) {
             if (e.getMessage() != null) {
@@ -235,7 +235,8 @@ public class Manage extends Activity {
             } catch (RemoteException e) {
             } finally {
                 mService = null;
-                Toast.makeText(getApplicationContext(), "Service deconnecté", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getApplicationContext(), "Service deconnecté", Toast.LENGTH_SHORT)
+                        .show();
             }
         }
     };
@@ -243,7 +244,7 @@ public class Manage extends Activity {
     private IServiceCallback mCallback = new IServiceCallback.Stub() {
         public void _valueChanged() {
             runOnUiThread(new Runnable() {
-                public void run(){
+                public void run() {
                     populateLists();
                 }
             });

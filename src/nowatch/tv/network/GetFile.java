@@ -44,7 +44,6 @@ public class GetFile {
     private HttpGet httpget = null;
     private DefaultHttpClient httpclient = null;
     private int buffer_size = 8 * 1024; // in Bytes
-    private boolean deleteOnFinish = false;
 
     protected String etag;
     protected long file_size = 0;
@@ -135,12 +134,11 @@ public class GetFile {
     // Non-Blocking download (large files?)
     public void getChannel(String src, String dst, String etag) throws ClientProtocolException,
             UnknownHostException, IOException {
-        getChannel(src, dst, etag, deleteOnFinish);
+        getChannel(src, dst, etag, true, false);
     }
 
-    public void getChannel(String src, String dst, String etag, boolean _deleteOnFinish)
-            throws ClientProtocolException, UnknownHostException, IOException {
-        deleteOnFinish = _deleteOnFinish;
+    public void getChannel(String src, String dst, String etag, boolean deleteOnFinish,
+            boolean resume) throws ClientProtocolException, UnknownHostException, IOException {
 
         if (!Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
             return;
@@ -160,7 +158,7 @@ public class GetFile {
         InputStream in = entity.getContent();
         File dstFile = getDestination(dst);
         if (in != null && dstFile != null) {
-            FileOutputStream out = new FileOutputStream(dstFile);
+            FileOutputStream out = new FileOutputStream(dstFile, resume);
             final ReadableByteChannel inputChannel = Channels.newChannel(in);
             final WritableByteChannel outputChannel = Channels.newChannel(out);
             // TODO: see if FileChannel.transferFrom() would be nice
@@ -177,8 +175,12 @@ public class GetFile {
                     // final ByteBuffer buffer =
                     // ByteBuffer.allocateDirect(buffer_size);
                     final ByteBuffer buffer = ByteBuffer.allocate(buffer_size);
-                    int count;
+                    long count;
                     cancelled: {
+                        if (resume) {
+                            count = dstFile.length();
+                            // FIXME: todo, resume dl
+                        }
                         while ((count = inputChannel.read(buffer)) != -1) {
                             if (isCancelled == true) {
                                 break cancelled;
@@ -223,12 +225,12 @@ public class GetFile {
                 } catch (Exception e) {
                     Log.e(TAG, e.getMessage());
                 }
-                finish(dstFile.getAbsolutePath());
+                finish(deleteOnFinish, dstFile.getAbsolutePath());
             }
             return;
         } else {
             if (dstFile != null) {
-                finish(dstFile.getAbsolutePath());
+                finish(deleteOnFinish, dstFile.getAbsolutePath());
             }
         }
     }
@@ -253,11 +255,11 @@ public class GetFile {
          */
     }
 
-    protected void update(int count) {
+    protected void update(long count) {
         // Nothing to do here
     }
 
-    protected void finish(String file) {
+    protected void finish(boolean deleteOnFinish, String file) {
         if (deleteOnFinish && file != null) {
             new File(file).delete();
         }

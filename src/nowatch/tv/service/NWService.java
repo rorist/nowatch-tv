@@ -21,6 +21,7 @@ import nowatch.tv.network.GetFile;
 import nowatch.tv.network.Network;
 import nowatch.tv.ui.ItemInfo;
 import nowatch.tv.ui.ListItems;
+import nowatch.tv.ui.Manage;
 import nowatch.tv.utils.DB;
 import nowatch.tv.utils.Item;
 import nowatch.tv.utils.Prefs;
@@ -53,7 +54,7 @@ public class NWService extends Service {
     private final static int NOTIFICATION_UPDATE = -1;
     private final static String REQ_NEW = "select count(_id) from items where status="
             + Item.STATUS_NEW;
-    private final String REQ_ITEM = "select title,file_uri,file_size from items where _id=? limit 1";
+    private final String REQ_ITEM = "select title,file_uri,file_size,status from items where _id=? limit 1";
     private final String REQ_CLEAN = "update items set status=" + Item.STATUS_UNREAD
             + " where status=" + Item.STATUS_DOWNLOADING;
     private final RemoteCallbackList<IServiceCallback> mCallbacks = new RemoteCallbackList<IServiceCallback>();
@@ -247,7 +248,8 @@ public class NWService extends Service {
                         SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
                         Cursor c = db.rawQuery(REQ_ITEM, new String[] { "" + itemId });
                         c.moveToFirst();
-                        DownloadTask task = new DownloadTask(NWService.this, c.getString(0), itemId);
+                        DownloadTask task = new DownloadTask(NWService.this, c.getString(0),
+                                itemId, c.getInt(3));
                         task.execute(c.getString(1), c.getString(2));
                         downloadTasks.put(itemId, task);
                         c.close();
@@ -269,12 +271,13 @@ public class NWService extends Service {
         private RemoteViews rv;
         private Notification nf;
         private int item_id;
+        private int status;
         private String download_title;
         private WeakReference<NWService> mService;
         private String error_msg = null;
         private getPodcastFile task = null;
 
-        public DownloadTask(NWService activity, String title, int itemId) {
+        public DownloadTask(NWService activity, String title, int itemId, int status) {
             super();
             mService = new WeakReference<NWService>(activity);
             if (mService != null) {
@@ -286,6 +289,7 @@ public class NWService extends Service {
             }
             download_title = title;
             item_id = itemId;
+            this.status = status;
         }
 
         @Override
@@ -297,10 +301,9 @@ public class NWService extends Service {
             rv.setImageViewResource(R.id.download_icon, R.drawable.icon);
             rv.setTextViewText(R.id.download_title, download_title);
             rv.setProgressBar(R.id.download_progress, 0, 0, true);
-            // FIXME: Add an action by Intent instead of null
-            // nf.contentIntent = PendingIntent.getActivity(service, 0, new
-            // Intent(DownloadService.this, DownloadManager.class), 0);
-            nf.contentIntent = PendingIntent.getActivity(service, 0, null, 0);
+            Intent i = new Intent(service, Manage.class);
+            i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            nf.contentIntent = PendingIntent.getActivity(service, 0, i, 0);
             nf.contentView = rv;
             nf.flags |= Notification.FLAG_ONGOING_EVENT;
             nf.flags |= Notification.FLAG_NO_CLEAR;
@@ -332,8 +335,13 @@ public class NWService extends Service {
                             + "/" + GetFile.PATH_PODCASTS);
                     dst.mkdirs();
                     task = new getPodcastFile(ctxt, fs);
-                    task.getChannel(str[0], dst.getCanonicalPath() + "/"
-                            + new File(str[0]).getName());
+                    if (status == Item.STATUS_UNCOMPLETE) {
+                        task.getChannel(str[0], dst.getCanonicalPath() + "/"
+                                + new File(str[0]).getName(), true);
+                    } else {
+                        task.getChannel(str[0], dst.getCanonicalPath() + "/"
+                                + new File(str[0]).getName(), false);
+                    }
                 } else {
                     // FIXME: Propagate error or exception
                     cancel(false);
@@ -439,12 +447,12 @@ public class NWService extends Service {
                 start = System.nanoTime();
             }
 
-            public void getChannel(String src, String dst) throws IOException {
-                getChannel(src, dst, null, false);
+            public void getChannel(String src, String dst, boolean resume) throws IOException {
+                getChannel(src, dst, null, false, resume);
             }
 
             @Override
-            protected void update(int count) {
+            protected void update(long count) {
                 current_bytes += count;
                 if (file_size > 0
                         && progress != (progress = (int) (current_bytes * 100 / file_size))) {
