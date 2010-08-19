@@ -2,9 +2,10 @@ package nowatch.tv.ui;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.lang.Runnable;
 
-import nowatch.tv.DownloadInterface;
-import nowatch.tv.DownloadInterfaceCallback;
+import nowatch.tv.IService;
+import nowatch.tv.IServiceCallback;
 import nowatch.tv.Main;
 import nowatch.tv.R;
 import nowatch.tv.service.NWService;
@@ -23,7 +24,6 @@ import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
@@ -42,7 +42,7 @@ import android.widget.AdapterView.OnItemClickListener;
 
 public class Manage extends Activity {
 
-    private final String TAG = Main.TAG + "DownloadManager";
+    private final String TAG = Main.TAG + "Manage";
     private static LayoutInflater mInflater;
     private DlAdapter adapterCurrent = null;
     private DlAdapter adapterPending = null;
@@ -175,7 +175,7 @@ public class Manage extends Activity {
                 Log.i(TAG, "downloadPending=" + downloadPending.size());
 
                 // Populate Lists
-                if (adapterCurrent == null || adapterPending == null) {
+//                if (adapterCurrent == null || adapterPending == null) {
                     // Create adapters
                     final Context ctxt = getApplicationContext();
                     adapterCurrent = new DlAdapter(ctxt, downloadCurrent);
@@ -186,11 +186,11 @@ public class Manage extends Activity {
                     listPending.setAdapter(adapterPending);
                     listCurrent.setOnItemClickListener(listenerCurrent);
                     listPending.setOnItemClickListener(listenerPending);
-                } else {
+//                } else {
                     // Update adapter
-                    adapterCurrent.notifyDataSetChanged();
-                    adapterPending.notifyDataSetChanged();
-                }
+//                    adapterCurrent.notifyDataSetChanged();
+//                    adapterPending.notifyDataSetChanged();
+//                }
             }
         } catch (RemoteException e) {
             if (e.getMessage() != null) {
@@ -204,10 +204,10 @@ public class Manage extends Activity {
     /**
      * Service Binding
      */
-    private DownloadInterface mService = null;
+    private IService mService = null;
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
-            mService = DownloadInterface.Stub.asInterface(service);
+            mService = IService.Stub.asInterface(service);
             if (mService != null) {
                 try {
                     mService._registerCallback(mCallback);
@@ -224,25 +224,21 @@ public class Manage extends Activity {
             try {
                 mService._unregisterCallback(mCallback);
             } catch (RemoteException e) {
+            } finally {
+                mService = null;
+                Toast.makeText(getApplicationContext(), "Service deconnecté", Toast.LENGTH_SHORT).show();
             }
-            mService = null;
-            Toast.makeText(getApplicationContext(), "Service deconnecté", Toast.LENGTH_SHORT)
-                    .show();
         }
     };
 
-    private DownloadInterfaceCallback mCallback = new DownloadInterfaceCallback.Stub() {
+    private IServiceCallback mCallback = new IServiceCallback.Stub() {
         public void _valueChanged() {
-            mHandler.sendMessage(mHandler.obtainMessage());
+            runOnUiThread(new Runnable() {
+                public void run(){
+                    populateLists();
+                }
+            });
         }
-    };
-
-    private Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            populateLists();
-        }
-
     };
 
     /**

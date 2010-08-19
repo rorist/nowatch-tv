@@ -13,8 +13,8 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import nowatch.tv.DownloadInterface;
-import nowatch.tv.DownloadInterfaceCallback;
+import nowatch.tv.IService;
+import nowatch.tv.IServiceCallback;
 import nowatch.tv.Main;
 import nowatch.tv.R;
 import nowatch.tv.network.GetFile;
@@ -57,7 +57,7 @@ public class NWService extends Service {
     private final String REQ_ITEM = "select title,file_uri,file_size from items where _id=? limit 1";
     private final String REQ_CLEAN = "update items set status=" + Item.STATUS_UNREAD
             + " where status=" + Item.STATUS_DOWNLOADING;
-    private final RemoteCallbackList<DownloadInterfaceCallback> mCallbacks = new RemoteCallbackList<DownloadInterfaceCallback>();
+    private final RemoteCallbackList<IServiceCallback> mCallbacks = new RemoteCallbackList<IServiceCallback>();
     private final ConcurrentLinkedQueue<Integer> downloadQueue = new ConcurrentLinkedQueue<Integer>();
     private final HashMap<Integer, DownloadTask> downloadTasks = new HashMap<Integer, DownloadTask>();
     private Context ctxt;
@@ -81,6 +81,7 @@ public class NWService extends Service {
         Log.i(TAG, "onDestroy()");
         cancelAll();
         clean();
+        mCallbacks.kill();
     }
 
     @Override
@@ -88,6 +89,7 @@ public class NWService extends Service {
         Log.i(TAG, "onLowMemory()");
         cancelAll();
         clean();
+        mCallbacks.kill();
     }
 
     @Override
@@ -138,15 +140,12 @@ public class NWService extends Service {
     private void addItem(int item_id) {
         if (!downloadQueue.contains(new Integer(item_id))) {
             downloadQueue.add(new Integer(item_id));
-            // Toast.makeText(ctxt, R.string.toast_dl_added,
-            // Toast.LENGTH_SHORT).show();
         }
     }
 
     private void clean() {
         // Clean failed downloads
         if (downloadTasks.size() == 0) {
-            mCallbacks.kill();
             // Reset state
             SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
             db.execSQL(REQ_CLEAN);
@@ -241,6 +240,7 @@ public class NWService extends Service {
                         c.close();
                         db.close();
                         ItemInfo.changeStatus(ctxt, itemId, Item.STATUS_DOWNLOADING);
+                        clientCallback();
                     }
                 }
             } else {
@@ -454,7 +454,6 @@ public class NWService extends Service {
         protected void onPostExecute(Void unused) {
             super.onPostExecute(unused);
             final NWService service = getService();
-            // Show notification about new items
             if (service != null) {
                 SQLiteDatabase db = (new DB(service.getApplicationContext())).getWritableDatabase();
                 Cursor c = db.rawQuery(REQ_NEW, null);
@@ -462,13 +461,16 @@ public class NWService extends Service {
                 int nb = c.getInt(0);
                 c.close();
                 db.close();
-                Notification nf = new Notification(R.drawable.icon_scream_48, "Nouveaux podcasts",
-                        System.currentTimeMillis());
-                nf.setLatestEventInfo(service, "Podcasts disponibles", nb + " nouveaux éléments",
-                        PendingIntent.getActivity(service, 0, new Intent(service, ListItems.class),
-                                0));
-                service.notificationManager.notify(NOTIFICATION_UPDATE, nf);
-                // Download items
+                if (nb > 0) {
+                    // Show notification about new items
+                    Notification nf = new Notification(R.drawable.icon_scream_48,
+                            "Nouveaux podcasts", System.currentTimeMillis());
+                    nf.setLatestEventInfo(service, "Podcasts disponibles", nb
+                            + " nouveaux éléments", PendingIntent.getActivity(service, 0,
+                            new Intent(service, ListItems.class), 0));
+                    service.notificationManager.notify(NOTIFICATION_UPDATE, nf);
+                    // Download items
+                }
                 service.stopOrContinue();
             }
         }
@@ -487,15 +489,15 @@ public class NWService extends Service {
     /**
      * Service control (IPC) using AIDL interface
      */
-    private final DownloadInterface.Stub mBinder = new DownloadInterface.Stub() {
+    private final IService.Stub mBinder = new IService.Stub() {
 
-        public void _registerCallback(DownloadInterfaceCallback cb) {
+        public void _registerCallback(IServiceCallback cb) {
             if (cb != null) {
                 mCallbacks.register(cb);
             }
         }
 
-        public void _unregisterCallback(DownloadInterfaceCallback cb) {
+        public void _unregisterCallback(IServiceCallback cb) {
             if (cb != null) {
                 mCallbacks.unregister(cb);
             }

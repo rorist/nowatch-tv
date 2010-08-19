@@ -1,6 +1,6 @@
 package nowatch.tv;
 
-oneway interface DownloadInterfaceCallback {
+oneway interface IServiceCallback {
 
     void _valueChanged();
     
