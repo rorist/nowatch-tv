@@ -61,6 +61,7 @@ public class ListItems extends Activity implements OnItemClickListener {
     private Context ctxt;
     private List<Item> items = null;
     private ListView list;
+    private ItemFilter mFilter;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -112,6 +113,7 @@ public class ListItems extends Activity implements OnItemClickListener {
             refreshListVisible();
         } else {
             resetList();
+            //adapter.getFilter().filter("SCUDS");
         }
     }
 
@@ -268,7 +270,6 @@ public class ListItems extends Activity implements OnItemClickListener {
     }
 
     public void resetList() {
-        Log.v(TAG, "resetList()");
         if (updateTask != null) {
             updateTask.cancel(true);
         }
@@ -280,7 +281,6 @@ public class ListItems extends Activity implements OnItemClickListener {
     }
 
     public void refreshListVisible() {
-        Log.v(TAG, "refreshListVisible()");
         addToList(list.getFirstVisiblePosition(), list.getLastVisiblePosition() - list.getFirstVisiblePosition() + 1, true);
         adapter.notifyDataSetChanged();
     }
@@ -311,8 +311,11 @@ public class ListItems extends Activity implements OnItemClickListener {
 
         @Override
         public Filter getFilter() {
-            // Log.v(TAG, "getFilter()");
-            return super.getFilter();
+            Log.v(TAG, "getFilter()");
+            if(mFilter == null) {
+                mFilter = new ItemFilter();
+            }
+            return mFilter;
         }
 
         @Override
@@ -344,6 +347,57 @@ public class ListItems extends Activity implements OnItemClickListener {
                 new EndlessTask().execute(size);
             }
             return convertView;
+        }
+    }
+    
+    private class ItemFilter extends Filter {
+        @Override
+        protected FilterResults performFiltering(CharSequence prefix) {
+            FilterResults results = new FilterResults();
+            String prefixString = prefix.toString().toLowerCase();
+            final int count = items.size();
+            if (prefix == null || prefix.length() == 0) {
+                ArrayList<Item> list = new ArrayList<Item>(items);
+                results.values = list;
+                results.count = list.size();
+            } else {
+                final List<Item> values = new ArrayList<Item>(items);
+                final List<Item> newValues = new ArrayList<Item>(count);
+                for (int i = 0; i < count; i++) {
+                    final Item item = values.get(i);
+                    String value = item.title.toLowerCase();
+                    // First match against the whole, non-splitted value
+                    if (value.startsWith(prefixString)) {
+                        newValues.add(item);
+                    } else {
+                        final String[] words = value.split(" ");
+                        final int wordCount = words.length;
+                        for (int k = 0; k < wordCount; k++) {
+                            if (words[k].startsWith(prefixString)) {
+                                newValues.add(item);
+                                break;
+                            }
+                        }
+                    }
+                }
+                results.values = newValues;
+                results.count = newValues.size();
+            }
+            return results;
+        }
+
+        @Override
+        protected void publishResults(CharSequence constraint, FilterResults results) {
+            items = (ArrayList<Item>) results.values;
+            adapter.clear();
+            updateList();
+            /*
+            if (results.count > 0) {
+                adapter.notifyDataSetChanged();
+            } else {
+                adapter.notifyDataSetInvalidated();
+            }
+            */
         }
     }
 
@@ -414,3 +468,4 @@ public class ListItems extends Activity implements OnItemClickListener {
 
     }
 }
+
