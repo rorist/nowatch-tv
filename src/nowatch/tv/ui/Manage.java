@@ -2,7 +2,6 @@ package nowatch.tv.ui;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.lang.Runnable;
 
 import nowatch.tv.IService;
 import nowatch.tv.IServiceCallback;
@@ -25,7 +24,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.os.Message;
 import android.os.RemoteException;
 import android.util.DisplayMetrics;
 import android.util.Log;
@@ -96,7 +94,8 @@ public class Manage extends Activity {
 
     private OnItemClickListener listenerCurrent = new OnItemClickListener() {
         public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-            cancelDialog(position, NWService.TYPE_CURRENT);
+            //cancelDialog(position, NWService.TYPE_CURRENT);
+            pauseDialog(position);
         }
     };
 
@@ -106,8 +105,19 @@ public class Manage extends Activity {
         }
     };
 
+    private void pauseDialog(final int position) {
+        // Send intent to service
+        final Context ctxt = Manage.this;
+        Intent intent = new Intent(ctxt, NWService.class);
+        intent.setAction(NWService.ACTION_PAUSE);
+        intent.putExtra(Item.EXTRA_ITEM_ID, downloadCurrent.get(position).id);
+        startService(intent);
+    }
+
     private void cancelDialog(final int position, final int type) {
-        final Context ctxt = this;
+        // TODO: Create a context menu and propose cancel and pause actions
+        // Cancel will remove the file, pause will change state to UNCOMPLETE
+        final Context ctxt = Manage.this;
         final AlertDialog.Builder dialog = new AlertDialog.Builder(ctxt);
         dialog.setMessage("Voulez-vous annuler le téléchargement ?");
         dialog.setPositiveButton("Oui", new OnClickListener() {
@@ -123,7 +133,6 @@ public class Manage extends Activity {
                 Intent intent = new Intent(ctxt, NWService.class);
                 intent.setAction(NWService.ACTION_CANCEL);
                 intent.putExtra(Item.EXTRA_ITEM_ID, item.id);
-                intent.putExtra(Item.EXTRA_ITEM_POSITION, position);
                 intent.putExtra(Item.EXTRA_ITEM_TYPE, type);
                 startService(intent);
             }

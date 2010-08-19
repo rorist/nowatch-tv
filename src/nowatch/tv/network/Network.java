@@ -66,7 +66,7 @@ public class Network {
             }
             return false;
         }
-        return isConnected();
+        return true;
     }
 
     private int getConnectionType() {

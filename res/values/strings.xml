@@ -12,6 +12,7 @@
     
     <string name="status_new">Nouveau</string>
     <string name="status_downloading">En téléchargement</string>
+    <string name="status_uncomplete">Incomplet</string>
     <string name="status_unread">Non-lu</string>
     <string name="status_read">Lu</string>
     

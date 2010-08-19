@@ -14,6 +14,7 @@ public class Item {
     public static final int STATUS_READ = 4;
     public static final int STATUS_DL_READ = 5;
     public static final int STATUS_DL_UNREAD = 6;
+    public static final int STATUS_UNCOMPLETE = 7;
 
     public int id;
     public Bitmap image;

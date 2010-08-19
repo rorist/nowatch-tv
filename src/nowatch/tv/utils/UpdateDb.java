@@ -70,6 +70,8 @@ public class UpdateDb {
             e.printStackTrace();
         } catch (NullPointerException e) {
             e.printStackTrace();
+        } catch (IllegalStateException e) {
+            e.printStackTrace();
         } finally {
             if (c != null) {
                 c.close();

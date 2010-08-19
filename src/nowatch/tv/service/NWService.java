@@ -21,7 +21,6 @@ import nowatch.tv.network.GetFile;
 import nowatch.tv.network.Network;
 import nowatch.tv.ui.ItemInfo;
 import nowatch.tv.ui.ListItems;
-import nowatch.tv.ui.Manage;
 import nowatch.tv.utils.DB;
 import nowatch.tv.utils.Item;
 import nowatch.tv.utils.Prefs;
@@ -65,6 +64,7 @@ public class NWService extends Service {
     public static final String ACTION_UPDATE = "action_update";
     public static final String ACTION_ADD = "action_add";
     public static final String ACTION_CANCEL = "action_cancel";
+    public static final String ACTION_PAUSE = "action_pause";
     public static final int TYPE_CURRENT = 1;
     public static final int TYPE_PENDING = 2;
     public NotificationManager notificationManager;
@@ -94,14 +94,12 @@ public class NWService extends Service {
 
     @Override
     public void onStart(Intent intent, int startId) {
-        Log.i(TAG, "onStart()");
         // onStart() is deprecated, but used for backward compatibility!
         handleCommand(intent);
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.i(TAG, "onStartCommand()");
         handleCommand(intent);
         return START_NOT_STICKY;
     }
@@ -115,13 +113,19 @@ public class NWService extends Service {
             Log.v(TAG, "action=" + action);
             if (ACTION_ADD.equals(action)) {
                 // Add item to download queue
-                addItem(intent.getExtras().getInt(Item.EXTRA_ITEM_ID));
+                Integer id = new Integer(intent.getExtras().getInt(Item.EXTRA_ITEM_ID));
+                if (!downloadQueue.contains(id)) {
+                    downloadQueue.add(id);
+                }
                 stopOrContinue();
             } else if (ACTION_CANCEL.equals(action)) {
                 // Cancel download
                 Bundle extras = intent.getExtras();
                 cancelDownload(extras.getInt(Item.EXTRA_ITEM_TYPE), extras
-                        .getInt(Item.EXTRA_ITEM_ID), extras.getInt(Item.EXTRA_ITEM_POSITION));
+                        .getInt(Item.EXTRA_ITEM_ID));
+                stopOrContinue();
+            } else if (ACTION_PAUSE.equals(action)) {
+                pauseDownload(intent.getExtras().getInt(Item.EXTRA_ITEM_ID));
                 stopOrContinue();
             } else if (ACTION_UPDATE.equals(action)) {
                 // Check for updates
@@ -134,12 +138,6 @@ public class NWService extends Service {
         } else {
             // Nothing to do
             stopOrContinue();
-        }
-    }
-
-    private void addItem(int item_id) {
-        if (!downloadQueue.contains(new Integer(item_id))) {
-            downloadQueue.add(new Integer(item_id));
         }
     }
 
@@ -178,7 +176,7 @@ public class NWService extends Service {
         }
     }
 
-    private void cancelDownload(int type, Integer id, int position) {
+    private void cancelDownload(int type, Integer id) {
         if (type == TYPE_PENDING) {
             if (downloadQueue.contains(id)) {
                 ItemInfo.changeStatus(ctxt, id, Item.STATUS_UNREAD);
@@ -191,12 +189,27 @@ public class NWService extends Service {
                     task.task.isCancelled = true;
                 }
                 if (AsyncTask.Status.RUNNING.equals(task.getStatus()) && task.cancel(true)) {
+                    // FIXME: Delete the file
                     downloadTasks.remove(id);
                     ItemInfo.changeStatus(ctxt, id, Item.STATUS_UNREAD);
                 }
             }
         }
         clientCallback();
+    }
+
+    private void pauseDownload(int id) {
+        if (downloadTasks.containsKey(id)) {
+            DownloadTask task = downloadTasks.get(id);
+            synchronized (task.task) {
+                task.task.isCancelled = true;
+            }
+            if (AsyncTask.Status.RUNNING.equals(task.getStatus()) && task.cancel(true)) {
+                downloadTasks.remove(id);
+                ItemInfo.changeStatus(ctxt, id, Item.STATUS_UNCOMPLETE);
+                clientCallback();
+            }
+        }
     }
 
     private void clientCallback() {
@@ -212,7 +225,7 @@ public class NWService extends Service {
     }
 
     private void stopOrContinue() {
-        if (downloadQueue.peek() == null && downloadTasks.size() < 1) {
+        if (downloadTasks.size() < 1 && downloadQueue.peek() == null) {
             stopSelf();
         } else {
             startDownloadTask();
@@ -384,7 +397,7 @@ public class NWService extends Service {
                         Toast.makeText(service.getApplicationContext(), error_msg,
                                 Toast.LENGTH_LONG).show();
                     }
-                    ItemInfo.changeStatus(service, item_id, Item.STATUS_UNREAD);
+                    ItemInfo.changeStatus(service, item_id, Item.STATUS_UNCOMPLETE);
                     service.stopOrContinue();
                 }
             }
@@ -402,8 +415,9 @@ public class NWService extends Service {
                     } finally {
                         nf = new Notification(android.R.drawable.stat_sys_download_done, title,
                                 System.currentTimeMillis());
+                        nf.flags = Notification.FLAG_AUTO_CANCEL;
                         nf.setLatestEventInfo(service, download_title, msg, PendingIntent
-                                .getActivity(service, 0, new Intent(service, Manage.class), 0));
+                                .getActivity(service, 0, new Intent(service, ListItems.class), 0));
                         service.notificationManager.notify(item_id, nf);
                     }
                 }
@@ -465,11 +479,12 @@ public class NWService extends Service {
                     // Show notification about new items
                     Notification nf = new Notification(R.drawable.icon_scream_48,
                             "Nouveaux podcasts", System.currentTimeMillis());
+                    nf.flags = Notification.FLAG_AUTO_CANCEL;
                     nf.setLatestEventInfo(service, "Podcasts disponibles", nb
                             + " nouveaux éléments", PendingIntent.getActivity(service, 0,
                             new Intent(service, ListItems.class), 0));
                     service.notificationManager.notify(NOTIFICATION_UPDATE, nf);
-                    // Download items
+                    // TODO: Auto-download items
                 }
                 service.stopOrContinue();
             }

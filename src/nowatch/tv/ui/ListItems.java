@@ -36,7 +36,6 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.Filter;
 import android.widget.Filterable;
-import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -113,7 +112,7 @@ public class ListItems extends Activity implements OnItemClickListener {
             refreshListVisible();
         } else {
             resetList();
-            //adapter.getFilter().filter("SCUDS");
+            // adapter.getFilter().filter("SCUDS");
         }
     }
 
@@ -139,6 +138,7 @@ public class ListItems extends Activity implements OnItemClickListener {
                 SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
                 db.execSQL(REQ_MARK_ALL);
                 db.close();
+                refreshListVisible();
                 return true;
             case MENU_OPTIONS:
                 startActivity(new Intent(ListItems.this, Prefs.class));
@@ -173,6 +173,9 @@ public class ListItems extends Activity implements OnItemClickListener {
             case Item.STATUS_DL_READ:
                 item.status = getString(R.string.status_read);
                 break;
+            case Item.STATUS_UNCOMPLETE:
+                item.status = getString(R.string.status_uncomplete);
+                break;
             default:
                 item.status = getString(R.string.status_new);
         }
@@ -188,8 +191,8 @@ public class ListItems extends Activity implements OnItemClickListener {
         // Icon
         byte[] logo_byte = c.getBlob(3);
         if (logo_byte != null && logo_byte.length > 200) {
-            item.logo = Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(
-                    logo_byte, 0, logo_byte.length), image_size, image_size, true);
+            item.logo = Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_byte, 0,
+                    logo_byte.length), image_size, image_size, true);
         } else {
             item.logo = BitmapFactory.decodeResource(getResources(), R.drawable.icon);
         }
@@ -201,12 +204,11 @@ public class ListItems extends Activity implements OnItemClickListener {
         } else if (diff < 86400) { // 24h
             item.date = String.format(getString(R.string.date_hours), (diff / 60 / 60));
         } else if (diff < 2678400) { // 31 days
-            item.date = String.format(getString(R.string.date_days),
-                    (diff / 60 / 60 / 24));
+            item.date = String.format(getString(R.string.date_days), (diff / 60 / 60 / 24));
             /*
              * } else if (diff < 7776000) { // 3 monthes item.date =
-             * String.format(getString(R.string.date_monthes), (diff
-             * / 60 / 60 / 24 / 30));
+             * String.format(getString(R.string.date_monthes), (diff / 60 / 60 /
+             * 24 / 30));
              */
         } else {
             SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy");
@@ -232,10 +234,9 @@ public class ListItems extends Activity implements OnItemClickListener {
         SQLiteDatabase db = null;
         Cursor c = null;
         int cnt = 0;
-        int size = items.size();
         try {
             db = (new DB(ctxt)).getWritableDatabase();
-            if(update) {
+            if (update) {
                 c = db.rawQuery(REQ_ITEMS_STATUS + offset + "," + limit, null);
             } else {
                 c = db.rawQuery(REQ_ITEMS + offset + "," + limit, null);
@@ -244,7 +245,7 @@ public class ListItems extends Activity implements OnItemClickListener {
             if (cnt > 0) {
                 c.moveToFirst();
                 do {
-                    if(update){
+                    if (update) {
                         int pos = offset + c.getPosition();
                         items.set(pos, updateItemStatus(items.get(pos), c));
                     } else {
@@ -281,7 +282,8 @@ public class ListItems extends Activity implements OnItemClickListener {
     }
 
     public void refreshListVisible() {
-        addToList(list.getFirstVisiblePosition(), list.getLastVisiblePosition() - list.getFirstVisiblePosition() + 1, true);
+        addToList(list.getFirstVisiblePosition(), list.getLastVisiblePosition()
+                - list.getFirstVisiblePosition() + 1, true);
         adapter.notifyDataSetChanged();
     }
 
@@ -312,7 +314,7 @@ public class ListItems extends Activity implements OnItemClickListener {
         @Override
         public Filter getFilter() {
             Log.v(TAG, "getFilter()");
-            if(mFilter == null) {
+            if (mFilter == null) {
                 mFilter = new ItemFilter();
             }
             return mFilter;
@@ -349,7 +351,7 @@ public class ListItems extends Activity implements OnItemClickListener {
             return convertView;
         }
     }
-    
+
     private class ItemFilter extends Filter {
         @Override
         protected FilterResults performFiltering(CharSequence prefix) {
@@ -386,18 +388,16 @@ public class ListItems extends Activity implements OnItemClickListener {
             return results;
         }
 
+        @SuppressWarnings("unchecked")
         @Override
         protected void publishResults(CharSequence constraint, FilterResults results) {
             items = (ArrayList<Item>) results.values;
             adapter.clear();
             updateList();
             /*
-            if (results.count > 0) {
-                adapter.notifyDataSetChanged();
-            } else {
-                adapter.notifyDataSetInvalidated();
-            }
-            */
+             * if (results.count > 0) { adapter.notifyDataSetChanged(); } else {
+             * adapter.notifyDataSetInvalidated(); }
+             */
         }
     }
 
@@ -468,4 +468,3 @@ public class ListItems extends Activity implements OnItemClickListener {
 
     }
 }
-

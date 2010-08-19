@@ -112,6 +112,9 @@ public class ItemInfo extends Activity {
                             // Stream the file
                             if (new Network(ctxt).isMobileAllowed()) {
                                 viewVideo(file_uri, file_type, item_id);
+                            } else {
+                                Toast.makeText(ctxt, R.string.toast_nomobiletraffic,
+                                        Toast.LENGTH_LONG).show();
                             }
                         }
                     });
@@ -132,6 +135,9 @@ public class ItemInfo extends Activity {
                             // Stream the file
                             if (new Network(ctxt).isMobileAllowed()) {
                                 viewVideo(file_uri, file_type, item_id);
+                            } else {
+                                Toast.makeText(ctxt, R.string.toast_nomobiletraffic,
+                                        Toast.LENGTH_LONG).show();
                             }
                         }
                     });
@@ -141,6 +147,9 @@ public class ItemInfo extends Activity {
                             // Download the file
                             if (new Network(ctxt).isMobileAllowed()) {
                                 downloadVideo(item_id);
+                            } else {
+                                Toast.makeText(ctxt, R.string.toast_nomobiletraffic,
+                                        Toast.LENGTH_LONG).show();
                             }
                         }
                     });
