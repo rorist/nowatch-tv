@@ -45,6 +45,7 @@ import android.widget.AdapterView.OnItemClickListener;
 public class ListItems extends Activity implements OnItemClickListener {
 
     private static final String TAG = Main.TAG + "ItemsActivity";
+    private final String REQ_ITEMS_STATUS = "SELECT items._id, '', items.status FROM items ORDER BY items.pubDate DESC LIMIT ";
     private final String REQ_ITEMS = "SELECT items._id, items.title, items.status, feeds.image, items.pubDate "
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id "
             + "ORDER BY items.pubDate DESC LIMIT ";
@@ -53,6 +54,7 @@ public class ListItems extends Activity implements OnItemClickListener {
     private static final int MENU_MARK_ALL = 1;
     private static final int MENU_OPTIONS = 2;
     private static final int ITEMS_NB = 16;
+    private static final int ENDLESS_OFFSET = 3;
     private int image_size;
     private ItemsAdapter adapter;
     private UpdateTaskBtn updateTask = null;
@@ -106,9 +108,11 @@ public class ListItems extends Activity implements OnItemClickListener {
     @Override
     public void onStart() {
         super.onStart();
-        // FIXME: Find better solution to refresh
-        // Add existing items to list
-        resetList();
+        if (items.size() > 0) {
+            refreshListVisible();
+        } else {
+            resetList();
+        }
     }
 
     @Override
@@ -147,83 +151,103 @@ public class ListItems extends Activity implements OnItemClickListener {
         startActivity(i);
     }
 
+    private Item updateItemStatus(Item item, Cursor c) {
+        switch (c.getInt(2)) {
+            case Item.STATUS_NEW:
+                item.status = getString(R.string.status_new);
+                break;
+            case Item.STATUS_DOWNLOADING:
+                item.status = getString(R.string.status_downloading);
+                break;
+            case Item.STATUS_UNREAD:
+                item.status = getString(R.string.status_unread);
+                break;
+            case Item.STATUS_READ:
+                item.status = getString(R.string.status_read);
+                break;
+            case Item.STATUS_DL_UNREAD:
+                item.status = getString(R.string.status_unread);
+                break;
+            case Item.STATUS_DL_READ:
+                item.status = getString(R.string.status_read);
+                break;
+            default:
+                item.status = getString(R.string.status_new);
+        }
+        return item;
+    }
+
+    private Item createItem(Cursor c) {
+        final Item item = new Item();
+        item.id = c.getInt(0);
+        item.title = c.getString(1);
+        // Status
+        item.status = updateItemStatus(item, c).status;
+        // Icon
+        byte[] logo_byte = c.getBlob(3);
+        if (logo_byte != null && logo_byte.length > 200) {
+            item.logo = Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(
+                    logo_byte, 0, logo_byte.length), image_size, image_size, true);
+        } else {
+            item.logo = BitmapFactory.decodeResource(getResources(), R.drawable.icon);
+        }
+        // Date
+        long date = c.getLong(4);
+        long diff = System.currentTimeMillis() / 1000 - date / 1000;
+        if (diff < 3600) { // 1h
+            item.date = getString(R.string.date_hour);
+        } else if (diff < 86400) { // 24h
+            item.date = String.format(getString(R.string.date_hours), (diff / 60 / 60));
+        } else if (diff < 2678400) { // 31 days
+            item.date = String.format(getString(R.string.date_days),
+                    (diff / 60 / 60 / 24));
+            /*
+             * } else if (diff < 7776000) { // 3 monthes item.date =
+             * String.format(getString(R.string.date_monthes), (diff
+             * / 60 / 60 / 24 / 30));
+             */
+        } else {
+            SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy");
+            formatter.setTimeZone(TimeZone.getDefault());
+            item.date = formatter.format(new Date(date));
+        }
+        // Actions
+        // item.action = new View.OnClickListener() {
+        // public void onClick(View v) {
+        // Intent i = new Intent(ctxt, InfoActivity.class);
+        // i.putExtra("item_id", item.id);
+        // startActivity(i);
+        // }
+        // };
+        return item;
+    }
+
     private int addToList(int offset, int limit) {
+        return addToList(offset, limit, false);
+    }
+
+    private int addToList(int offset, int limit, boolean update) {
         SQLiteDatabase db = null;
         Cursor c = null;
-        byte[] logo_byte;
         int cnt = 0;
+        int size = items.size();
         try {
             db = (new DB(ctxt)).getWritableDatabase();
-            c = db.rawQuery(REQ_ITEMS + offset + "," + limit, null);
+            if(update) {
+                c = db.rawQuery(REQ_ITEMS_STATUS + offset + "," + limit, null);
+            } else {
+                c = db.rawQuery(REQ_ITEMS + offset + "," + limit, null);
+            }
             cnt = c.getCount();
             if (cnt > 0) {
                 c.moveToFirst();
                 do {
-                    final Item item = new Item();
-                    item.id = c.getInt(0);
-                    item.title = c.getString(1);
-                    // Status
-                    switch (c.getInt(2)) {
-                        case Item.STATUS_NEW:
-                            item.status = getString(R.string.status_new);
-                            break;
-                        case Item.STATUS_DOWNLOADING:
-                            item.status = getString(R.string.status_downloading);
-                            break;
-                        case Item.STATUS_UNREAD:
-                            item.status = getString(R.string.status_unread);
-                            break;
-                        case Item.STATUS_READ:
-                            item.status = getString(R.string.status_read);
-                            break;
-                        case Item.STATUS_DL_UNREAD:
-                            item.status = getString(R.string.status_unread);
-                            break;
-                        case Item.STATUS_DL_READ:
-                            item.status = getString(R.string.status_read);
-                            break;
-                        default:
-                            item.status = getString(R.string.status_new);
-                    }
-                    // Icon
-                    logo_byte = c.getBlob(3);
-                    if (logo_byte != null && logo_byte.length > 200) {
-                        item.logo = Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(
-                                logo_byte, 0, logo_byte.length), image_size, image_size, true);
+                    if(update){
+                        int pos = offset + c.getPosition();
+                        items.set(pos, updateItemStatus(items.get(pos), c));
                     } else {
-                        item.logo = BitmapFactory.decodeResource(getResources(), R.drawable.icon);
+                        items.add(createItem(c));
                     }
-                    // Date
-                    long date = c.getLong(4);
-                    long diff = System.currentTimeMillis() / 1000 - date / 1000;
-                    if (diff < 3600) { // 1h
-                        item.date = getString(R.string.date_hour);
-                    } else if (diff < 86400) { // 24h
-                        item.date = String.format(getString(R.string.date_hours), (diff / 60 / 60));
-                    } else if (diff < 2678400) { // 31 days
-                        item.date = String.format(getString(R.string.date_days),
-                                (diff / 60 / 60 / 24));
-                        /*
-                         * } else if (diff < 7776000) { // 3 monthes item.date =
-                         * String.format(getString(R.string.date_monthes), (diff
-                         * / 60 / 60 / 24 / 30));
-                         */
-                    } else {
-                        SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy");
-                        formatter.setTimeZone(TimeZone.getDefault());
-                        item.date = formatter.format(new Date(date));
-                    }
-                    // Actions
-                    // item.action = new View.OnClickListener() {
-                    // public void onClick(View v) {
-                    // Intent i = new Intent(ctxt, InfoActivity.class);
-                    // i.putExtra("item_id", item.id);
-                    // startActivity(i);
-                    // }
-                    // };
-
-                    // Add the item
-                    items.add(item);
                 } while (c.moveToNext());
             }
         } catch (SQLiteDiskIOException e) {
@@ -244,6 +268,7 @@ public class ListItems extends Activity implements OnItemClickListener {
     }
 
     public void resetList() {
+        Log.v(TAG, "resetList()");
         if (updateTask != null) {
             updateTask.cancel(true);
         }
@@ -252,6 +277,12 @@ public class ListItems extends Activity implements OnItemClickListener {
         addToList(0, ITEMS_NB);
         updateList();
         list.setSelection(0);
+    }
+
+    public void refreshListVisible() {
+        Log.v(TAG, "refreshListVisible()");
+        addToList(list.getFirstVisiblePosition(), list.getLastVisiblePosition() - list.getFirstVisiblePosition() + 1, true);
+        adapter.notifyDataSetChanged();
     }
 
     private void updateList() {
@@ -308,8 +339,9 @@ public class ListItems extends Activity implements OnItemClickListener {
             vh.logo.setImageBitmap(item.logo);
             // vh.action.setOnClickListener(item.action);
             // Set endless loader
-            if (position == items.size() - 3) {
-                new EndlessTask().execute(position + 1);
+            int size = items.size();
+            if (position == size - ENDLESS_OFFSET) {
+                new EndlessTask().execute(size);
             }
             return convertView;
         }
