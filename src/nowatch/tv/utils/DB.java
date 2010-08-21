@@ -12,27 +12,19 @@ public class DB extends SQLiteOpenHelper {
     private final static String TAG = Main.TAG + "DB";
     private final static String DB_NAME = "nowatch.db";
     private final static int DB_VERSION = 2;
-    private final String CREATE_FEEDS = "create table feeds ("
-            + "_id INTEGER PRIMARY KEY,"
-            + "title TEXT,"
-            + "description TEXT,"
-            + "link TEXT,"
-            + "pubDate NUMERIC,"
-            + "etag TEXT,"
-            + "image BLOB);";
-    private final String CREATE_ITEMS = "create table items ("
-            + "_id INTEGER PRIMARY KEY,"
+    private final String CREATE_FEEDS = "create table feeds (" + "_id INTEGER PRIMARY KEY,"
+            + "title TEXT," + "description TEXT," + "link TEXT," + "pubDate NUMERIC,"
+            + "etag TEXT," + "image BLOB);";
+    private final String CREATE_ITEMS = "create table items (" + "_id INTEGER PRIMARY KEY,"
             + "feed_id INTEGER,"
             + "status INTEGER,"
-            + "title TEXT UNIQUE ON CONFLICT REPLACE," // Needs PRAGMA recursive_triggers=true;
-            + "description TEXT,"
-            + "link TEXT, pubDate NUMERIC,"
-            + "file_uri TEXT,"
-            + "file_size INTEGER,"
-            + "file_type TEXT);";
-    private final String[] podcasts = new String[] { "cinefuzz", "geekinc", "scudstv", "zapcasttv",
-            "tom", "revuetech" };
-    private final int podcasts_len = podcasts.length;
+            + "title TEXT UNIQUE ON CONFLICT REPLACE," // Needs PRAGMA
+            // recursive_triggers=true;
+            + "description TEXT," + "link TEXT, pubDate NUMERIC," + "file_uri TEXT,"
+            + "file_size INTEGER," + "file_type TEXT);";
+    public static final String[] podcasts = new String[] { "Cine Fuzz", "Geek Inc", "SCUDS.TV",
+            "ZapCast.tv", "TonightOnMars", "La Revue Tech" };
+    public static final int podcasts_len = podcasts.length;
 
     public DB(Context context) {
         super(context, DB_NAME, null, DB_VERSION);
