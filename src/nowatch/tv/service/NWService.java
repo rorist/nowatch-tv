@@ -434,10 +434,11 @@ public class NWService extends Service {
 
         class getPodcastFile extends GetFile {
 
+            private long total_bytes = 0;
             private long current_bytes = 0;
             private long file_size = 1;
-            private int progress = 0;
             private long start;
+            private long now;
 
             public getPodcastFile(final Context ctxt, long file_size) {
                 super(ctxt);
@@ -453,12 +454,18 @@ public class NWService extends Service {
 
             @Override
             protected void update(long count) {
-                current_bytes += count;
-                if (file_size > 0
-                        && progress != (progress = (int) (current_bytes * 100 / file_size))) {
-                    publishProgress(progress, (int) (current_bytes / Math
-                            .abs((System.nanoTime() - start) / 1000000)));
+                now = System.nanoTime();
+                // Speed of the last 2 seconds
+                if ((now - start) > 2000000000L && file_size > 0) {
+                    publishProgress((int) (total_bytes * 100 / file_size),
+                            (int) (current_bytes / Math.abs((now - start) / 1000000)));
+                    start = now;
+                    current_bytes = count;
+
+                } else {
+                    current_bytes += count;
                 }
+                total_bytes += count;
             }
         }
     }
