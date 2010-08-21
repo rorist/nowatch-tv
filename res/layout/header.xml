@@ -35,15 +35,21 @@
             android:visibility="gone"
             style="@style/Button_menu" />
         <Button
+            android:id="@+id/btn_manage"
+            android:drawableLeft="@drawable/btn_manage"
+            android:text="@string/btn_manage"
+            android:visibility="gone"
+            style="@style/Button_menu" />            
+        <Button
             android:id="@+id/btn_search"
             android:drawableLeft="@drawable/btn_search"
             android:text="@string/btn_search"
             android:visibility="gone"
             style="@style/Button_menu" />
         <Button
-            android:id="@+id/btn_manage"
-            android:drawableLeft="@drawable/btn_manage"
-            android:text="@string/btn_manage"
+            android:id="@+id/btn_filter_podcast"
+            android:drawableLeft="@drawable/btn_search"
+            android:text="@string/btn_filter_podcast"
             android:visibility="gone"
             style="@style/Button_menu" />
         <Button
