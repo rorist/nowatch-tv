@@ -1,6 +1,6 @@
-package nowatch.tv.utils;
+package net.nowatch.utils;
 
-import nowatch.tv.R;
+import net.nowatch.R;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;

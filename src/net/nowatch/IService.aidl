@@ -1,6 +1,6 @@
-package nowatch.tv;
+package net.nowatch;
 
-import nowatch.tv.IServiceCallback;
+import net.nowatch.IServiceCallback;
 
 interface IService {
 

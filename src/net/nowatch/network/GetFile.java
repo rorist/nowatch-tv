@@ -1,6 +1,6 @@
 // HTTP Client based on AndroidHttpClient (API level 8)
 
-package nowatch.tv.network;
+package net.nowatch.network;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -12,7 +12,7 @@ import java.nio.channels.Channels;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 
-import nowatch.tv.Main;
+import net.nowatch.Main;
 
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpResponse;
@@ -39,7 +39,7 @@ public class GetFile {
 
     private final String TAG = Main.TAG + "GetFile";
     private static final String USERAGENT = "Android/" + android.os.Build.VERSION.RELEASE + " ("
-            + android.os.Build.MODEL + ") Nowatch.TV/";
+            + android.os.Build.MODEL + ") net.nowatch/";
     private String version = "0.3.x";
     private HttpGet httpget = null;
     private DefaultHttpClient httpclient = null;
@@ -49,13 +49,13 @@ public class GetFile {
     protected long file_size = 0;
 
     public boolean isCancelled;
-    public static final String PATH_CACHE = "Android/data/nowatch.tv/cache";
-    public static final String PATH_PODCASTS = "Podcasts/Nowatch.TV";
+    public static final String PATH_CACHE = "Android/data/net.nowatch/cache";
+    public static final String PATH_PODCASTS = "Podcasts/net.nowatch";
 
     public GetFile(final Context ctxt) {
         if (ctxt != null) {
             try {
-                version = ctxt.getPackageManager().getPackageInfo("nowatch.tv", 0).versionName;
+                version = ctxt.getPackageManager().getPackageInfo("net.nowatch", 0).versionName;
             } catch (NameNotFoundException e) {
             }
         }

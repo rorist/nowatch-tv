@@ -1,16 +1,16 @@
-package nowatch.tv.ui;
+package net.nowatch.ui;
 
 // TODO: Do not bind to service, just send IntentService
 
 import java.io.File;
 
-import nowatch.tv.Main;
-import nowatch.tv.R;
-import nowatch.tv.network.GetFile;
-import nowatch.tv.network.Network;
-import nowatch.tv.service.NWService;
-import nowatch.tv.utils.DB;
-import nowatch.tv.utils.Item;
+import net.nowatch.Main;
+import net.nowatch.R;
+import net.nowatch.network.GetFile;
+import net.nowatch.network.Network;
+import net.nowatch.service.NWService;
+import net.nowatch.utils.DB;
+import net.nowatch.utils.Item;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.ContentValues;

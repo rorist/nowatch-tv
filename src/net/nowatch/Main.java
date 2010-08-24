@@ -1,9 +1,9 @@
-package nowatch.tv;
+package net.nowatch;
 
 // http://developer.android.com/intl/fr/guide/appendix/media-formats.html
 // TODO: le flux de TOM contient une image redirigée en 301, notifier Cedric
 
-import nowatch.tv.ui.ListItems;
+import net.nowatch.ui.ListItems;
 import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;

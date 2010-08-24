@@ -1,4 +1,4 @@
-package nowatch.tv.utils;
+package net.nowatch.utils;
 
 import android.graphics.Bitmap;
 import android.view.View.OnClickListener;

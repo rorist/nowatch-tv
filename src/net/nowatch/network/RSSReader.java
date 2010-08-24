@@ -1,10 +1,10 @@
-package nowatch.tv.network;
+package net.nowatch.network;
 
 import java.util.Arrays;
 import java.util.List;
 
-import nowatch.tv.Main;
-import nowatch.tv.utils.Item;
+import net.nowatch.Main;
+import net.nowatch.utils.Item;
 
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;

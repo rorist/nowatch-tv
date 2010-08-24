@@ -1,15 +1,15 @@
-package nowatch.tv.ui;
+package net.nowatch.ui;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import nowatch.tv.IService;
-import nowatch.tv.IServiceCallback;
-import nowatch.tv.Main;
-import nowatch.tv.R;
-import nowatch.tv.service.NWService;
-import nowatch.tv.utils.DB;
-import nowatch.tv.utils.Item;
+import net.nowatch.IService;
+import net.nowatch.IServiceCallback;
+import net.nowatch.Main;
+import net.nowatch.R;
+import net.nowatch.service.NWService;
+import net.nowatch.utils.DB;
+import net.nowatch.utils.Item;
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.ComponentName;

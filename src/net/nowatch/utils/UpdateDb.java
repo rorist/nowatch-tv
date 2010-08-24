@@ -1,4 +1,4 @@
-package nowatch.tv.utils;
+package net.nowatch.utils;
 
 import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
@@ -14,9 +14,9 @@ import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
 import javax.xml.parsers.SAXParserFactory;
 
-import nowatch.tv.Main;
-import nowatch.tv.network.GetFile;
-import nowatch.tv.network.RSSReader;
+import net.nowatch.Main;
+import net.nowatch.network.GetFile;
+import net.nowatch.network.RSSReader;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;

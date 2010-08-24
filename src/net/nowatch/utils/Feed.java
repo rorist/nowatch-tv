@@ -1,4 +1,4 @@
-package nowatch.tv.utils;
+package net.nowatch.utils;
 
 public class Feed {
 

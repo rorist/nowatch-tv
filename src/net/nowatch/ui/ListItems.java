@@ -1,4 +1,4 @@
-package nowatch.tv.ui;
+package net.nowatch.ui;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
@@ -8,12 +8,12 @@ import java.util.TimeZone;
 
 import net.londatiga.android.ActionItem;
 import net.londatiga.android.QuickAction;
-import nowatch.tv.Main;
-import nowatch.tv.R;
-import nowatch.tv.service.UpdateTask;
-import nowatch.tv.utils.DB;
-import nowatch.tv.utils.Item;
-import nowatch.tv.utils.Prefs;
+import net.nowatch.Main;
+import net.nowatch.R;
+import net.nowatch.service.UpdateTask;
+import net.nowatch.utils.DB;
+import net.nowatch.utils.Item;
+import net.nowatch.utils.Prefs;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;

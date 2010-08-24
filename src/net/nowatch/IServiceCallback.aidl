@@ -1,4 +1,4 @@
-package nowatch.tv;
+package net.nowatch;
 
 oneway interface IServiceCallback {
 

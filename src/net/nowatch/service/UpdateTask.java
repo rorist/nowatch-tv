@@ -1,16 +1,16 @@
-package nowatch.tv.service;
+package net.nowatch.service;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 
-import nowatch.tv.Main;
-import nowatch.tv.R;
-import nowatch.tv.network.Network;
-import nowatch.tv.ui.ListItems;
-import nowatch.tv.utils.Feed;
-import nowatch.tv.utils.UpdateDb;
+import net.nowatch.Main;
+import net.nowatch.R;
+import net.nowatch.network.Network;
+import net.nowatch.ui.ListItems;
+import net.nowatch.utils.Feed;
+import net.nowatch.utils.UpdateDb;
 import android.app.Activity;
 import android.app.Service;
 import android.content.Context;

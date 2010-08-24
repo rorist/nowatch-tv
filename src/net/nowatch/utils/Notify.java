@@ -1,6 +1,6 @@
-package nowatch.tv.utils;
+package net.nowatch.utils;
 
-import nowatch.tv.service.NWService;
+import net.nowatch.service.NWService;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;

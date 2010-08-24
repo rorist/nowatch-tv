@@ -1,4 +1,4 @@
-package nowatch.tv.service;
+package net.nowatch.service;
 
 // TODO: Use IntentService in startService() (queuing model)
 
@@ -13,18 +13,18 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import nowatch.tv.IService;
-import nowatch.tv.IServiceCallback;
-import nowatch.tv.Main;
-import nowatch.tv.R;
-import nowatch.tv.network.GetFile;
-import nowatch.tv.network.Network;
-import nowatch.tv.ui.ItemInfo;
-import nowatch.tv.ui.ListItems;
-import nowatch.tv.ui.Manage;
-import nowatch.tv.utils.DB;
-import nowatch.tv.utils.Item;
-import nowatch.tv.utils.Prefs;
+import net.nowatch.IService;
+import net.nowatch.IServiceCallback;
+import net.nowatch.Main;
+import net.nowatch.R;
+import net.nowatch.network.GetFile;
+import net.nowatch.network.Network;
+import net.nowatch.ui.ItemInfo;
+import net.nowatch.ui.ListItems;
+import net.nowatch.ui.Manage;
+import net.nowatch.utils.DB;
+import net.nowatch.utils.Item;
+import net.nowatch.utils.Prefs;
 
 import org.apache.http.client.ClientProtocolException;
 

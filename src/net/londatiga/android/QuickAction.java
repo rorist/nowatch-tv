@@ -2,7 +2,7 @@ package net.londatiga.android;
 
 import java.util.ArrayList;
 
-import nowatch.tv.R;
+import net.nowatch.R;
 import android.content.Context;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;

@@ -1,9 +1,9 @@
-package nowatch.tv.network;
+package net.nowatch.network;
 
 import java.lang.ref.WeakReference;
 
-import nowatch.tv.service.NWService;
-import nowatch.tv.utils.Prefs;
+import net.nowatch.service.NWService;
+import net.nowatch.utils.Prefs;
 
 import android.app.Activity;
 import android.app.Service;
