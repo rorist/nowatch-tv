@@ -52,8 +52,6 @@ public class ListItems extends Activity implements OnItemClickListener {
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id";
     private final String REQ_ITEMS_END = " ORDER BY items.pubDate DESC LIMIT ";
     private final String REQ_ITEMS = REQ_ITEMS_SELECT + REQ_ITEMS_END;
-    // private final String REQ_PODCASTS =
-    // "SELECT feeds._id, feeds.title, feeds.image FROM feeds ORDER BY feeds.title";
     private final String REQ_MARK_ALL = "update items set status=" + Item.STATUS_UNREAD
             + " where status=" + Item.STATUS_NEW;
     private static final int MENU_MARK_ALL = 1;
@@ -182,7 +180,7 @@ public class ListItems extends Activity implements OnItemClickListener {
         first.setTitle("Tous");
         first.setIcon(res.getDrawable(R.drawable.action_icon));
         first.setOnClickListener(new View.OnClickListener() {
-            @Override
+            //@Override
             public void onClick(View v) {
                 current_request = REQ_ITEMS;
                 current_request_status = REQ_ITEMS_STATUS + REQ_ITEMS_END;
@@ -199,7 +197,7 @@ public class ListItems extends Activity implements OnItemClickListener {
             p.setIcon(res.getDrawable(R.drawable.action_icon));
             final int item_id = i + 1;
             p.setOnClickListener(new View.OnClickListener() {
-                @Override
+                //@Override
                 public void onClick(View v) {
                     current_filter = "items.feed_id=" + item_id;
                     current_request = REQ_ITEMS_SELECT + " WHERE " + current_filter + REQ_ITEMS_END;

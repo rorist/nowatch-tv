@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -21,6 +22,7 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
+import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
@@ -28,6 +30,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.util.DisplayMetrics;
 import android.util.Log;
 
 public class UpdateDb {
@@ -165,7 +168,8 @@ public class UpdateDb {
                 // Get image bits (only if not in mobile/3g)
                 // if (new Network(ctxt).isMobileAllowed()) {
                 try {
-                    new GetImage(ctxt).getChannel(feedMap.getAsString("image"));
+                    feedMap.put("image", new GetImage(ctxt)
+                            .getChannel(feedMap.getAsString("image")));
                 } catch (IOException e) {
                     Log.e(TAG, e.getMessage());
                 }
@@ -197,52 +201,61 @@ public class UpdateDb {
                 }
             }
         }
+    }
 
-        // TODO: Being static
-        class GetImage extends GetFile {
+    // TODO: Being static
+    private static class GetImage extends GetFile {
 
-            public GetImage(Context ctxt) {
-                super(ctxt);
-            }
+        private byte[] image;
+        Context ctxt;
 
-            public void getChannel(String src) throws IOException {
-                getChannel(src, null, null, true, false);
-            }
+        // private WeakReference<Activity> mActivity = null;
 
-            @Override
-            protected void finish(boolean delete, String file) {
-                Log.v(TAG, "FINISH IMAGE");
-                Bitmap file_bitmap = null;
-                try {
-                    if (file_size > 0 && file_size > 150000L) {
-                        BitmapFactory.Options options = new BitmapFactory.Options();
-                        options.inSampleSize = 3;
-                        // if
-                        // (Integer.parseInt(android.os.Build.VERSION.INCREMENTAL)
-                        // > 3) {
-                        // options.inPurgeable = true;
-                        // options.inInputShareable = true;
-                        // options.inDensity = 160;
-                        // options.inTargetDensity = 160;
-                        // }
-                        file_bitmap = BitmapFactory.decodeFile(file, options);
-                    } else {
-                        file_bitmap = BitmapFactory.decodeFile(file);
-                    }
-                    if (file_bitmap != null) {
-                        ByteArrayOutputStream out = new ByteArrayOutputStream();
-                        file_bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-                        feedMap.put("image", out.toByteArray());
-                        // Save memory from Bitmap allocation
-                        file_bitmap.recycle();
-                    }
-                } catch (IllegalStateException e) {
-                    Log.e(TAG, e.getMessage());
-                } catch (IllegalArgumentException e) {
-                    Log.e(TAG, e.getMessage());
+        public GetImage(Context ctxt) {
+            super(ctxt);
+            this.ctxt = ctxt;
+            // mActivity = new WeakReference<Activity>(activity);
+        }
+
+        public byte[] getChannel(String src) throws IOException {
+            getChannel(src, null, null, true, false);
+            return image;
+        }
+
+        @Override
+        protected void finish(boolean delete, String file) {
+            Bitmap file_bitmap = null;
+            try {
+                if (file_size > 0 && file_size > 150000L) {
+                    // DisplayMetrics metrics = new DisplayMetrics();
+                    // a.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+                    // Image options
+                    BitmapFactory.Options options = new BitmapFactory.Options();
+                    options.inSampleSize = 3;
+                    // Not compatible with 1.5
+                    options.inPurgeable = true;
+                    options.inInputShareable = true;
+                    options.inDensity = 160; // FIXME
+                    options.inTargetDensity = 160;
+                    // End
+                    file_bitmap = BitmapFactory.decodeFile(file, options);
+                } else {
+                    file_bitmap = BitmapFactory.decodeFile(file);
                 }
-                super.finish(delete, file);
+                if (file_bitmap != null) {
+                    ByteArrayOutputStream out = new ByteArrayOutputStream();
+                    file_bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
+                    // feedMap.put("image", out.toByteArray());
+                    image = out.toByteArray();
+                    // Save memory from Bitmap allocation
+                    file_bitmap.recycle();
+                }
+            } catch (IllegalStateException e) {
+                Log.e(TAG, e.getMessage());
+            } catch (IllegalArgumentException e) {
+                Log.e(TAG, e.getMessage());
             }
+            super.finish(delete, file);
         }
     }
 }

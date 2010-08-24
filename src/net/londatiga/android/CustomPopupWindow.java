@@ -34,7 +34,7 @@ public class CustomPopupWindow {
 		// when a touch even happens outside of the window
 		// make the window go away
 		window.setTouchInterceptor(new OnTouchListener() {
-			@Override
+			//@Override
 			public boolean onTouch(View v, MotionEvent event) {
 				if (event.getAction() == MotionEvent.ACTION_OUTSIDE) {
 					CustomPopupWindow.this.window.dismiss();
