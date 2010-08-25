@@ -50,9 +50,10 @@ import android.widget.Toast;
 
 public class NWService extends Service {
 
-    private final static String TAG = Main.TAG + "NWService";
-    private final static int NOTIFICATION_UPDATE = -1;
-    private final static String REQ_NEW = "select count(_id) from items where status="
+    private static final String TAG = Main.TAG + "NWService";
+    private static final int NOTIFICATION_UPDATE = -1;
+    private static final long PROGRESS_UPDATE = 3000000000L;
+    private static final String REQ_NEW = "select count(_id) from items where status="
             + Item.STATUS_NEW;
     private final String REQ_ITEM = "select title,file_uri,file_size,status from items where _id=? limit 1";
     private final String REQ_CLEAN = "update items set status=" + Item.STATUS_UNREAD
@@ -343,6 +344,7 @@ public class NWService extends Service {
                         ItemInfo.changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
                         task.getChannel(str[0], dest, true);
                     } else {
+                        ItemInfo.changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
                         task.getChannel(str[0], dest, false);
                     }
                 } else {
@@ -390,8 +392,19 @@ public class NWService extends Service {
                                 Toast.LENGTH_LONG).show();
                     }
                     ItemInfo.changeStatus(service, item_id, Item.STATUS_DL_UNREAD);
-                    finishNotification("Téléchargement terminé!", service
-                            .getString(R.string.notif_dl_complete));
+                    try {
+                        service.notificationManager.cancel(item_id);
+                    } catch (Exception e) {
+                        Log.v(TAG, e.getMessage());
+                    } finally {
+                        nf = new Notification(android.R.drawable.stat_sys_download_done,
+                                "Téléchargement terminé!", System.currentTimeMillis());
+                        nf.flags = Notification.FLAG_AUTO_CANCEL;
+                        nf.setLatestEventInfo(service, download_title, service
+                                .getString(R.string.notif_dl_complete), PendingIntent.getActivity(
+                                service, 0, new Intent(service, ListItems.class), 0));
+                        service.notificationManager.notify(item_id, nf);
+                    }
                     service.stopOrContinue();
                 }
             }
@@ -403,9 +416,8 @@ public class NWService extends Service {
             if (mService != null) {
                 final NWService service = mService.get();
                 if (service != null) {
-                    // TODO: Replace by a Toast !
-                    finishNotification("Téléchargement annulé!", service
-                            .getString(R.string.notif_dl_canceled));
+                    Toast.makeText(service.getApplicationContext(), "Téléchargement annulé!",
+                            Toast.LENGTH_LONG).show();
                     if (error_msg != null) {
                         Toast.makeText(service.getApplicationContext(), error_msg,
                                 Toast.LENGTH_LONG).show();
@@ -417,37 +429,19 @@ public class NWService extends Service {
             super.onCancelled();
         }
 
-        private void finishNotification(String title, String msg) {
-            if (mService != null) {
-                final NWService service = mService.get();
-                if (service != null) {
-                    try {
-                        service.notificationManager.cancel(item_id);
-                    } catch (Exception e) {
-                        Log.v(TAG, e.getMessage());
-                    } finally {
-                        nf = new Notification(android.R.drawable.stat_sys_download_done, title,
-                                System.currentTimeMillis());
-                        nf.flags = Notification.FLAG_AUTO_CANCEL;
-                        nf.setLatestEventInfo(service, download_title, msg, PendingIntent
-                                .getActivity(service, 0, new Intent(service, ListItems.class), 0));
-                        service.notificationManager.notify(item_id, nf);
-                    }
-                }
-            }
-        }
-
+        // TODO: Make this static
         class getPodcastFile extends GetFile {
 
+            private static final long PROGRESS_MAX = 1000000;
+            private static final long PERCENT = 100;
             private long current_bytes = 0;
-            private long file_size = 1;
             private long start;
             private long now;
 
             public getPodcastFile(final Context ctxt, long file_remote_size) {
                 super(ctxt);
-                if (file_size > 0) {
-                    this.file_size = file_remote_size;
+                if (file_remote_size > 0) {
+                    this.file_remote_size = file_remote_size;
                 }
                 start = System.nanoTime();
             }
@@ -459,10 +453,10 @@ public class NWService extends Service {
             @Override
             protected void update(long count) {
                 now = System.nanoTime();
-                // Speed of the last 2 seconds
-                if ((now - start) > 2000000000L && file_size > 0) {
-                    publishProgress((int) (file_local_size * 100 / file_remote_size),
-                            (int) (current_bytes / Math.abs((now - start) / 1000000)));
+                // Speed of the last 3 seconds
+                if ((now - start) > PROGRESS_UPDATE && file_remote_size > 0) {
+                    publishProgress((int) (file_local_size * PERCENT / file_remote_size),
+                            (int) (current_bytes / Math.abs((now - start) / PROGRESS_MAX)));
                     start = now;
                     current_bytes = count;
                 } else {

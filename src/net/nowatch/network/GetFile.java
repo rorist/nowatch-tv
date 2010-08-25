@@ -161,22 +161,25 @@ public class GetFile {
         if (file_remote_size < 1) {
             file_remote_size = entity.getContentLength();
         }
-
         InputStream in = entity.getContent();
         FileOutputStream out = new FileOutputStream(dstFile, resume);
         if (in != null && dstFile != null) {
+            update(0);
             final ReadableByteChannel inputChannel = Channels.newChannel(in);
             final WritableByteChannel outputChannel = Channels.newChannel(out);
             // TODO: see if FileChannel.transferFrom() would be nice
             try {
                 // Fast Channel Copy
-                /*
-                 * if (inputChannel != null && out!= null) { FileChannel
-                 * filechannel = out.getChannel(); Log.v(TAG,
-                 * "size="+file_size); filechannel.transferFrom(inputChannel,
-                 * 0L, file_size); if (filechannel != null) {
-                 * filechannel.close(); }
-                 */
+
+                // if (inputChannel != null && out != null) {
+                // FileChannel filechannel = out.getChannel();
+                // Log.v(TAG, "size=" + file_local_size);
+                // filechannel.transferFrom(inputChannel, 0L, file_local_size);
+                // if (filechannel != null) {
+                // filechannel.close();
+                // }
+                // }
+
                 if (inputChannel != null && outputChannel != null) {
                     // final ByteBuffer buffer =
                     // ByteBuffer.allocateDirect(buffer_size);
