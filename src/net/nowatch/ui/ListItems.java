@@ -48,7 +48,7 @@ public class ListItems extends Activity implements OnItemClickListener {
 
     private static final String TAG = Main.TAG + "ItemsActivity";
     private final String REQ_ITEMS_STATUS = "SELECT items._id, '', items.status FROM items";
-    private final String REQ_ITEMS_SELECT = "SELECT items._id, items.title, items.status, feeds.image, items.pubDate "
+    private final String REQ_ITEMS_SELECT = "SELECT items._id, items.title, items.status, feeds.image, items.pubDate, items.image "
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id";
     private final String REQ_ITEMS_END = " ORDER BY items.pubDate DESC LIMIT ";
     private final String REQ_ITEMS = REQ_ITEMS_SELECT + REQ_ITEMS_END;
@@ -242,12 +242,16 @@ public class ListItems extends Activity implements OnItemClickListener {
         return item;
     }
 
-    private Bitmap createImage(byte[] logo_byte, int width, int height) {
-        if (logo_byte != null && logo_byte.length > 200) {
-            return Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_byte, 0,
-                    logo_byte.length), width, height, true);
+    private Bitmap createImage(byte[] logo_podcast_byte, byte[] logo_item_byte, int width, int height) {
+        final int min_size = 200;
+        if (logo_item_byte != null && logo_item_byte.length > min_size) {
+            return Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_item_byte, 0, logo_item_byte.length), image_size, image_size, true);
         } else {
-            return BitmapFactory.decodeResource(getResources(), R.drawable.icon);
+            if (logo_podcast_byte != null && logo_podcast_byte.length > min_size) {
+                return Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_podcast_byte, 0, logo_podcast_byte.length), image_size, image_size, true);
+            } else {
+                return BitmapFactory.decodeResource(getResources(), R.drawable.icon);
+            }
         }
     }
 
@@ -258,7 +262,7 @@ public class ListItems extends Activity implements OnItemClickListener {
         // Status
         item.status = updateItemStatus(item, c).status;
         // Icon
-        item.logo = createImage(c.getBlob(3), image_size, image_size);
+        item.logo = createImage(c.getBlob(3), c.getBlob(5), image_size, image_size);
         // Date
         long date = c.getLong(4);
         long diff = System.currentTimeMillis() / 1000 - date / 1000;

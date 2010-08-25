@@ -192,14 +192,14 @@ public class UpdateDb {
                             itemMap.put("pubDate", cal.getTimeInMillis());
                             itemMap.put("feed_id", feed_id);
                             // Get item image
-                                String image = itemMap.getAsString("image");
-                                if (image != "") {
-                                    try {
-                                        itemMap.put("image", new GetImage(ctxt).getChannel(image));
-                                    } catch (IOException e) {
-                                        Log.e(TAG, e.getMessage());
-                                    }
+                            String image = itemMap.getAsString("image");
+                            if (image != "") {
+                                try {
+                                    itemMap.put("image", new GetImage(ctxt).getChannel(image));
+                                } catch (IOException e) {
+                                    Log.e(TAG, e.getMessage());
                                 }
+                            }
                             // Insert in DB
                             db.insert("items", null, itemMap);
                         }

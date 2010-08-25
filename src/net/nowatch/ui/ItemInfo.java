@@ -36,8 +36,8 @@ import android.widget.Toast;
 public class ItemInfo extends Activity {
 
     private final String TAG = Main.TAG + "InfoActivity";
-    private final String REQ = "SELECT feeds.title, items.title, items.description, "
-            + "items.link, feeds.link, image, file_uri, file_size, file_type, items.status "
+    private final String REQ = "SELECT feeds.title, items.title, items.description, items.link, "
+            + "feeds.link, feeds.image, items.file_uri, items.file_size, items.file_type, items.status, items.image "
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id WHERE items._id=";
     private final String STYLE = "<style>*{color: black;}</style>";
     private final String PRE = "<meta http-equiv=\"Content-Type\" content=\"application/xhtml+text; charset=UTF-8\"/>"
@@ -65,13 +65,19 @@ public class ItemInfo extends Activity {
         ((TextView) findViewById(R.id.title)).setText(title);
         ((WebView) findViewById(R.id.desc)).loadData(PRE + c.getString(2), "text/html", "utf-8");
         findViewById(R.id.desc).setBackgroundColor(0);
+        // Try to get item logo, then podcast logo and finally application logo
+        final int min_size = 200;
         ImageView logo = (ImageView) findViewById(R.id.logo);
-        byte[] logo_byte = c.getBlob(5);
-        if (logo_byte != null && logo_byte.length > 200) {
-            logo.setImageBitmap(Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_byte,
-                    0, logo_byte.length), image_size, image_size, true));
+        byte[] logo_item_byte = c.getBlob(10);
+        if (logo_item_byte != null && logo_item_byte.length > min_size) {
+            logo.setImageBitmap(Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_item_byte, 0, logo_item_byte.length), image_size, image_size, true));
         } else {
-            logo.setImageResource(R.drawable.icon);
+            byte[] logo_podcast_byte = c.getBlob(5);
+            if (logo_podcast_byte != null && logo_podcast_byte.length > min_size) {
+                logo.setImageBitmap(Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_podcast_byte, 0, logo_podcast_byte.length), image_size, image_size, true));
+            } else {
+                logo.setImageResource(R.drawable.icon);
+            }
         }
         // File
         final String file_uri = c.getString(6);
