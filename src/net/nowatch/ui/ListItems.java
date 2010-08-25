@@ -78,7 +78,7 @@ public class ListItems extends Activity implements OnItemClickListener {
         // Screen metrics (for dip to px conversion)
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
-        image_size = (int) (48 * dm.density + 0.5f);
+        image_size = (int) (64 * dm.density + 0.5f);
 
         // Title button
         findViewById(R.id.btn_logo).setOnClickListener(new View.OnClickListener() {
