@@ -104,7 +104,6 @@ public class UpdateDb {
 
         @Override
         protected void finish(boolean delete, String file) {
-            Log.v(TAG, "FINISH FEED");
             try {
                 if (file != null) {
                     // Save etag
@@ -167,15 +166,13 @@ public class UpdateDb {
                 }
             } else if (!in_items && name == "image"
                     && uri != "http://www.itunes.com/dtds/podcast-1.0.dtd") {
-                // Get image bits (only if not in mobile/3g)
-                // if (new Network(ctxt).isMobileAllowed()) {
+                // Get feed image
                 try {
                     feedMap.put("image", new GetImage(ctxt)
                             .getChannel(feedMap.getAsString("image")));
                 } catch (IOException e) {
                     Log.e(TAG, e.getMessage());
                 }
-                // }
             } else if (!in_items && name == "pubDate") {
                 try {
                     Log.i(TAG, "pubDate: This check is supposed to happen only once");
@@ -192,9 +189,17 @@ public class UpdateDb {
                     try {
                         item_date = formatter.parse(itemMap.getAsString("pubDate"));
                         if (item_date.after(lastPub)) {
+                            // Update some values
                             cal.setTime(item_date);
                             itemMap.put("pubDate", cal.getTimeInMillis());
                             itemMap.put("feed_id", feed_id);
+                            // Get item image
+                            try {
+                                itemMap.put("image", new GetImage(ctxt).getChannel(itemMap.getAsString("image")));
+                            } catch (IOException e) {
+                                Log.e(TAG, e.getMessage());
+                            }
+                            // Insert in DB
                             db.insert("items", null, itemMap);
                         }
                     } catch (ParseException e) {

@@ -20,10 +20,15 @@ public class DB extends SQLiteOpenHelper {
             + "status INTEGER,"
             + "title TEXT UNIQUE ON CONFLICT REPLACE," // Needs PRAGMA
             // recursive_triggers=true;
-            + "description TEXT," + "link TEXT, pubDate NUMERIC," + "file_uri TEXT,"
-            + "file_size INTEGER," + "file_type TEXT);";
-    public static final String[] podcasts = new String[] { "Cine Fuzz", "Geek Inc", "SCUDS.TV",
-            "ZapCast.tv", "TonightOnMars", "La Revue Tech" };
+            + "description TEXT,"
+            + "link TEXT,"
+            + "pubDate NUMERIC,"
+            + "file_uri TEXT,"
+            + "file_size INTEGER,"
+            + "file_type TEXT,"
+            + "image BLOB);";
+    public static final String[] podcasts = new String[] { "Cine Fuzz", "Geek Inc.", "SCUDS.TV",
+            "ZapCast.tv", "Tonight On Mars", "La Revue Tech" };
     public static final int podcasts_len = podcasts.length;
 
     public DB(Context context) {

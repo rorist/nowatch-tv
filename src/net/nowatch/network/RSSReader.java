@@ -18,10 +18,13 @@ public class RSSReader extends DefaultHandler {
 
     private final String TAG = Main.TAG + "RSSReader";
     private final boolean LOG_INFO = false;
+    private final String ITUNES_DTD = "http://www.itunes.com/dtds/podcast-1.0.dtd";
     private final List<String> feeds_fields = Arrays.asList("_id", "title", "description", "link",
             "pubDate", "image");
     private final List<String> items_fields = Arrays.asList("_id", "feed_id", "title",
             "description", "link", "pubDate", "file_uri", "file_size", "file_type");
+    private final List<String> allowed_video = Arrays.asList("video/mp4", "video/x-m4v");
+    private final List<String> allowed_image= Arrays.asList("image/jpg", "image/jpeg", "image/png");
     private boolean in_image = false;
     private String current_tag;
     private StringBuffer itemBuf;
@@ -48,6 +51,7 @@ public class RSSReader extends DefaultHandler {
         itemMap.put("file_uri", "");
         itemMap.put("file_type", "");
         itemMap.put("file_size", "");
+        itemMap.put("image", "");
         itemMap.put("status", Item.STATUS_NEW);
     }
 
@@ -68,24 +72,43 @@ public class RSSReader extends DefaultHandler {
         if (name == "item") {
             in_items = true;
             return;
-        } else if (name == "image" && uri != "http://www.itunes.com/dtds/podcast-1.0.dtd") {
+        } else if (name == "image" && uri != ITUNES_DTD) {
             in_image = true;
         }
         current_tag = name;
         itemBuf = new StringBuffer();
 
+        // Get item image if it exists
+        if (in_items && current_tag == "image" && uri == ITUNES_DTD) {
+            int len = attrs.getLength();
+            for (int i = 0; i < len; i++) {
+                logi(attrs.getLocalName(i) + "=" + attrs.getValue(i));
+                if (attrs.getLocalName(i) == "href") {
+                    itemMap.put("image", attrs.getValue(i));
+                }
+            }
+        }
+
         // Get attributes of enclosure tags
         if (current_tag == "enclosure") {
+            String file_uri = "";
+            String file_size = "";
+            String file_type = "";
             int len = attrs.getLength();
             for (int i = 0; i < len; i++) {
                 logi(attrs.getLocalName(i) + "=" + attrs.getValue(i));
                 if (attrs.getLocalName(i) == "url") {
-                    itemMap.put("file_uri", attrs.getValue(i));
+                    file_uri = attrs.getValue(i);
                 } else if (attrs.getLocalName(i) == "length") {
-                    itemMap.put("file_size", attrs.getValue(i));
+                    file_size = attrs.getValue(i);
                 } else if (attrs.getLocalName(i) == "type") {
-                    itemMap.put("file_type", attrs.getValue(i));
+                    file_type = attrs.getValue(i);
                 }
+            }
+            if(allowed_video.contains(file_type)){
+                itemMap.put("file_uri", file_uri);
+                itemMap.put("file_size", file_size);
+                itemMap.put("file_type", file_type);
             }
         }
     }
