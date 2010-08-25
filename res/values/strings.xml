@@ -9,6 +9,7 @@
     <string name="feed_cinefuzz">http://feeds.feedburner.com/CineFuzz</string>
     <string name="feed_tom">http://feeds.feedburner.com/tonightonmars</string>
     <string name="feed_revuetech">http://www.stockagemedias.fr/larevuetech/xml/podcast_iphone.xml</string>
+    <string name="feed_captainweb">http://feeds.feedburner.com/LaperoDuCaptain</string>
     
     <string name="status_new">Nouveau</string>
     <string name="status_downloading">En téléchargement</string>

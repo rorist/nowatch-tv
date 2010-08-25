@@ -37,7 +37,8 @@ import android.util.Log;
 
 public class UpdateDb {
 
-    private static final String TAG = Main.TAG + "UpdateDb";
+    private final static String TAG = Main.TAG + "UpdateDb";
+    private final static String PUBDATE = "Wed, 31 Mar 1999 00:00:00 +0200";
     private static SQLiteDatabase db;
     private static String feed_id;
     private static String etag = null;
@@ -59,7 +60,7 @@ public class UpdateDb {
             }
 
             // pubDate
-            String pubDate = "Wed, 31 Mar 1999 00:00:00 +0200";
+            String pubDate = PUBDATE;
             if (c.getString(1) != null) {
                 pubDate = c.getString(1);
             }
@@ -171,22 +172,18 @@ public class UpdateDb {
                 } catch (IOException e) {
                     Log.e(TAG, e.getMessage());
                 }
-            } else if (!in_items && name == "pubDate") {
-                try {
-                    Log.i(TAG, "pubDate: This check is supposed to happen only once");
-                    // Check publication date of channel
-                    if (!formatter.parse(feedMap.getAsString("pubDate")).after(lastPub)) {
-                        db.close();
-                        throw new SAXException("Nothing to update for feed_id=" + feed_id);
-                    }
-                } catch (ParseException e) {
-                    Log.e(TAG, e.getMessage());
-                }
             } else if (name == "item") {
                 if (db != null) {
                     try {
                         item_date = formatter.parse(itemMap.getAsString("pubDate"));
-                        if (item_date.after(lastPub)) {
+                    } catch (ParseException e) {
+                        Log.e(TAG, e.getMessage());
+                        try {
+                            item_date = formatter.parse(PUBDATE);
+                        } catch (ParseException e1) {
+                        }
+                    } finally {
+                        // if (lastPub != null && item_date.after(lastPub)) {
                             // Update some values
                             cal.setTime(item_date);
                             itemMap.put("pubDate", cal.getTimeInMillis());
@@ -202,9 +199,7 @@ public class UpdateDb {
                             }
                             // Insert in DB
                             db.insert("items", null, itemMap);
-                        }
-                    } catch (ParseException e) {
-                        Log.e(TAG, e.getMessage());
+                       // }
                     }
                 }
             }

@@ -28,7 +28,7 @@ public class DB extends SQLiteOpenHelper {
             + "file_type TEXT,"
             + "image BLOB);";
     public static final String[] podcasts = new String[] { "Cine Fuzz", "Geek Inc.", "SCUDS.TV",
-            "ZapCast.tv", "Tonight On Mars", "La Revue Tech" };
+            "ZapCast.tv", "Tonight On Mars", "La Revue Tech", "Captain Web" };
     public static final int podcasts_len = podcasts.length;
 
     public DB(Context context) {
