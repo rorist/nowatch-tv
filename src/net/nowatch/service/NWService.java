@@ -328,7 +328,7 @@ public class NWService extends Service {
             // Download file
             try {
                 String state = Environment.getExternalStorageState();
-                if (Environment.MEDIA_MOUNTED.equals(state)) {
+                if (Environment.MEDIA_MOUNTED.equals(state) && str[0] != "") {
                     // TODO: Use getExternalStoragePublicDirectory() (API L8)
                     File dst = new File(Environment.getExternalStorageDirectory()
                             .getCanonicalPath()
