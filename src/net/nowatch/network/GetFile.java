@@ -39,18 +39,19 @@ public class GetFile {
 
     private final String TAG = Main.TAG + "GetFile";
     private static final String USERAGENT = "Android/" + android.os.Build.VERSION.RELEASE + " ("
-            + android.os.Build.MODEL + ") net.nowatch/";
+            + android.os.Build.MODEL + ") NoWatch.NET/";
     private String version = "0.3.x";
     private HttpGet httpget = null;
     private DefaultHttpClient httpclient = null;
     private int buffer_size = 8 * 1024; // in Bytes
 
     protected String etag;
-    protected long file_size = 0;
+    protected long file_local_size = 0;
+    protected long file_remote_size = 0;
 
     public boolean isCancelled;
     public static final String PATH_CACHE = "Android/data/net.nowatch/cache";
-    public static final String PATH_PODCASTS = "Podcasts/net.nowatch";
+    public static final String PATH_PODCASTS = "Podcasts/NoWatch.TV";
 
     public GetFile(final Context ctxt) {
         if (ctxt != null) {
@@ -61,7 +62,7 @@ public class GetFile {
         }
     }
 
-    private HttpEntity openUrl(long start, String src, String etag) {
+    private HttpEntity openUrl(String src, String etag) {
         // Set HTTP Client params
         HttpParams params = new BasicHttpParams();
         HttpConnectionParams.setStaleCheckingEnabled(params, false);
@@ -85,8 +86,9 @@ public class GetFile {
             if (etag != null) {
                 httpget.addHeader("If-None-Match", etag);
             }
-            if (start > 0) {
-                httpget.addHeader("Range", start + "-");
+            Log.v(TAG, "start=" + file_local_size);
+            if (file_local_size > 0) {
+                httpget.addHeader("Range", file_local_size + "-");
             }
             // Get response
             HttpResponse response = httpclient.execute(httpget);
@@ -95,6 +97,7 @@ public class GetFile {
             if (statusCode != HttpStatus.SC_OK) {
                 return null;
             }
+            // TODO: Do not resume if no Range-Accept header received
             // Save etag
             else if (response.getLastHeader("ETag") != null) {
                 this.etag = response.getLastHeader("ETag").getValue();
@@ -102,7 +105,8 @@ public class GetFile {
             // Save file_size
             if (response.getLastHeader("Content-Length") != null) {
                 try {
-                    file_size = Long.parseLong(response.getLastHeader("Content-Length").getValue());
+                    file_remote_size = Long.parseLong(response.getLastHeader("Content-Length")
+                            .getValue());
                 } catch (NumberFormatException e) {
                     Log.e(TAG, "Length=" + response.getLastHeader("Content-Length").getValue()
                             + ", " + e.getMessage());
@@ -149,15 +153,17 @@ public class GetFile {
 
         // Get OutputStream and InputStream
         File dstFile = getDestination(dst);
-        FileOutputStream out = new FileOutputStream(dstFile, resume);
-        final HttpEntity entity = openUrl(dstFile.length(), src, etag);
+        file_local_size = dstFile.length();
+        final HttpEntity entity = openUrl(src, etag);
         if (entity == null) {
             return;
         }
-        InputStream in = entity.getContent();
-        if (file_size < 1) {
-            file_size = entity.getContentLength();
+        if (file_remote_size < 1) {
+            file_remote_size = entity.getContentLength();
         }
+
+        InputStream in = entity.getContent();
+        FileOutputStream out = new FileOutputStream(dstFile, resume);
         if (in != null && dstFile != null) {
             final ReadableByteChannel inputChannel = Channels.newChannel(in);
             final WritableByteChannel outputChannel = Channels.newChannel(out);

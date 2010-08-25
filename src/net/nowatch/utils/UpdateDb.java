@@ -4,7 +4,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.lang.ref.WeakReference;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -22,7 +21,6 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
-import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
@@ -32,7 +30,6 @@ import android.database.sqlite.SQLiteException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.preference.PreferenceManager;
-import android.util.DisplayMetrics;
 import android.util.Log;
 
 public class UpdateDb {
@@ -141,7 +138,6 @@ public class UpdateDb {
     private static class RSS extends RSSReader {
 
         private SimpleDateFormat formatter;
-        private Date lastPub;
         private Date item_date;
         private Calendar cal = Calendar.getInstance();
         private Context ctxt;
@@ -150,11 +146,6 @@ public class UpdateDb {
             this.ctxt = ctxt;
             formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss ZZZ");
             // formatter.setTimeZone(TimeZone.getDefault()); // FIXME
-            try {
-                lastPub = formatter.parse(pubDate);
-            } catch (ParseException e) {
-                Log.e(TAG, e.getMessage());
-            }
         }
 
         @Override
@@ -168,7 +159,8 @@ public class UpdateDb {
             } else if (!in_items && name == "image" && uri != RSSReader.ITUNES_DTD) {
                 // Get feed image
                 try {
-                    feedMap.put("image", new GetImage(ctxt).getChannel(feedMap.getAsString("image")));
+                    feedMap.put("image", new GetImage(ctxt)
+                            .getChannel(feedMap.getAsString("image")));
                 } catch (IOException e) {
                     Log.e(TAG, e.getMessage());
                 }
@@ -183,23 +175,21 @@ public class UpdateDb {
                         } catch (ParseException e1) {
                         }
                     } finally {
-                        // if (lastPub != null && item_date.after(lastPub)) {
-                            // Update some values
-                            cal.setTime(item_date);
-                            itemMap.put("pubDate", cal.getTimeInMillis());
-                            itemMap.put("feed_id", feed_id);
-                            // Get item image
-                            String image = itemMap.getAsString("image");
-                            if (image != "") {
-                                try {
-                                    itemMap.put("image", new GetImage(ctxt).getChannel(image));
-                                } catch (IOException e) {
-                                    Log.e(TAG, e.getMessage());
-                                }
+                        // Update some values
+                        cal.setTime(item_date);
+                        itemMap.put("pubDate", cal.getTimeInMillis());
+                        itemMap.put("feed_id", feed_id);
+                        // Get item image
+                        String image = itemMap.getAsString("image");
+                        if (!new String("").equals(image)) {
+                            try {
+                                itemMap.put("image", new GetImage(ctxt).getChannel(image));
+                            } catch (IOException e) {
+                                Log.e(TAG, e.getMessage());
                             }
-                            // Insert in DB
-                            db.insert("items", null, itemMap);
-                       // }
+                        }
+                        // Insert in DB
+                        db.insert("items", null, itemMap);
                     }
                 }
             }
@@ -226,7 +216,7 @@ public class UpdateDb {
         protected void finish(boolean delete, String file) {
             Bitmap file_bitmap = null;
             try {
-                if (file_size > 0 && file_size > 150000L) {
+                if (file_remote_size > 0 && file_remote_size > 150000L) {
                     // Get density from prefs
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctxt);
                     int density = prefs.getInt(Prefs.KEY_DENSITY, Prefs.DEFAULT_DENSITY);

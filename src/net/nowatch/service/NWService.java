@@ -50,7 +50,7 @@ import android.widget.Toast;
 
 public class NWService extends Service {
 
-    private final static String TAG = Main.TAG + "DownloadService";
+    private final static String TAG = Main.TAG + "NWService";
     private final static int NOTIFICATION_UPDATE = -1;
     private final static String REQ_NEW = "select count(_id) from items where status="
             + Item.STATUS_NEW;
@@ -328,19 +328,22 @@ public class NWService extends Service {
             // Download file
             try {
                 String state = Environment.getExternalStorageState();
-                if (Environment.MEDIA_MOUNTED.equals(state) && str[0] != "") {
+                Log.v(TAG, "file source=" + str[0]);
+                if (Environment.MEDIA_MOUNTED.equals(state) && !str[0].equals(new String(""))) {
                     // TODO: Use getExternalStoragePublicDirectory() (API L8)
                     File dst = new File(Environment.getExternalStorageDirectory()
                             .getCanonicalPath()
                             + "/" + GetFile.PATH_PODCASTS);
                     dst.mkdirs();
                     task = new getPodcastFile(ctxt, fs);
+                    String dest = dst.getCanonicalPath() + "/" + new File(str[0]).getName();
+                    Log.v(TAG, "status=" + status + " == " + Item.STATUS_UNCOMPLETE);
                     if (status == Item.STATUS_UNCOMPLETE) {
-                        task.getChannel(str[0], dst.getCanonicalPath() + "/"
-                                + new File(str[0]).getName(), true);
+                        Log.v(TAG, "try to resume download");
+                        ItemInfo.changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
+                        task.getChannel(str[0], dest, true);
                     } else {
-                        task.getChannel(str[0], dst.getCanonicalPath() + "/"
-                                + new File(str[0]).getName(), false);
+                        task.getChannel(str[0], dest, false);
                     }
                 } else {
                     // FIXME: Propagate error or exception
@@ -367,8 +370,9 @@ public class NWService extends Service {
             if (mService != null) {
                 final NWService service = mService.get();
                 if (service != null) {
+                    // TODO: show mo/s if > 1000ko/s
                     rv.setProgressBar(R.id.download_progress, 100, values[0], false);
-                    rv.setTextViewText(R.id.download_status, values[0] + "% " + values[1] + "kB/s");
+                    rv.setTextViewText(R.id.download_status, values[0] + "% " + values[1] + "ko/s");
                     service.notificationManager.notify(item_id, nf);
                 }
             }
@@ -399,6 +403,7 @@ public class NWService extends Service {
             if (mService != null) {
                 final NWService service = mService.get();
                 if (service != null) {
+                    // TODO: Replace by a Toast !
                     finishNotification("Téléchargement annulé!", service
                             .getString(R.string.notif_dl_canceled));
                     if (error_msg != null) {
@@ -434,16 +439,15 @@ public class NWService extends Service {
 
         class getPodcastFile extends GetFile {
 
-            private long total_bytes = 0;
             private long current_bytes = 0;
             private long file_size = 1;
             private long start;
             private long now;
 
-            public getPodcastFile(final Context ctxt, long file_size) {
+            public getPodcastFile(final Context ctxt, long file_remote_size) {
                 super(ctxt);
                 if (file_size > 0) {
-                    this.file_size = file_size;
+                    this.file_size = file_remote_size;
                 }
                 start = System.nanoTime();
             }
@@ -457,15 +461,14 @@ public class NWService extends Service {
                 now = System.nanoTime();
                 // Speed of the last 2 seconds
                 if ((now - start) > 2000000000L && file_size > 0) {
-                    publishProgress((int) (total_bytes * 100 / file_size),
+                    publishProgress((int) (file_local_size * 100 / file_remote_size),
                             (int) (current_bytes / Math.abs((now - start) / 1000000)));
                     start = now;
                     current_bytes = count;
-
                 } else {
                     current_bytes += count;
                 }
-                total_bytes += count;
+                file_local_size += count;
             }
         }
     }

@@ -171,7 +171,6 @@ public class ItemInfo extends Activity {
     }
 
     private void downloadVideo(int item_id) {
-        changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
         Intent intent = new Intent(ItemInfo.this, NWService.class);
         intent.setAction(NWService.ACTION_ADD);
         intent.putExtra(Item.EXTRA_ITEM_ID, item_id);

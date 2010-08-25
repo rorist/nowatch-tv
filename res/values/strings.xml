@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">NWTV Beta</string>
+    <string name="app_name">NoWatch.NET</string>
     <string name="loading">Chargement ...</string>
     
     <string name="feed_geekinc">http://feeds.feedburner.com/GeekInc</string>

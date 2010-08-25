@@ -477,11 +477,14 @@ public class ListItems extends Activity implements OnItemClickListener {
         protected void onPreExecute() {
             super.onPreExecute();
             if (mActivity != null) {
-                Button btn_ref = (Button) getActivity().findViewById(R.id.btn_refresh);
-                btn_ref.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh_a, 0, 0, 0);
-                ((AnimationDrawable) btn_ref.getCompoundDrawables()[0]).start();
-                btn_ref.setEnabled(false);
-                btn_ref.setClickable(false);
+                ListItems a = getActivity();
+                if (a != null) {
+                    Button btn_ref = (Button) a.findViewById(R.id.btn_refresh);
+                    btn_ref.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh_a, 0, 0, 0);
+                    ((AnimationDrawable) btn_ref.getCompoundDrawables()[0]).start();
+                    btn_ref.setEnabled(false);
+                    btn_ref.setClickable(false);
+                }
             }
         }
 
@@ -490,12 +493,14 @@ public class ListItems extends Activity implements OnItemClickListener {
             super.onPostExecute(unused);
             if (mActivity != null) {
                 ListItems a = getActivity();
-                Button btn_ref = (Button) a.findViewById(R.id.btn_refresh);
-                btn_ref.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0, 0);
-                btn_ref.setEnabled(true);
-                btn_ref.setClickable(true);
-                a.findViewById(R.id.loading).setVisibility(View.INVISIBLE);
-                a.resetList();
+                if (a != null) {
+                    Button btn_ref = (Button) a.findViewById(R.id.btn_refresh);
+                    btn_ref.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0, 0);
+                    btn_ref.setEnabled(true);
+                    btn_ref.setClickable(true);
+                    a.findViewById(R.id.loading).setVisibility(View.INVISIBLE);
+                    a.resetList();
+                }
             }
         }
 
@@ -503,11 +508,13 @@ public class ListItems extends Activity implements OnItemClickListener {
         protected void onCancelled() {
             super.onCancelled();
             if (mActivity != null) {
-                Button btn_refresh = (Button) getActivity().findViewById(R.id.btn_refresh);
-                btn_refresh
-                        .setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0, 0);
-                btn_refresh.setEnabled(true);
-                btn_refresh.setClickable(true);
+                ListItems a = getActivity();
+                if (a != null) {
+                    Button btn_refresh = (Button) a.findViewById(R.id.btn_refresh);
+                    btn_refresh.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0, 0);
+                    btn_refresh.setEnabled(true);
+                    btn_refresh.setClickable(true);
+                }
             }
         }
 

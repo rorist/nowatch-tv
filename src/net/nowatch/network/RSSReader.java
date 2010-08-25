@@ -23,7 +23,8 @@ public class RSSReader extends DefaultHandler {
     private final List<String> items_fields = Arrays.asList("_id", "feed_id", "title",
             "description", "link", "pubDate", "file_uri", "file_size", "file_type");
     private final List<String> allowed_video = Arrays.asList("video/mp4", "video/x-m4v");
-    private final List<String> allowed_image= Arrays.asList("image/jpg", "image/jpeg", "image/png");
+    // private final List<String> allowed_image= Arrays.asList("image/jpg",
+    // "image/jpeg", "image/png");
     private boolean in_image = false;
     private String current_tag;
     private StringBuffer itemBuf;
@@ -105,7 +106,7 @@ public class RSSReader extends DefaultHandler {
                     file_type = attrs.getValue(i);
                 }
             }
-            if(allowed_video.contains(file_type)){
+            if (allowed_video.contains(file_type)) {
                 itemMap.put("file_uri", file_uri);
                 itemMap.put("file_size", file_size);
                 itemMap.put("file_type", file_type);
