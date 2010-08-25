@@ -9,6 +9,7 @@ import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
+import android.util.DisplayMetrics;
 
 public class Prefs extends PreferenceActivity implements OnSharedPreferenceChangeListener {
 
@@ -26,6 +27,9 @@ public class Prefs extends PreferenceActivity implements OnSharedPreferenceChang
 
     public final static String KEY_SIMULTANEOUS_DL = "simultaneous_download";
     public final static String DEFAULT_SIMULTANEOUS_DL = "3";
+    
+    public final static String KEY_DENSITY = "density";
+    public final static int DEFAULT_DENSITY = DisplayMetrics.DENSITY_DEFAULT;
 
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);

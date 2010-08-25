@@ -25,11 +25,13 @@ import org.xml.sax.XMLReader;
 import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
 import android.util.Log;
 
@@ -209,12 +211,9 @@ public class UpdateDb {
         private byte[] image;
         Context ctxt;
 
-        // private WeakReference<Activity> mActivity = null;
-
         public GetImage(Context ctxt) {
             super(ctxt);
             this.ctxt = ctxt;
-            // mActivity = new WeakReference<Activity>(activity);
         }
 
         public byte[] getChannel(String src) throws IOException {
@@ -227,16 +226,17 @@ public class UpdateDb {
             Bitmap file_bitmap = null;
             try {
                 if (file_size > 0 && file_size > 150000L) {
-                    // DisplayMetrics metrics = new DisplayMetrics();
-                    // a.getWindowManager().getDefaultDisplay().getMetrics(metrics);
+                    // Get density from prefs
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctxt);
+                    int density = prefs.getInt(Prefs.KEY_DENSITY, Prefs.DEFAULT_DENSITY);
                     // Image options
                     BitmapFactory.Options options = new BitmapFactory.Options();
                     options.inSampleSize = 3;
-                    // Not compatible with 1.5
+                    // FIXME: Not compatible with 1.5
                     options.inPurgeable = true;
                     options.inInputShareable = true;
-                    options.inDensity = 160; // FIXME
-                    options.inTargetDensity = 160;
+                    options.inDensity = density;
+                    options.inTargetDensity = density;
                     // End
                     file_bitmap = BitmapFactory.decodeFile(file, options);
                 } else {
@@ -245,7 +245,6 @@ public class UpdateDb {
                 if (file_bitmap != null) {
                     ByteArrayOutputStream out = new ByteArrayOutputStream();
                     file_bitmap.compress(Bitmap.CompressFormat.PNG, 100, out);
-                    // feedMap.put("image", out.toByteArray());
                     image = out.toByteArray();
                     // Save memory from Bitmap allocation
                     file_bitmap.recycle();
