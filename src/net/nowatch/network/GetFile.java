@@ -61,7 +61,7 @@ public class GetFile {
         }
     }
 
-    private HttpEntity openUrl(String src, String etag) {
+    private HttpEntity openUrl(long start, String src, String etag) {
         // Set HTTP Client params
         HttpParams params = new BasicHttpParams();
         HttpConnectionParams.setStaleCheckingEnabled(params, false);
@@ -84,6 +84,9 @@ public class GetFile {
             // Headers
             if (etag != null) {
                 httpget.addHeader("If-None-Match", etag);
+            }
+            if (start > 0) {
+                httpget.addHeader("Range", start + "-");
             }
             // Get response
             HttpResponse response = httpclient.execute(httpget);
@@ -144,21 +147,18 @@ public class GetFile {
             return;
         }
 
-        // Get InputStream
-        final HttpEntity entity = openUrl(src, etag);
+        // Get OutputStream and InputStream
+        File dstFile = getDestination(dst);
+        FileOutputStream out = new FileOutputStream(dstFile, resume);
+        final HttpEntity entity = openUrl(dstFile.length(), src, etag);
         if (entity == null) {
             return;
         }
+        InputStream in = entity.getContent();
         if (file_size < 1) {
             file_size = entity.getContentLength();
-            /*
-             * if (file_size < 1){ file_size = 256000; }
-             */
         }
-        InputStream in = entity.getContent();
-        File dstFile = getDestination(dst);
         if (in != null && dstFile != null) {
-            FileOutputStream out = new FileOutputStream(dstFile, resume);
             final ReadableByteChannel inputChannel = Channels.newChannel(in);
             final WritableByteChannel outputChannel = Channels.newChannel(out);
             // TODO: see if FileChannel.transferFrom() would be nice
@@ -177,10 +177,6 @@ public class GetFile {
                     final ByteBuffer buffer = ByteBuffer.allocate(buffer_size);
                     long count;
                     cancelled: {
-                        if (resume) {
-                            count = dstFile.length();
-                            // FIXME: todo, resume dl
-                        }
                         while ((count = inputChannel.read(buffer)) != -1) {
                             if (isCancelled == true) {
                                 break cancelled;

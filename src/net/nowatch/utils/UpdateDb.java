@@ -164,12 +164,10 @@ public class UpdateDb {
                 if (db != null) {
                     db.update("feeds", feedMap, "_id=?", new String[] { feed_id });
                 }
-            } else if (!in_items && name == "image"
-                    && uri != "http://www.itunes.com/dtds/podcast-1.0.dtd") {
+            } else if (!in_items && name == "image" && uri != RSSReader.ITUNES_DTD) {
                 // Get feed image
                 try {
-                    feedMap.put("image", new GetImage(ctxt)
-                            .getChannel(feedMap.getAsString("image")));
+                    feedMap.put("image", new GetImage(ctxt).getChannel(feedMap.getAsString("image")));
                 } catch (IOException e) {
                     Log.e(TAG, e.getMessage());
                 }
@@ -194,11 +192,14 @@ public class UpdateDb {
                             itemMap.put("pubDate", cal.getTimeInMillis());
                             itemMap.put("feed_id", feed_id);
                             // Get item image
-                            try {
-                                itemMap.put("image", new GetImage(ctxt).getChannel(itemMap.getAsString("image")));
-                            } catch (IOException e) {
-                                Log.e(TAG, e.getMessage());
-                            }
+                                String image = itemMap.getAsString("image");
+                                if (image != "") {
+                                    try {
+                                        itemMap.put("image", new GetImage(ctxt).getChannel(image));
+                                    } catch (IOException e) {
+                                        Log.e(TAG, e.getMessage());
+                                    }
+                                }
                             // Insert in DB
                             db.insert("items", null, itemMap);
                         }

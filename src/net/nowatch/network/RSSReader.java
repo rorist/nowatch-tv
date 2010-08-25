@@ -16,9 +16,8 @@ import android.util.Log;
 
 public class RSSReader extends DefaultHandler {
 
-    private final String TAG = Main.TAG + "RSSReader";
+    private final static String TAG = Main.TAG + "RSSReader";
     private final boolean LOG_INFO = false;
-    private final String ITUNES_DTD = "http://www.itunes.com/dtds/podcast-1.0.dtd";
     private final List<String> feeds_fields = Arrays.asList("_id", "title", "description", "link",
             "pubDate", "image");
     private final List<String> items_fields = Arrays.asList("_id", "feed_id", "title",
@@ -31,6 +30,7 @@ public class RSSReader extends DefaultHandler {
     protected boolean in_items = false;
     protected ContentValues feedMap;
     protected ContentValues itemMap;
+    public final static String ITUNES_DTD = "http://www.itunes.com/dtds/podcast-1.0.dtd";
 
     private void logi(String str) {
         if (LOG_INFO) {
