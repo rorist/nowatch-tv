@@ -17,7 +17,6 @@ public class Item {
     public static final int STATUS_UNCOMPLETE = 7;
 
     public int id;
-    public Bitmap image;
     public String title;
     public String status;
     public String date;

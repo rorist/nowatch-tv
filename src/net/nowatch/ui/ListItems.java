@@ -98,12 +98,12 @@ public class ListItems extends Activity implements OnItemClickListener {
         });
         findViewById(R.id.btn_filter_podcast).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                filterByPodcast();
+                DialogfilterByPodcast();
             }
         });
         findViewById(R.id.btn_manage).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                startActivity(new Intent(ListItems.this, Manage.class));
+                DialogManage();
             }
         });
 
@@ -130,7 +130,6 @@ public class ListItems extends Activity implements OnItemClickListener {
             refreshListVisible();
         } else {
             resetList();
-            // adapter.getFilter().filter("SCUDS");
         }
     }
 
@@ -171,7 +170,40 @@ public class ListItems extends Activity implements OnItemClickListener {
         startActivity(i);
     }
 
-    private void filterByPodcast() {
+    private void DialogManage() {
+        final Resources res = getResources();
+        final QuickAction qa = new QuickAction(findViewById(R.id.btn_manage));
+        qa.setAnimStyle(QuickAction.ANIM_GROW_FROM_CENTER);
+
+        final ActionItem first = new ActionItem();
+        first.setTitle("Téléchargements");
+        first.setIcon(res.getDrawable(R.drawable.action_download));
+        first.setOnClickListener(new View.OnClickListener() {
+            // @Override
+            public void onClick(View v) {
+                qa.dismiss();
+                startActivity(new Intent(ListItems.this, Manage.class));
+            }
+        });
+
+        final ActionItem second = new ActionItem();
+        second.setTitle("Favoris");
+        second.setIcon(res.getDrawable(R.drawable.action_bookmark));
+        second.setOnClickListener(new View.OnClickListener() {
+            // @Override
+            public void onClick(View v) {
+                qa.dismiss();
+            }
+        });
+
+        qa.addActionItem(first);
+        qa.addActionItem(second);
+        qa.show();
+    }
+
+    private void DialogfilterByPodcast() {
+        // TODO: Filter without requerying ?
+        // adapter.getFilter().filter("SCUDS");
         final Resources res = getResources();
         final QuickAction qa = new QuickAction(findViewById(R.id.btn_filter_podcast));
         qa.setAnimStyle(QuickAction.ANIM_GROW_FROM_CENTER);
@@ -180,7 +212,7 @@ public class ListItems extends Activity implements OnItemClickListener {
         first.setTitle("Tous");
         first.setIcon(res.getDrawable(R.drawable.action_icon));
         first.setOnClickListener(new View.OnClickListener() {
-            //@Override
+            // @Override
             public void onClick(View v) {
                 current_request = REQ_ITEMS;
                 current_request_status = REQ_ITEMS_STATUS + REQ_ITEMS_END;
@@ -197,7 +229,7 @@ public class ListItems extends Activity implements OnItemClickListener {
             p.setIcon(res.getDrawable(R.drawable.action_icon));
             final int item_id = i + 1;
             p.setOnClickListener(new View.OnClickListener() {
-                //@Override
+                // @Override
                 public void onClick(View v) {
                     current_filter = "items.feed_id=" + item_id;
                     current_request = REQ_ITEMS_SELECT + " WHERE " + current_filter + REQ_ITEMS_END;
@@ -209,7 +241,6 @@ public class ListItems extends Activity implements OnItemClickListener {
             });
             qa.addActionItem(p);
         }
-
         qa.show();
     }
 
@@ -242,13 +273,16 @@ public class ListItems extends Activity implements OnItemClickListener {
         return item;
     }
 
-    private Bitmap createImage(byte[] logo_podcast_byte, byte[] logo_item_byte, int width, int height) {
+    private Bitmap createImage(byte[] logo_podcast_byte, byte[] logo_item_byte, int width,
+            int height) {
         final int min_size = 200;
         if (logo_item_byte != null && logo_item_byte.length > min_size) {
-            return Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_item_byte, 0, logo_item_byte.length), image_size, image_size, true);
+            return Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_item_byte, 0,
+                    logo_item_byte.length), image_size, image_size, true);
         } else {
             if (logo_podcast_byte != null && logo_podcast_byte.length > min_size) {
-                return Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_podcast_byte, 0, logo_podcast_byte.length), image_size, image_size, true);
+                return Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_podcast_byte,
+                        0, logo_podcast_byte.length), image_size, image_size, true);
             } else {
                 return BitmapFactory.decodeResource(getResources(), R.drawable.icon);
             }
@@ -480,7 +514,8 @@ public class ListItems extends Activity implements OnItemClickListener {
                 ListItems a = getActivity();
                 if (a != null) {
                     Button btn_ref = (Button) a.findViewById(R.id.btn_refresh);
-                    btn_ref.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh_a, 0, 0, 0);
+                    btn_ref.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh_a, 0, 0,
+                            0);
                     ((AnimationDrawable) btn_ref.getCompoundDrawables()[0]).start();
                     btn_ref.setEnabled(false);
                     btn_ref.setClickable(false);
@@ -495,7 +530,9 @@ public class ListItems extends Activity implements OnItemClickListener {
                 ListItems a = getActivity();
                 if (a != null) {
                     Button btn_ref = (Button) a.findViewById(R.id.btn_refresh);
-                    btn_ref.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0, 0);
+                    btn_ref
+                            .setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0,
+                                    0);
                     btn_ref.setEnabled(true);
                     btn_ref.setClickable(true);
                     a.findViewById(R.id.loading).setVisibility(View.INVISIBLE);
@@ -511,7 +548,8 @@ public class ListItems extends Activity implements OnItemClickListener {
                 ListItems a = getActivity();
                 if (a != null) {
                     Button btn_refresh = (Button) a.findViewById(R.id.btn_refresh);
-                    btn_refresh.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0, 0, 0);
+                    btn_refresh.setCompoundDrawablesWithIntrinsicBounds(R.drawable.btn_refresh, 0,
+                            0, 0);
                     btn_refresh.setEnabled(true);
                     btn_refresh.setClickable(true);
                 }
