@@ -404,8 +404,8 @@ public class NWService extends Service {
                                 .getString(R.string.notif_dl_complete), PendingIntent.getActivity(
                                 service, 0, new Intent(service, ListItems.class), 0));
                         service.notificationManager.notify(item_id, nf);
+                        service.stopOrContinue();
                     }
-                    service.stopOrContinue();
                 }
             }
         }
@@ -416,14 +416,20 @@ public class NWService extends Service {
             if (mService != null) {
                 final NWService service = mService.get();
                 if (service != null) {
+                    ItemInfo.changeStatus(service, item_id, Item.STATUS_UNCOMPLETE);
                     Toast.makeText(service.getApplicationContext(), "Téléchargement annulé!",
                             Toast.LENGTH_LONG).show();
                     if (error_msg != null) {
                         Toast.makeText(service.getApplicationContext(), error_msg,
                                 Toast.LENGTH_LONG).show();
                     }
-                    ItemInfo.changeStatus(service, item_id, Item.STATUS_UNCOMPLETE);
-                    service.stopOrContinue();
+                    try {
+                        service.notificationManager.cancel(item_id);
+                    } catch (Exception e) {
+                        Log.v(TAG, e.getMessage());
+                    } finally {
+                        service.stopOrContinue();
+                    }
                 }
             }
             super.onCancelled();
