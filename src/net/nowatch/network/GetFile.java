@@ -62,7 +62,7 @@ public class GetFile {
         }
     }
 
-    private HttpEntity openUrl(String src, String etag) {
+    private HttpEntity openUrl(String src, String etag, boolean resume) {
         // Set HTTP Client params
         HttpParams params = new BasicHttpParams();
         HttpConnectionParams.setStaleCheckingEnabled(params, false);
@@ -87,8 +87,10 @@ public class GetFile {
                 httpget.addHeader("If-None-Match", etag);
             }
             Log.v(TAG, "start=" + file_local_size);
-            if (file_local_size > 0) {
+            if (file_local_size > 0 && resume) {
                 httpget.addHeader("Range", file_local_size + "-");
+            } else {
+                file_local_size = 0;
             }
             // Get response
             HttpResponse response = httpclient.execute(httpget);
@@ -154,7 +156,7 @@ public class GetFile {
         // Get OutputStream and InputStream
         File dstFile = getDestination(dst);
         file_local_size = dstFile.length();
-        final HttpEntity entity = openUrl(src, etag);
+        final HttpEntity entity = openUrl(src, etag, resume);
         if (entity == null) {
             return;
         }

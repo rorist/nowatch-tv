@@ -1,7 +1,5 @@
 package net.nowatch.service;
 
-// TODO: Use IntentService in startService() (queuing model)
-
 import java.io.File;
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -173,7 +171,7 @@ public class NWService extends Service {
                     }
                 }
             } catch (ConcurrentModificationException e) {
-                Log.e(TAG, "FIXME: ConcurrentModificationException");
+                Log.e(TAG, "ConcurrentModificationException");
             }
         }
     }
@@ -244,7 +242,7 @@ public class NWService extends Service {
                         && downloadQueue.size() > 0) {
                     Integer itemId = downloadQueue.poll();
                     if (itemId != null) {
-                        // TODO: Check if there is enough space on device
+                        // FIXME: Check if there is enough space on device
                         // Get item information and start DownloadTask
                         SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
                         Cursor c = db.rawQuery(REQ_ITEM, new String[] { "" + itemId });
@@ -331,14 +329,12 @@ public class NWService extends Service {
                 String state = Environment.getExternalStorageState();
                 Log.v(TAG, "file source=" + str[0]);
                 if (Environment.MEDIA_MOUNTED.equals(state) && !str[0].equals(new String(""))) {
-                    // TODO: Use getExternalStoragePublicDirectory() (API L8)
                     File dst = new File(Environment.getExternalStorageDirectory()
                             .getCanonicalPath()
                             + "/" + GetFile.PATH_PODCASTS);
                     dst.mkdirs();
                     task = new getPodcastFile(ctxt, fs);
                     String dest = dst.getCanonicalPath() + "/" + new File(str[0]).getName();
-                    Log.v(TAG, "status=" + status + " == " + Item.STATUS_UNCOMPLETE);
                     if (status == Item.STATUS_UNCOMPLETE) {
                         Log.v(TAG, "try to resume download");
                         ItemInfo.changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
@@ -348,7 +344,6 @@ public class NWService extends Service {
                         task.getChannel(str[0], dest, false);
                     }
                 } else {
-                    // FIXME: Propagate error or exception
                     cancel(false);
                 }
             } catch (MalformedURLException e) {
@@ -416,7 +411,6 @@ public class NWService extends Service {
             if (mService != null) {
                 final NWService service = mService.get();
                 if (service != null) {
-                    ItemInfo.changeStatus(service, item_id, Item.STATUS_UNCOMPLETE);
                     Toast.makeText(service.getApplicationContext(), "Téléchargement annulé!",
                             Toast.LENGTH_LONG).show();
                     if (error_msg != null) {

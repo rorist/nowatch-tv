@@ -3,6 +3,8 @@ package net.nowatch.ui;
 import java.util.ArrayList;
 import java.util.List;
 
+import net.londatiga.android.ActionItem;
+import net.londatiga.android.QuickAction;
 import net.nowatch.IService;
 import net.nowatch.IServiceCallback;
 import net.nowatch.Main;
@@ -18,6 +20,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.ServiceConnection;
 import android.content.DialogInterface.OnClickListener;
+import android.content.res.Resources;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
@@ -94,25 +97,23 @@ public class Manage extends Activity {
 
     private OnItemClickListener listenerCurrent = new OnItemClickListener() {
         public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-            cancelDialog(position, NWService.TYPE_CURRENT);
-            // pauseDialog(position);
+            DialogActions(v, position, NWService.TYPE_CURRENT);
         }
     };
-
     private OnItemClickListener listenerPending = new OnItemClickListener() {
         public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-            cancelDialog(position, NWService.TYPE_PENDING);
+            DialogActions(v, position, NWService.TYPE_PENDING);
         }
     };
 
-    // private void pauseDialog(final int position) {
-    // // Send intent to service
-    // final Context ctxt = Manage.this;
-    // Intent intent = new Intent(ctxt, NWService.class);
-    // intent.setAction(NWService.ACTION_PAUSE);
-    // intent.putExtra(Item.EXTRA_ITEM_ID, downloadCurrent.get(position).id);
-    // startService(intent);
-    // }
+    private void pauseDialog(final int position) {
+        // Send intent to service
+        final Context ctxt = Manage.this;
+        Intent intent = new Intent(ctxt, NWService.class);
+        intent.setAction(NWService.ACTION_PAUSE);
+        intent.putExtra(Item.EXTRA_ITEM_ID, downloadCurrent.get(position).id);
+        startService(intent);
+    }
 
     private void cancelDialog(final int position, final int type) {
         // TODO: Create a context menu and propose cancel and pause actions
@@ -142,6 +143,38 @@ public class Manage extends Activity {
             }
         });
         dialog.show();
+    }
+
+    private void DialogActions(final View view, final int position, final int type) {
+        final Resources res = getResources();
+        final QuickAction qa = new QuickAction(view);
+        qa.setAnimStyle(QuickAction.ANIM_GROW_FROM_CENTER);
+
+        final ActionItem pause = new ActionItem();
+        pause.setTitle("Pause");
+        pause.setIcon(res.getDrawable(R.drawable.action_pause));
+        pause.setOnClickListener(new View.OnClickListener() {
+            // @Override
+            public void onClick(View v) {
+                pauseDialog(position);
+                qa.dismiss();
+            }
+        });
+
+        final ActionItem cancel = new ActionItem();
+        cancel.setTitle("Annuler");
+        cancel.setIcon(res.getDrawable(R.drawable.action_cancel));
+        cancel.setOnClickListener(new View.OnClickListener() {
+            // @Override
+            public void onClick(View v) {
+                cancelDialog(position, type);
+                qa.dismiss();
+            }
+        });
+
+        qa.addActionItem(pause);
+        qa.addActionItem(cancel);
+        qa.show();
     }
 
     private List<Item> getDownloads(int[] data) {
