@@ -210,7 +210,6 @@ public class NWService extends Service {
                     task.task.isCancelled = true;
                 }
                 if (AsyncTask.Status.RUNNING.equals(task.getStatus()) && task.cancel(true)) {
-                    // FIXME: Delete the file
                     downloadTasks.remove(id);
                     ItemInfo.changeStatus(ctxt, id, Item.STATUS_UNREAD);
                 }
@@ -296,6 +295,7 @@ public class NWService extends Service {
         private WeakReference<NWService> mService;
         private String error_msg = null;
         private getPodcastFile task = null;
+        private String dest = null;
 
         public DownloadTask(NWService activity, String title, int itemId, int status) {
             super();
@@ -355,7 +355,7 @@ public class NWService extends Service {
                             + "/" + GetFile.PATH_PODCASTS);
                     dst.mkdirs();
                     task = new getPodcastFile(ctxt, fs);
-                    String dest = dst.getCanonicalPath() + "/" + new File(str[0]).getName();
+                    dest = dst.getCanonicalPath() + "/" + new File(str[0]).getName();
                     if (status == Item.STATUS_INCOMPLETE) {
                         Log.v(TAG, "try to resume download");
                         ItemInfo.changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
@@ -437,6 +437,9 @@ public class NWService extends Service {
                     if (error_msg != null) {
                         Toast.makeText(service.getApplicationContext(), error_msg,
                                 Toast.LENGTH_LONG).show();
+                    }
+                    if (dest != null) {
+                        new File(dest).delete();
                     }
                     try {
                         service.notificationManager.cancel(item_id);
