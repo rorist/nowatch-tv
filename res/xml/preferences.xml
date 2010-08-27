@@ -1,22 +1,30 @@
 <PreferenceScreen
     xmlns:android="http://schemas.android.com/apk/res/android">
-    <PreferenceCategory android:title="Notifications">
+    <PreferenceCategory android:title="Paramètres de notifications">
         <CheckBoxPreference
             android:key="notification"
             android:title="Notification"
-            android:summary="TODO"
+            android:summary=""
             android:defaultValue="false" />
+        <EditTextPreference
+            android:key="notification_update"
+            android:title="Intervalle d'actualisation"
+            android:summary="Toutes les 30 minutes (FIXME)"
+            android:dependency="notification"
+            android:defaultValue="2"
+            android:inputType="number" />
         <CheckBoxPreference
             android:key="auto_dl"
             android:title="Téléchargement auto"
-            android:summary="TODO"
+            android:summary="Démarrer le téléchargement des nouveaux podcasts automatiquement"
+            android:dependency="notification"
             android:defaultValue="false" />
     </PreferenceCategory>
-    <PreferenceCategory android:title="Général">
+    <PreferenceCategory android:title="Paramètres généraux">
         <EditTextPreference
             android:key="simultaneous_download"
             android:title="Download simultanés"
-            android:summary="TODO"
+            android:summary="Nombre de téléchargement simultanés = 2 (FIXME)"
             android:defaultValue="2"
             android:inputType="number" />
         <CheckBoxPreference

@@ -33,9 +33,12 @@ import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -52,7 +55,7 @@ public class NWService extends Service {
     private static final String TAG = Main.TAG + "NWService";
     private static final int NOTIFICATION_UPDATE = -1;
     private static final long PROGRESS_UPDATE = 3000000000L;
-    private static final String REQ_NEW = "select count(_id) from items where status="
+    private static final String REQ_NEW = "select items._id from items where status="
             + Item.STATUS_NEW;
     private final String REQ_ITEM = "select title,file_uri,file_size,status from items where _id=? limit 1";
     private final String REQ_CLEAN = "update items set status=" + Item.STATUS_UNREAD
@@ -75,6 +78,9 @@ public class NWService extends Service {
         Log.i(TAG, "onCreate()");
         ctxt = getApplicationContext();
         notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        IntentFilter filter = new IntentFilter();
+        filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
+        registerReceiver(receiver, filter);
     }
 
     @Override
@@ -83,6 +89,7 @@ public class NWService extends Service {
         pauseAll();
         clean();
         mCallbacks.kill();
+        unregisterReceiver(receiver);
     }
 
     @Override
@@ -91,6 +98,7 @@ public class NWService extends Service {
         pauseAll();
         clean();
         mCallbacks.kill();
+        unregisterReceiver(receiver);
     }
 
     @Override
@@ -144,10 +152,10 @@ public class NWService extends Service {
     
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         public void onReceive(Context ctxt, Intent intent) {
-            // 3G(connected) -> Wifi(connected)
+            ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
             final NetworkInfo ni = connMgr.getActiveNetworkInfo();
             if (ni != null && ni.getState() == NetworkInfo.State.CONNECTED && ni.getType() == ConnectivityManager.TYPE_MOBILE) {
-                if(!new Network(this).isMobileAllowed()){
+                if(!new Network(ctxt).isMobileAllowed()){
                     pauseAll();
                 }
             }
@@ -219,7 +227,7 @@ public class NWService extends Service {
             }
             if (AsyncTask.Status.RUNNING.equals(task.getStatus()) && task.cancel(true)) {
                 downloadTasks.remove(id);
-                ItemInfo.changeStatus(ctxt, id, Item.STATUS_UNCOMPLETE);
+                ItemInfo.changeStatus(ctxt, id, Item.STATUS_INCOMPLETE);
                 clientCallback();
             }
         }
@@ -348,7 +356,7 @@ public class NWService extends Service {
                     dst.mkdirs();
                     task = new getPodcastFile(ctxt, fs);
                     String dest = dst.getCanonicalPath() + "/" + new File(str[0]).getName();
-                    if (status == Item.STATUS_UNCOMPLETE) {
+                    if (status == Item.STATUS_INCOMPLETE) {
                         Log.v(TAG, "try to resume download");
                         ItemInfo.changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
                         task.getChannel(str[0], dest, true);
@@ -494,12 +502,11 @@ public class NWService extends Service {
             super.onPostExecute(unused);
             final NWService service = getService();
             if (service != null) {
-                SQLiteDatabase db = (new DB(service.getApplicationContext())).getWritableDatabase();
+                final Context ctxt = service.getApplicationContext();
+                SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
                 Cursor c = db.rawQuery(REQ_NEW, null);
                 c.moveToFirst();
-                int nb = c.getInt(0);
-                c.close();
-                db.close();
+                int nb = c.getCount();
                 if (nb > 0) {
                     // Show notification about new items
                     Notification nf = new Notification(R.drawable.icon_scream_48,
@@ -509,8 +516,17 @@ public class NWService extends Service {
                             + " nouveaux éléments", PendingIntent.getActivity(service, 0,
                             new Intent(service, ListItems.class), 0));
                     service.notificationManager.notify(NOTIFICATION_UPDATE, nf);
-                    // TODO: Auto-download items
+                    // Auto-download items
+                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctxt);
+                    if (prefs.getBoolean(Prefs.KEY_AUTO_DL, Prefs.DEFAULT_AUTO_DL)) {
+                        // FIXME
+                        while (c.moveToNext()) {
+                            service.downloadQueue.add(c.getInt(0));
+                        }
+                    }
                 }
+                c.close();
+                db.close();
                 service.stopOrContinue();
             }
         }

@@ -19,6 +19,9 @@ public class Prefs extends PreferenceActivity implements OnSharedPreferenceChang
     public final static String KEY_MOBILE_TRAFFIC = "mobile_traffic";
     public final static boolean DEFAULT_MOBILE_TRAFFIC = false;
 
+    public final static String KEY_AUTO_DL = "auto_dl";
+    public final static boolean DEFAULT_AUTO_DL = false;
+
     public final static String KEY_NOTIFICATION = "notification";
     public final static boolean DEFAULT_NOTIFICATION = false;
 

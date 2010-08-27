@@ -264,8 +264,8 @@ public class ListItems extends Activity implements OnItemClickListener {
             case Item.STATUS_DL_READ:
                 item.status = getString(R.string.status_read);
                 break;
-            case Item.STATUS_UNCOMPLETE:
-                item.status = getString(R.string.status_uncomplete);
+            case Item.STATUS_INCOMPLETE:
+                item.status = getString(R.string.status_incomplete);
                 break;
             default:
                 item.status = getString(R.string.status_new);

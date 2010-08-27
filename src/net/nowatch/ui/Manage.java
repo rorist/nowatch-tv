@@ -117,7 +117,7 @@ public class Manage extends Activity {
 
     private void cancelDialog(final int position, final int type) {
         // TODO: Create a context menu and propose cancel and pause actions
-        // Cancel will remove the file, pause will change state to UNCOMPLETE
+        // Cancel will remove the file, pause will change state to INCOMPLETE
         final Context ctxt = Manage.this;
         final AlertDialog.Builder dialog = new AlertDialog.Builder(ctxt);
         dialog.setMessage("Voulez-vous annuler le téléchargement ?");
