@@ -45,7 +45,6 @@ public class UpdateTask extends AsyncTask<Void, Void, Void> {
         feeds.add(new Feed(4, R.string.feed_zapcast));
         feeds.add(new Feed(5, R.string.feed_tom));
         feeds.add(new Feed(6, R.string.feed_revuetech));
-        feeds.add(new Feed(7, R.string.feed_captainweb)); // FIXME: Temporary
     }
 
     @Override
