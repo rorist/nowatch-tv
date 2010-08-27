@@ -30,6 +30,7 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -79,7 +80,7 @@ public class NWService extends Service {
     @Override
     public void onDestroy() {
         Log.i(TAG, "onDestroy()");
-        cancelAll();
+        pauseAll();
         clean();
         mCallbacks.kill();
     }
@@ -87,7 +88,7 @@ public class NWService extends Service {
     @Override
     public void onLowMemory() {
         Log.i(TAG, "onLowMemory()");
-        cancelAll();
+        pauseAll();
         clean();
         mCallbacks.kill();
     }
@@ -140,6 +141,18 @@ public class NWService extends Service {
             stopOrContinue();
         }
     }
+    
+    private BroadcastReceiver receiver = new BroadcastReceiver() {
+        public void onReceive(Context ctxt, Intent intent) {
+            // 3G(connected) -> Wifi(connected)
+            final NetworkInfo ni = connMgr.getActiveNetworkInfo();
+            if (ni != null && ni.getState() == NetworkInfo.State.CONNECTED && ni.getType() == ConnectivityManager.TYPE_MOBILE) {
+                if(!new Network(this).isMobileAllowed()){
+                    pauseAll();
+                }
+            }
+        }
+    };
 
     private void clean() {
         // Clean failed downloads
@@ -150,14 +163,14 @@ public class NWService extends Service {
             db.close();
             // Remove notifications
             // try {
-            // notificationManager.cancelAll();
+            //     notificationManager.pauseAll();
             // } catch (Exception e) {
-            // Log.v(TAG, e.getMessage());
+            //     Log.v(TAG, e.getMessage());
             // }
         }
     }
 
-    private void cancelAll() {
+    private void pauseAll() {
         // Cancel current downloads
         if (downloadTasks != null && downloadTasks.size() > 0) {
             Collection<DownloadTask> tasks = downloadTasks.values();
@@ -166,7 +179,7 @@ public class NWService extends Service {
                     for (DownloadTask task : tasks) {
                         if (AsyncTask.Status.RUNNING.equals(task.getStatus()) && task.cancel(true)) {
                             downloadTasks.remove(task.item_id);
-                            ItemInfo.changeStatus(ctxt, task.item_id, Item.STATUS_UNREAD);
+                            ItemInfo.changeStatus(ctxt, task.item_id, Item.STATUS_INCOMPLETE);
                         }
                     }
                 }
