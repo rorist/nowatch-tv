@@ -18,14 +18,15 @@ public class DB extends SQLiteOpenHelper {
     private final String CREATE_ITEMS = "create table items (" + "_id INTEGER PRIMARY KEY,"
             + "feed_id INTEGER,"
             + "status INTEGER,"
-            + "title TEXT UNIQUE ON CONFLICT REPLACE," // Needs PRAGMA
-            // recursive_triggers=true;
+            + "title TEXT UNIQUE ON CONFLICT REPLACE,"
+            // Needs PRAGMA recursive_triggers=true;
             + "description TEXT,"
             + "link TEXT,"
             + "pubDate NUMERIC,"
             + "file_uri TEXT,"
             + "file_size INTEGER,"
             + "file_type TEXT,"
+            + "bookmark INTEGER,"
             + "image BLOB);";
     public static final String[] podcasts = new String[] { "Cine Fuzz", "Geek Inc.", "SCUDS.TV",
             "ZapCast.tv", "Tonight On Mars", "La Revue Tech", "Captain Web" };

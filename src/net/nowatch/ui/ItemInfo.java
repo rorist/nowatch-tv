@@ -1,7 +1,5 @@
 package net.nowatch.ui;
 
-// TODO: Do not bind to service, just send IntentService
-
 import java.io.File;
 
 import net.nowatch.Main;
@@ -37,7 +35,7 @@ public class ItemInfo extends Activity {
 
     private final String TAG = Main.TAG + "InfoActivity";
     private final String REQ = "SELECT feeds.title, items.title, items.description, items.link, "
-            + "feeds.link, feeds.image, items.file_uri, items.file_size, items.file_type, items.status, items.image "
+            + "feeds.link, feeds.image, items.file_uri, items.file_size, items.file_type, items.status, items.image, items.bookmark "
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id WHERE items._id=";
     private final String STYLE = "<style>*{color: black;}</style>";
     private final String PRE = "<meta http-equiv=\"Content-Type\" content=\"application/xhtml+text; charset=UTF-8\"/>"
@@ -48,7 +46,7 @@ public class ItemInfo extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.info_activity);
+        setContentView(R.layout.activity_item_info);
 
         // Screen metrics (for dip to px conversion)
         DisplayMetrics dm = new DisplayMetrics();
@@ -65,16 +63,20 @@ public class ItemInfo extends Activity {
         ((TextView) findViewById(R.id.title)).setText(title);
         ((WebView) findViewById(R.id.desc)).loadData(PRE + c.getString(2), "text/html", "utf-8");
         findViewById(R.id.desc).setBackgroundColor(0);
+
         // Try to get item logo, then podcast logo and finally application logo
         final int min_size = 200;
         ImageView logo = (ImageView) findViewById(R.id.logo);
         byte[] logo_item_byte = c.getBlob(10);
         if (logo_item_byte != null && logo_item_byte.length > min_size) {
-            logo.setImageBitmap(Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_item_byte, 0, logo_item_byte.length), image_size, image_size, true));
+            logo.setImageBitmap(Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(
+                    logo_item_byte, 0, logo_item_byte.length), image_size, image_size, true));
         } else {
             byte[] logo_podcast_byte = c.getBlob(5);
             if (logo_podcast_byte != null && logo_podcast_byte.length > min_size) {
-                logo.setImageBitmap(Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_podcast_byte, 0, logo_podcast_byte.length), image_size, image_size, true));
+                logo.setImageBitmap(Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(
+                        logo_podcast_byte, 0, logo_podcast_byte.length), image_size, image_size,
+                        true));
             } else {
                 logo.setImageResource(R.drawable.icon);
             }
@@ -84,6 +86,7 @@ public class ItemInfo extends Activity {
         final String file_type = c.getString(8);
         // final String file_size = c.getString(7);
         final int status = c.getInt(9);
+        final int bookmarked = c.getInt(11);
 
         // Close db
         c.close();
@@ -105,6 +108,7 @@ public class ItemInfo extends Activity {
         });
 
         // Buttons
+        setBookmark(item_id, bookmarked);
         ((ImageButton) findViewById(R.id.btn_logo)).setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
                 finish();
@@ -167,6 +171,33 @@ public class ItemInfo extends Activity {
         ContentValues value = new ContentValues();
         value.put("status", status);
         db.update("items", value, "_id=?", new String[] { id + "" });
+        db.close();
+    }
+
+    private void setBookmark(final int item_id, int bookmarked) {
+        Log.v(TAG, "bookmarked=" + bookmarked);
+        ImageButton btn_bookmark = (ImageButton) findViewById(R.id.btn_bookmark);
+        if (bookmarked == 1) {
+            btn_bookmark.setImageResource(R.drawable.btn_bookmark);
+            btn_bookmark.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    setBookmark(item_id, 0);
+                }
+            });
+        } else {
+            btn_bookmark.setImageResource(R.drawable.btn_bookmark2);
+            btn_bookmark.setOnClickListener(new OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    setBookmark(item_id, 1);
+                }
+            });
+        }
+        SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
+        ContentValues value = new ContentValues();
+        value.put("bookmark", bookmarked);
+        db.update("items", value, "_id=?", new String[] { item_id + "" });
         db.close();
     }
 

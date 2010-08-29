@@ -242,7 +242,7 @@ public class QuickAction extends CustomPopupWindow {
      * @return action item {@link View}
      */
     private View getActionItem(String title, Drawable icon, OnClickListener listener) {
-        LinearLayout container = (LinearLayout) inflater.inflate(R.layout.action_item, null);
+        LinearLayout container = (LinearLayout) inflater.inflate(R.layout.item_action, null);
 
         ImageView img = (ImageView) container.findViewById(R.id.icon);
         TextView text = (TextView) container.findViewById(R.id.title);

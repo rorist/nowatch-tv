@@ -86,7 +86,6 @@ public class GetFile {
             if (etag != null) {
                 httpget.addHeader("If-None-Match", etag);
             }
-            Log.v(TAG, "start=" + file_local_size);
             if (file_local_size > 0 && resume) {
                 httpget.addHeader("Range", file_local_size + "-");
             } else {

@@ -55,7 +55,7 @@ public class Manage extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         startService(new Intent(Manage.this, NWService.class));
-        setContentView(R.layout.manage_activity);
+        setContentView(R.layout.activity_manage);
         mInflater = LayoutInflater.from(getApplicationContext());
 
         // Buttons
