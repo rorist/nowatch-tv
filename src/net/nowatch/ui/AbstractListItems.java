@@ -154,7 +154,7 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
              */
         } else {
             SimpleDateFormat formatter = new SimpleDateFormat("dd.MM.yyyy");
-            formatter.setTimeZone(TimeZone.getDefault());
+            formatter.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
             item.date = formatter.format(new Date(date));
         }
         // Actions

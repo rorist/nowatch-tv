@@ -8,6 +8,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
+import java.util.TimeZone;
 
 import javax.xml.parsers.FactoryConfigurationError;
 import javax.xml.parsers.ParserConfigurationException;
@@ -145,7 +146,7 @@ public class UpdateDb {
         public RSS(final Context ctxt, String pubDate) {
             this.ctxt = ctxt;
             formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss ZZZ");
-            // formatter.setTimeZone(TimeZone.getDefault()); // FIXME
+            formatter.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
         }
 
         @Override

@@ -179,16 +179,14 @@ public class ItemInfo extends Activity {
         ImageButton btn_bookmark = (ImageButton) findViewById(R.id.btn_bookmark);
         if (bookmarked == 1) {
             btn_bookmark.setImageResource(R.drawable.btn_bookmark);
-            btn_bookmark.setOnClickListener(new OnClickListener() {
-                @Override
+            btn_bookmark.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     setBookmark(item_id, 0);
                 }
             });
         } else {
             btn_bookmark.setImageResource(R.drawable.btn_bookmark2);
-            btn_bookmark.setOnClickListener(new OnClickListener() {
-                @Override
+            btn_bookmark.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
                     setBookmark(item_id, 1);
                 }

@@ -121,7 +121,7 @@ public class Manage extends Activity {
         final Context ctxt = Manage.this;
         final AlertDialog.Builder dialog = new AlertDialog.Builder(ctxt);
         dialog.setMessage("Voulez-vous annuler le téléchargement ?");
-        dialog.setPositiveButton("Oui", new OnClickListener() {
+        dialog.setPositiveButton("Oui", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
                 Item item = null;
                 // Remove item from list
@@ -138,7 +138,7 @@ public class Manage extends Activity {
                 startService(intent);
             }
         });
-        dialog.setNegativeButton("Non", new OnClickListener() {
+        dialog.setNegativeButton("Non", new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
             }
         });
@@ -154,7 +154,6 @@ public class Manage extends Activity {
         pause.setTitle("Pause");
         pause.setIcon(res.getDrawable(R.drawable.action_pause));
         pause.setOnClickListener(new View.OnClickListener() {
-            // @Override
             public void onClick(View v) {
                 pauseDialog(position);
                 qa.dismiss();
@@ -165,7 +164,6 @@ public class Manage extends Activity {
         cancel.setTitle("Annuler");
         cancel.setIcon(res.getDrawable(R.drawable.action_cancel));
         cancel.setOnClickListener(new View.OnClickListener() {
-            // @Override
             public void onClick(View v) {
                 cancelDialog(position, type);
                 qa.dismiss();
