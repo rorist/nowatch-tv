@@ -43,7 +43,7 @@ public class GetFile {
     private String version = "0.3.x";
     private HttpGet httpget = null;
     private DefaultHttpClient httpclient = null;
-    private int buffer_size = 8 * 1024; // in Bytes
+    private int buffer_size = 4 * 1024; // in Bytes
 
     protected String etag;
     protected long file_local_size = 0;
@@ -182,9 +182,10 @@ public class GetFile {
                 // }
 
                 if (inputChannel != null && outputChannel != null) {
+                    final ByteBuffer buffer = ByteBuffer.allocateDirect(buffer_size);
+                    // FIXME: Try to change the buffer size or direct allocation
                     // final ByteBuffer buffer =
-                    // ByteBuffer.allocateDirect(buffer_size);
-                    final ByteBuffer buffer = ByteBuffer.allocate(buffer_size);
+                    // ByteBuffer.allocate(buffer_size);
                     long count;
                     cancelled: {
                         while ((count = inputChannel.read(buffer)) != -1) {
@@ -241,25 +242,74 @@ public class GetFile {
         }
     }
 
-    // Blocking download (small files?)
-    public void getBlocking(String src, String dst) {
-        /*
-         * if
-         * (!Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState
-         * ())) { return; }
-         * 
-         * try { // Get InputStream final HttpEntity entity = openUrl(src,
-         * etag); if (entity == null) { return; } InputStream in =
-         * entity.getContent(); File dstFile = getDestination(dst); if (in !=
-         * null && dstFile != null) { OutputStream out = new
-         * FileOutputStream(dstFile);
-         * 
-         * } } catch(IOException e) { Log.e(TAG, e.getMessage()); }finally { if
-         * (in != null) { in.close(); } if (out != null) { out.close(); } if
-         * (entity != null) { entity.consumeContent(); } if (httpclient != null)
-         * { httpclient.close(); } finish(dstFile.getAbsolutePath()); }
-         */
-    }
+    // public void getBlocking(String src, String dst, String etag) {
+    // getBlocking(src, dst, etag, true, false);
+    // }
+    //
+    // // Blocking download (small files?)
+    // public void getBlocking(String src, String dst, String etag, boolean
+    // deleteOnFinish,
+    // boolean resume) {
+    //
+    // if
+    // (!Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState()))
+    // {
+    // return;
+    // }
+    //
+    // InputStream in = null;
+    // OutputStream out = null;
+    // HttpEntity entity = null;
+    // File dstFile = null;
+    //
+    // try {
+    // entity = openUrl(src, etag, resume);
+    // if (entity == null) {
+    // return;
+    // }
+    // in = entity.getContent();
+    // dstFile = getDestination(dst);
+    // if (in != null && dstFile != null) {
+    // out = new FileOutputStream(dstFile);
+    // // FIXME: download the file HERE
+    // byte data[] = new byte[1024];
+    // int total = 0;
+    // int count;
+    // cancelled: {
+    // while ((count = in.read(data)) != -1) {
+    // if (isCancelled == true) {
+    // break cancelled;
+    // }
+    // out.write(data, 0, count);
+    // total += count;
+    // update(count);
+    // }
+    // }
+    // }
+    // } catch (IOException e) {
+    // Log.e(TAG, e.getMessage());
+    // } finally {
+    // try {
+    // if (httpget != null) {
+    // httpget.abort();
+    // }
+    // if (in != null) {
+    // in.close();
+    // }
+    // if (out != null) {
+    // out.close();
+    // }
+    // if (entity != null) {
+    // entity.consumeContent();
+    // }
+    // if (dstFile != null) {
+    // finish(deleteOnFinish, dstFile.getAbsolutePath());
+    // }
+    // } catch (Exception e) {
+    // Log.e(TAG, e.getMessage());
+    // }
+    // }
+    // }
 
     protected void update(long count) {
         // Nothing to do here

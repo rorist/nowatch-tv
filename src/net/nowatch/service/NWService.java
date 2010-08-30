@@ -150,13 +150,14 @@ public class NWService extends Service {
             stopOrContinue();
         }
     }
-    
+
     private BroadcastReceiver receiver = new BroadcastReceiver() {
         public void onReceive(Context ctxt, Intent intent) {
             ConnectivityManager connMgr = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
             final NetworkInfo ni = connMgr.getActiveNetworkInfo();
-            if (ni != null && ni.getState() == NetworkInfo.State.CONNECTED && ni.getType() == ConnectivityManager.TYPE_MOBILE) {
-                if(!new Network(ctxt).isMobileAllowed()){
+            if (ni != null && ni.getState() == NetworkInfo.State.CONNECTED
+                    && ni.getType() == ConnectivityManager.TYPE_MOBILE) {
+                if (!new Network(ctxt).isMobileAllowed()) {
                     pauseAll();
                 }
             }
@@ -172,14 +173,15 @@ public class NWService extends Service {
             db.close();
             // Remove notifications
             // try {
-            //     notificationManager.pauseAll();
+            // notificationManager.pauseAll();
             // } catch (Exception e) {
-            //     Log.v(TAG, e.getMessage());
+            // Log.v(TAG, e.getMessage());
             // }
         }
     }
 
     private void pauseAll() {
+        downloadQueue.clear();
         // Cancel current downloads
         if (downloadTasks != null && downloadTasks.size() > 0) {
             Collection<DownloadTask> tasks = downloadTasks.values();
@@ -264,8 +266,10 @@ public class NWService extends Service {
                     Integer itemId = downloadQueue.poll();
                     if (itemId != null) {
                         // Get available space on sdcard
-                        StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
-                        long bytesFree = (long) stat.getBlockSize() * (long) stat.getAvailableBlocks();
+                        StatFs stat = new StatFs(Environment.getExternalStorageDirectory()
+                                .getPath());
+                        long bytesFree = (long) stat.getBlockSize()
+                                * (long) stat.getAvailableBlocks();
                         // Get item information and start DownloadTask
                         SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
                         Cursor c = db.rawQuery(REQ_ITEM, new String[] { "" + itemId });
@@ -280,9 +284,10 @@ public class NWService extends Service {
                             ItemInfo.changeStatus(ctxt, itemId, Item.STATUS_DOWNLOADING);
                             clientCallback();
                         } else {
-                            Toast.makeText(ctxt, R.string.toast_sdcardfreespace, Toast.LENGTH_LONG).show();
-                            Log.v(TAG, "free space="+bytesFree);
-                            Log.v(TAG, "file size="+c.getLong(2));
+                            Toast.makeText(ctxt, R.string.toast_sdcardfreespace, Toast.LENGTH_LONG)
+                                    .show();
+                            Log.v(TAG, "free space=" + bytesFree);
+                            Log.v(TAG, "file size=" + c.getLong(2));
                         }
                     }
                 }
@@ -357,7 +362,6 @@ public class NWService extends Service {
             // Download file
             try {
                 String state = Environment.getExternalStorageState();
-                Log.v(TAG, "file source=" + str[0]);
                 if (Environment.MEDIA_MOUNTED.equals(state) && !str[0].equals(new String(""))) {
                     File dst = new File(Environment.getExternalStorageDirectory()
                             .getCanonicalPath()
@@ -483,6 +487,11 @@ public class NWService extends Service {
                 getChannel(src, dst, null, false, resume);
             }
 
+            // public void getBlocking(String src, String dst, boolean resume)
+            // throws IOException {
+            // getBlocking(src, dst, null, false, resume);
+            // }
+
             @Override
             protected void update(long count) {
                 now = System.nanoTime();
@@ -517,28 +526,32 @@ public class NWService extends Service {
                 final Context ctxt = service.getApplicationContext();
                 SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
                 Cursor c = db.rawQuery(REQ_NEW, null);
-                c.moveToFirst();
-                int nb = c.getCount();
-                if (nb > 0) {
-                    // Show notification about new items
-                    Notification nf = new Notification(R.drawable.icon_scream_48,
-                            "Nouveaux podcasts", System.currentTimeMillis());
-                    nf.flags = Notification.FLAG_AUTO_CANCEL;
-                    nf.setLatestEventInfo(service, "Podcasts disponibles", nb
-                            + " nouveaux éléments", PendingIntent.getActivity(service, 0,
-                            new Intent(service, ListItems.class), 0));
-                    service.notificationManager.notify(NOTIFICATION_UPDATE, nf);
-                    // Auto-download items
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctxt);
-                    if (prefs.getBoolean(Prefs.KEY_AUTO_DL, Prefs.DEFAULT_AUTO_DL)) {
-                        while (c.moveToNext()) {
-                            service.downloadQueue.add(c.getInt(0));
+                try {
+                    c.moveToFirst();
+                    int nb = c.getCount();
+                    if (nb > 0) {
+                        // Show notification about new items
+                        Notification nf = new Notification(R.drawable.icon_scream_48,
+                                "Nouveaux podcasts", System.currentTimeMillis());
+                        nf.flags = Notification.FLAG_AUTO_CANCEL;
+                        nf.setLatestEventInfo(service, "Podcasts disponibles", nb
+                                + " nouveaux éléments", PendingIntent.getActivity(service, 0,
+                                new Intent(service, ListItems.class), 0));
+                        service.notificationManager.notify(NOTIFICATION_UPDATE, nf);
+                        // Auto-download items
+                        SharedPreferences prefs = PreferenceManager
+                                .getDefaultSharedPreferences(ctxt);
+                        if (prefs.getBoolean(Prefs.KEY_AUTO_DL, Prefs.DEFAULT_AUTO_DL)) {
+                            while (c.moveToNext()) {
+                                service.downloadQueue.add(c.getInt(0));
+                                service.stopOrContinue();
+                            }
                         }
                     }
+                } finally {
+                    c.close();
+                    db.close();
                 }
-                c.close();
-                db.close();
-                service.stopOrContinue();
             }
         }
 
