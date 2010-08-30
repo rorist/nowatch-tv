@@ -29,7 +29,7 @@ public class DB extends SQLiteOpenHelper {
             + "bookmark INTEGER,"
             + "image BLOB);";
     public static final String[] podcasts = new String[] { "Cine Fuzz", "Geek Inc.", "SCUDS.TV",
-            "ZapCast.tv", "Tonight On Mars", "La Revue Tech", "Captain Web" };
+            "ZapCast.tv", "Tonight On Mars", "La Revue Tech" };
     public static final int podcasts_len = podcasts.length;
 
     public DB(Context context) {
