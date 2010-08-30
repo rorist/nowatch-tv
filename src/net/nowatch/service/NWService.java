@@ -270,7 +270,7 @@ public class NWService extends Service {
                         SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
                         Cursor c = db.rawQuery(REQ_ITEM, new String[] { "" + itemId });
                         c.moveToFirst();
-                        if (c.getLong(2) > bytesFree) {
+                        if (bytesFree > c.getLong(2)) {
                             DownloadTask task = new DownloadTask(NWService.this, c.getString(0),
                                     itemId, c.getInt(3));
                             task.execute(c.getString(1), c.getString(2));
@@ -281,6 +281,8 @@ public class NWService extends Service {
                             clientCallback();
                         } else {
                             Toast.makeText(ctxt, R.string.toast_sdcardfreespace, Toast.LENGTH_LONG).show();
+                            Log.v(TAG, "free space="+bytesFree);
+                            Log.v(TAG, "file size="+c.getLong(2));
                         }
                     }
                 }
