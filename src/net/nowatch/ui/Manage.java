@@ -107,11 +107,13 @@ public class Manage extends Activity {
 
     private void pauseDialog(final int position) {
         // Send intent to service
+        Item item = downloadCurrent.get(position);
         final Context ctxt = Manage.this;
         Intent intent = new Intent(ctxt, NWService.class);
         intent.setAction(NWService.ACTION_PAUSE);
-        intent.putExtra(Item.EXTRA_ITEM_ID, downloadCurrent.get(position).id);
+        intent.putExtra(Item.EXTRA_ITEM_ID, item.id);
         startService(intent);
+        adapterPending.remove(item);
     }
 
     private void cancelDialog(final int position, final int type) {
@@ -126,8 +128,10 @@ public class Manage extends Activity {
                 // Remove item from list
                 if (type == NWService.TYPE_CURRENT) {
                     item = downloadCurrent.get(position);
+                    adapterCurrent.remove(item);
                 } else if (type == NWService.TYPE_PENDING) {
                     item = downloadPending.get(position);
+                    adapterPending.remove(item);
                 }
                 // Send intent to service
                 Intent intent = new Intent(ctxt, NWService.class);

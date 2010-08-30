@@ -183,9 +183,7 @@ public class GetFile {
 
                 if (inputChannel != null && outputChannel != null) {
                     final ByteBuffer buffer = ByteBuffer.allocateDirect(buffer_size);
-                    // FIXME: Try to change the buffer size or direct allocation
-                    // final ByteBuffer buffer =
-                    // ByteBuffer.allocate(buffer_size);
+                    // final ByteBuffer buffer = ByteBuffer.allocate(buffer);
                     long count;
                     cancelled: {
                         while ((count = inputChannel.read(buffer)) != -1) {

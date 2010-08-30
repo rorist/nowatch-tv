@@ -5,10 +5,8 @@ import java.io.IOException;
 import java.lang.ref.WeakReference;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
-import java.util.Collection;
-import java.util.ConcurrentModificationException;
-import java.util.HashMap;
 import java.util.Iterator;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import net.nowatch.IService;
@@ -63,7 +61,8 @@ public class NWService extends Service {
             + " where status=" + Item.STATUS_DOWNLOADING;
     private final RemoteCallbackList<IServiceCallback> mCallbacks = new RemoteCallbackList<IServiceCallback>();
     private final ConcurrentLinkedQueue<Integer> downloadQueue = new ConcurrentLinkedQueue<Integer>();
-    private final HashMap<Integer, DownloadTask> downloadTasks = new HashMap<Integer, DownloadTask>();
+    private final ConcurrentHashMap<Integer, DownloadTask> downloadTasks = new ConcurrentHashMap<Integer, DownloadTask>();
+    private UpdateTaskNotif updateTask;
     private Context ctxt;
 
     public static final String ACTION_UPDATE = "action_update";
@@ -139,7 +138,7 @@ public class NWService extends Service {
                 stopOrContinue();
             } else if (ACTION_UPDATE.equals(action)) {
                 // Check for updates
-                UpdateTaskNotif updateTask = new UpdateTaskNotif(NWService.this);
+                updateTask = new UpdateTaskNotif(NWService.this);
                 updateTask.execute();
             } else {
                 // Nothing to do
@@ -165,6 +164,10 @@ public class NWService extends Service {
     };
 
     private void clean() {
+        // Clean current tasks
+        if (updateTask != null) {
+            updateTask.cancel(true);
+        }
         // Clean failed downloads
         if (downloadTasks.size() == 0) {
             // Reset state
@@ -184,19 +187,23 @@ public class NWService extends Service {
         downloadQueue.clear();
         // Cancel current downloads
         if (downloadTasks != null && downloadTasks.size() > 0) {
-            Collection<DownloadTask> tasks = downloadTasks.values();
-            try {
-                synchronized (tasks) {
-                    for (DownloadTask task : tasks) {
-                        if (AsyncTask.Status.RUNNING.equals(task.getStatus()) && task.cancel(true)) {
-                            downloadTasks.remove(task.item_id);
-                            ItemInfo.changeStatus(ctxt, task.item_id, Item.STATUS_INCOMPLETE);
-                        }
+            // FIXME: En cours de modification
+            Iterator<DownloadTask> iterator = downloadTasks.values().iterator();
+            while (iterator.hasNext()) {
+                DownloadTask task = iterator.next();
+                synchronized (task) {
+                    if (task.cancel(true)) {
+                        downloadTasks.remove(task.item_id);
+                        ItemInfo.changeStatus(ctxt, task.item_id, Item.STATUS_INCOMPLETE);
                     }
                 }
-            } catch (ConcurrentModificationException e) {
-                Log.e(TAG, "ConcurrentModificationException");
             }
+        }
+        // Remove notifications
+        try {
+            notificationManager.cancelAll();
+        } catch (Exception e) {
+            Log.v(TAG, e.getMessage());
         }
     }
 
@@ -218,7 +225,7 @@ public class NWService extends Service {
                 }
             }
         }
-        clientCallback();
+        // clientCallback();
     }
 
     private void pauseDownload(int id) {
@@ -230,7 +237,7 @@ public class NWService extends Service {
             if (AsyncTask.Status.RUNNING.equals(task.getStatus()) && task.cancel(true)) {
                 downloadTasks.remove(id);
                 ItemInfo.changeStatus(ctxt, id, Item.STATUS_INCOMPLETE);
-                clientCallback();
+                // clientCallback();
             }
         }
     }
