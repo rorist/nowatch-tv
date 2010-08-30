@@ -23,13 +23,14 @@
     
     <string name="toast_dl_added">Téléchargement ajouté dans la file d\'attente ...</string>
     <string name="toast_sdcard">La carte SD n\'est pas accessible !</string>
+    <string name="toast_sdcardfreespace">Espace insuffisant sur la carte SD !</string>
     <string name="toast_notsupported">Format de fichier non supporté !</string>
     <string name="toast_notconnected">Connection indisponible !</string>
     <string name="toast_nomobiletraffic">Option MOBILE/3G desactivée !</string>
     
     <string name="notif_dl_started">Téléchargement démarré ...</string>
-    <string name="notif_dl_complete">Téléchargement terminé!</string>
-    <string name="notif_dl_canceled">Téléchargement annulé!</string>
+    <string name="notif_dl_complete">Téléchargement terminé !</string>
+    <string name="notif_dl_canceled">Téléchargement annulé !</string>
     
     <string name="date_hour">Moins d\'une heure</string>
     <string name="date_hours">Il y a %s heures</string>

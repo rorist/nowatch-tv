@@ -45,6 +45,7 @@ import android.os.Environment;
 import android.os.IBinder;
 import android.os.RemoteCallbackList;
 import android.os.RemoteException;
+import android.os.StatFs;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
@@ -262,19 +263,25 @@ public class NWService extends Service {
                         && downloadQueue.size() > 0) {
                     Integer itemId = downloadQueue.poll();
                     if (itemId != null) {
-                        // FIXME: Check if there is enough space on device
+                        // Get available space on sdcard
+                        StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
+                        long bytesFree = (long) stat.getBlockSize() * (long) stat.getAvailableBlocks();
                         // Get item information and start DownloadTask
                         SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
                         Cursor c = db.rawQuery(REQ_ITEM, new String[] { "" + itemId });
                         c.moveToFirst();
-                        DownloadTask task = new DownloadTask(NWService.this, c.getString(0),
-                                itemId, c.getInt(3));
-                        task.execute(c.getString(1), c.getString(2));
-                        downloadTasks.put(itemId, task);
-                        c.close();
-                        db.close();
-                        ItemInfo.changeStatus(ctxt, itemId, Item.STATUS_DOWNLOADING);
-                        clientCallback();
+                        if (c.getLong(2) > bytesFree) {
+                            DownloadTask task = new DownloadTask(NWService.this, c.getString(0),
+                                    itemId, c.getInt(3));
+                            task.execute(c.getString(1), c.getString(2));
+                            downloadTasks.put(itemId, task);
+                            c.close();
+                            db.close();
+                            ItemInfo.changeStatus(ctxt, itemId, Item.STATUS_DOWNLOADING);
+                            clientCallback();
+                        } else {
+                            Toast.makeText(ctxt, R.string.toast_sdcardfreespace, Toast.LENGTH_LONG).show();
+                        }
                     }
                 }
             } else {
@@ -522,7 +529,6 @@ public class NWService extends Service {
                     // Auto-download items
                     SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctxt);
                     if (prefs.getBoolean(Prefs.KEY_AUTO_DL, Prefs.DEFAULT_AUTO_DL)) {
-                        // FIXME
                         while (c.moveToNext()) {
                             service.downloadQueue.add(c.getInt(0));
                         }
