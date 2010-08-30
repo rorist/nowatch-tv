@@ -49,7 +49,7 @@ public class GetFile {
     protected long file_local_size = 0;
     protected long file_remote_size = 0;
 
-    public boolean isCancelled;
+    public Boolean isCancelled = false;
     public static final String PATH_CACHE = "Android/data/net.nowatch/cache";
     public static final String PATH_PODCASTS = "Podcasts/NoWatch.TV";
 
@@ -187,8 +187,10 @@ public class GetFile {
                     long count;
                     cancelled: {
                         while ((count = inputChannel.read(buffer)) != -1) {
-                            if (isCancelled == true) {
-                                break cancelled;
+                            synchronized (isCancelled) {
+                                if (isCancelled == true) {
+                                    break cancelled;
+                                }
                             }
                             buffer.flip();
                             outputChannel.write(buffer);

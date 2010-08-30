@@ -113,7 +113,7 @@ public class Manage extends Activity {
         intent.setAction(NWService.ACTION_PAUSE);
         intent.putExtra(Item.EXTRA_ITEM_ID, item.id);
         startService(intent);
-        adapterPending.remove(item);
+        adapterCurrent.remove(item);
     }
 
     private void cancelDialog(final int position, final int type) {
@@ -153,15 +153,18 @@ public class Manage extends Activity {
         final QuickAction qa = new QuickAction(view);
         qa.setAnimStyle(QuickAction.ANIM_GROW_FROM_CENTER);
 
-        final ActionItem pause = new ActionItem();
-        pause.setTitle("Pause");
-        pause.setIcon(res.getDrawable(R.drawable.action_pause));
-        pause.setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                pauseDialog(position);
-                qa.dismiss();
-            }
-        });
+        if (type == NWService.TYPE_CURRENT) {
+            final ActionItem pause = new ActionItem();
+            pause.setTitle("Pause");
+            pause.setIcon(res.getDrawable(R.drawable.action_pause));
+            pause.setOnClickListener(new View.OnClickListener() {
+                public void onClick(View v) {
+                    pauseDialog(position);
+                    qa.dismiss();
+                }
+            });
+            qa.addActionItem(pause);
+        }
 
         final ActionItem cancel = new ActionItem();
         cancel.setTitle("Annuler");
@@ -173,7 +176,6 @@ public class Manage extends Activity {
             }
         });
 
-        qa.addActionItem(pause);
         qa.addActionItem(cancel);
         qa.show();
     }

@@ -209,19 +209,24 @@ public class NWService extends Service {
 
     private void cancelDownload(int type, Integer id) {
         if (type == TYPE_PENDING) {
-            if (downloadQueue.contains(id)) {
-                ItemInfo.changeStatus(ctxt, id, Item.STATUS_UNREAD);
-                downloadQueue.remove(id);
+            synchronized (downloadQueue) {
+                if (downloadQueue.contains(id)) {
+                    ItemInfo.changeStatus(ctxt, id, Item.STATUS_UNREAD);
+                    downloadQueue.remove(id);
+                }
             }
         } else if (type == TYPE_CURRENT) {
-            if (downloadTasks.containsKey(id)) {
-                DownloadTask task = downloadTasks.get(id);
-                synchronized (task.task) {
-                    task.task.isCancelled = true;
-                }
-                if (AsyncTask.Status.RUNNING.equals(task.getStatus()) && task.cancel(true)) {
-                    downloadTasks.remove(id);
-                    ItemInfo.changeStatus(ctxt, id, Item.STATUS_UNREAD);
+            synchronized (downloadTasks) {
+                if (downloadTasks.containsKey(id)) {
+                    DownloadTask task = downloadTasks.get(id);
+                    synchronized (task.task) {
+                        task.task.isCancelled = true;
+                    }
+                    if (task != null && AsyncTask.Status.RUNNING.equals(task.getStatus())
+                            && task.cancel(true)) {
+                        downloadTasks.remove(id);
+                        ItemInfo.changeStatus(ctxt, id, Item.STATUS_UNREAD);
+                    }
                 }
             }
         }
