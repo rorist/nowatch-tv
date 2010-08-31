@@ -65,7 +65,7 @@ public class ListItems extends AbstractListItems {
         });
 
         // Current request
-        // TODO: From Prefs
+        // TODO: From Prefs ?
         current_request = REQ_ITEMS;
         current_request_status = REQ_ITEMS_STATUS + REQ_ITEMS_END;
     }

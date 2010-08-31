@@ -197,7 +197,6 @@ public class UpdateDb {
         }
     }
 
-    // TODO: Being static
     private static class GetImage extends GetFile {
 
         private byte[] image;

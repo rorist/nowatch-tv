@@ -271,7 +271,6 @@ public class GetFile {
     // dstFile = getDestination(dst);
     // if (in != null && dstFile != null) {
     // out = new FileOutputStream(dstFile);
-    // // FIXME: download the file HERE
     // byte data[] = new byte[1024];
     // int total = 0;
     // int count;

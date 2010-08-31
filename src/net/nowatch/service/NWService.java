@@ -187,7 +187,6 @@ public class NWService extends Service {
         downloadQueue.clear();
         // Cancel current downloads
         if (downloadTasks != null && downloadTasks.size() > 0) {
-            // FIXME: En cours de modification
             Iterator<DownloadTask> iterator = downloadTasks.values().iterator();
             while (iterator.hasNext()) {
                 DownloadTask task = iterator.next();
@@ -413,9 +412,14 @@ public class NWService extends Service {
             if (mService != null) {
                 final NWService service = mService.get();
                 if (service != null) {
-                    // TODO: show mo/s if > 1000ko/s
+                    String status;
+                    if (values[1] < 1024) {
+                        status = values[0] + "% " + values[1] + "ko/s";
+                    } else {
+                        status = values[0] + "% " + (values[1] / 1024) + "mo/s";
+                    }
                     rv.setProgressBar(R.id.download_progress, 100, values[0], false);
-                    rv.setTextViewText(R.id.download_status, values[0] + "% " + values[1] + "ko/s");
+                    rv.setTextViewText(R.id.download_status, status);
                     service.notificationManager.notify(item_id, nf);
                 }
             }
@@ -482,7 +486,6 @@ public class NWService extends Service {
             publishProgress(values);
         }
 
-        // TODO: Make this static
         static class getPodcastFile extends GetFile {
 
             private static final long PROGRESS_MAX = 1000000;
