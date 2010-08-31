@@ -43,7 +43,7 @@ public class GetFile {
     private String version = "0.3.x";
     private HttpGet httpget = null;
     private DefaultHttpClient httpclient = null;
-    private int buffer_size = 4 * 1024; // in Bytes
+    private final int buffer_size = 4 * 1024; // in Bytes
 
     protected String etag;
     protected long file_local_size = 0;

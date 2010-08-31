@@ -379,7 +379,7 @@ public class NWService extends Service {
                             .getCanonicalPath()
                             + "/" + GetFile.PATH_PODCASTS);
                     dst.mkdirs();
-                    task = new getPodcastFile(ctxt, fs);
+                    task = new getPodcastFile(ctxt, DownloadTask.this, fs);
                     dest = dst.getCanonicalPath() + "/" + new File(str[0]).getName();
                     if (status == Item.STATUS_INCOMPLETE) {
                         Log.v(TAG, "try to resume download");
@@ -478,17 +478,24 @@ public class NWService extends Service {
             super.onCancelled();
         }
 
+        public void publish(Integer... values) {
+            publishProgress(values);
+        }
+
         // TODO: Make this static
-        class getPodcastFile extends GetFile {
+        static class getPodcastFile extends GetFile {
 
             private static final long PROGRESS_MAX = 1000000;
             private static final long PERCENT = 100;
+            private WeakReference<NWService> mService;
+            private DownloadTask task;
             private long current_bytes = 0;
             private long start;
             private long now;
 
-            public getPodcastFile(final Context ctxt, long file_remote_size) {
+            public getPodcastFile(final Context ctxt, final DownloadTask task, final long file_remote_size) {
                 super(ctxt);
+                this.task = task;
                 if (file_remote_size > 0) {
                     this.file_remote_size = file_remote_size;
                 }
@@ -505,12 +512,12 @@ public class NWService extends Service {
             // }
 
             @Override
-            protected void update(long count) {
+            protected void update(final long count) {
                 now = System.nanoTime();
                 // Speed of the last 3 seconds
                 if ((now - start) > PROGRESS_UPDATE && file_remote_size > 0) {
-                    publishProgress((int) (file_local_size * PERCENT / file_remote_size),
-                            (int) (current_bytes / Math.abs((now - start) / PROGRESS_MAX)));
+                    task.publish((int) (file_local_size * PERCENT / file_remote_size),
+                        (int) (current_bytes / Math.abs((now - start) / PROGRESS_MAX)));
                     start = now;
                     current_bytes = count;
                 } else {
