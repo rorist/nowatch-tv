@@ -6,6 +6,7 @@ import net.nowatch.Main;
 import net.nowatch.R;
 import net.nowatch.service.UpdateTask;
 import net.nowatch.utils.DB;
+import net.nowatch.utils.Db;
 import net.nowatch.utils.Item;
 import net.nowatch.utils.Prefs;
 import android.content.Intent;
@@ -93,7 +94,7 @@ public class ListItems extends AbstractListItems {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case MENU_MARK_ALL:
-                SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
+                SQLiteDatabase db = (new Db(ctxt)).openDb();
                 db.execSQL(REQ_MARK_ALL);
                 db.close();
                 refreshListVisible();
@@ -189,7 +190,7 @@ public class ListItems extends AbstractListItems {
         Cursor c = null;
         int cnt = 0;
         try {
-            db = (new DB(ctxt)).getWritableDatabase();
+            db = (new Db(ctxt)).openDb();
             if (update) {
                 c = db.rawQuery(current_request_status + offset + "," + limit, null);
             } else {

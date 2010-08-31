@@ -2,7 +2,7 @@ package net.nowatch.ui;
 
 import net.nowatch.Main;
 import net.nowatch.R;
-import net.nowatch.utils.DB;
+import net.nowatch.utils.Db;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteDiskIOException;
@@ -54,7 +54,7 @@ public class BookmarkItems extends AbstractListItems {
         Cursor c = null;
         int cnt = 0;
         try {
-            db = (new DB(ctxt)).getWritableDatabase();
+            db = (new Db(ctxt)).openDb();
             c = db.rawQuery(REQ + offset + "," + limit, null);
             if (c.moveToFirst()) {
                 cnt = c.getCount();

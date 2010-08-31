@@ -319,4 +319,27 @@ public class GetFile {
             new File(file).delete();
         }
     }
+
+    // TODO: Merge with getChannel()
+    public static void fastChannelCopy(final ReadableByteChannel src, final WritableByteChannel dest)
+            throws IOException, NullPointerException {
+        if (src != null && dest != null) {
+            final ByteBuffer buffer = ByteBuffer.allocateDirect(16 * 1024);
+            while (src.read(buffer) != -1) {
+                buffer.flip();
+                dest.write(buffer);
+                buffer.compact();
+            }
+            buffer.flip();
+            while (buffer.hasRemaining()) {
+                dest.write(buffer);
+            }
+            if (src != null) {
+                src.close();
+            }
+            if (dest != null) {
+                dest.close();
+            }
+        }
+    }
 }

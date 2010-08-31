@@ -10,7 +10,7 @@ import net.nowatch.IServiceCallback;
 import net.nowatch.Main;
 import net.nowatch.R;
 import net.nowatch.service.NWService;
-import net.nowatch.utils.DB;
+import net.nowatch.utils.Db;
 import net.nowatch.utils.Item;
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -181,7 +181,7 @@ public class Manage extends Activity {
     }
 
     private List<Item> getDownloads(int[] data) {
-        SQLiteDatabase db = (new DB(getApplicationContext())).getWritableDatabase();
+        SQLiteDatabase db = (new Db(getApplicationContext())).openDb();
         List<Item> list = new ArrayList<Item>();
         int len = data.length;
         for (int i = 0; i < len; i++) {

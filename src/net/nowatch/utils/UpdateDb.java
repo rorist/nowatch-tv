@@ -46,8 +46,7 @@ public class UpdateDb {
         Cursor c = null;
         try {
             // Get lastpub and etag
-            db = (new DB(ctxt)).getWritableDatabase();
-
+            db = (new Db(ctxt)).openDb();
             c = db.rawQuery("select etag,pubDate from feeds where _id=? limit 1",
                     new String[] { fid });
             c.moveToFirst();
@@ -189,7 +188,7 @@ public class UpdateDb {
                                 Log.e(TAG, e.getMessage());
                             }
                         }
-                        // Insert in DB
+                        // Insert in Db
                         db.insert("items", null, itemMap);
                     }
                 }

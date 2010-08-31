@@ -18,7 +18,7 @@ import net.nowatch.network.Network;
 import net.nowatch.ui.ItemInfo;
 import net.nowatch.ui.ListItems;
 import net.nowatch.ui.Manage;
-import net.nowatch.utils.DB;
+import net.nowatch.utils.Db;
 import net.nowatch.utils.Item;
 import net.nowatch.utils.Prefs;
 
@@ -171,7 +171,7 @@ public class NWService extends Service {
         // Clean failed downloads
         if (downloadTasks.size() == 0) {
             // Reset state
-            SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
+            SQLiteDatabase db = (new Db(ctxt)).openDb();
             db.execSQL(REQ_CLEAN);
             db.close();
             // Remove notifications
@@ -282,7 +282,7 @@ public class NWService extends Service {
                         long bytesFree = (long) stat.getBlockSize()
                                 * (long) stat.getAvailableBlocks();
                         // Get item information and start DownloadTask
-                        SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
+                        SQLiteDatabase db = (new Db(ctxt)).openDb();
                         Cursor c = db.rawQuery(REQ_ITEM, new String[] { "" + itemId });
                         c.moveToFirst();
                         if (bytesFree > c.getLong(2)) {
@@ -490,13 +490,13 @@ public class NWService extends Service {
 
             private static final long PROGRESS_MAX = 1000000;
             private static final long PERCENT = 100;
-            private WeakReference<NWService> mService;
             private DownloadTask task;
             private long current_bytes = 0;
             private long start;
             private long now;
 
-            public getPodcastFile(final Context ctxt, final DownloadTask task, final long file_remote_size) {
+            public getPodcastFile(final Context ctxt, final DownloadTask task,
+                    final long file_remote_size) {
                 super(ctxt);
                 this.task = task;
                 if (file_remote_size > 0) {
@@ -520,7 +520,7 @@ public class NWService extends Service {
                 // Speed of the last 3 seconds
                 if ((now - start) > PROGRESS_UPDATE && file_remote_size > 0) {
                     task.publish((int) (file_local_size * PERCENT / file_remote_size),
-                        (int) (current_bytes / Math.abs((now - start) / PROGRESS_MAX)));
+                            (int) (current_bytes / Math.abs((now - start) / PROGRESS_MAX)));
                     start = now;
                     current_bytes = count;
                 } else {
@@ -546,7 +546,7 @@ public class NWService extends Service {
             final NWService service = getService();
             if (service != null) {
                 final Context ctxt = service.getApplicationContext();
-                SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
+                SQLiteDatabase db = (new Db(ctxt)).openDb();
                 Cursor c = db.rawQuery(REQ_NEW, null);
                 try {
                     c.moveToFirst();

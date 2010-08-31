@@ -7,7 +7,7 @@ import net.nowatch.R;
 import net.nowatch.network.GetFile;
 import net.nowatch.network.Network;
 import net.nowatch.service.NWService;
-import net.nowatch.utils.DB;
+import net.nowatch.utils.Db;
 import net.nowatch.utils.Item;
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
@@ -56,7 +56,7 @@ public class ItemInfo extends Activity {
         // Get item information
         Bundle extra = getIntent().getExtras();
         final int item_id = extra.getInt(Item.EXTRA_ITEM_ID);
-        SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
+        SQLiteDatabase db = (new Db(ctxt)).openDb();
         Cursor c = db.rawQuery(REQ + item_id, null);
         c.moveToFirst();
         final String title = c.getString(1);
@@ -88,7 +88,7 @@ public class ItemInfo extends Activity {
         final int status = c.getInt(9);
         final int bookmarked = c.getInt(11);
 
-        // Close db
+        // Close Db
         c.close();
         db.close();
 
@@ -167,7 +167,7 @@ public class ItemInfo extends Activity {
     }
 
     public static void changeStatus(Context ctxt, int id, int status) {
-        SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
+        SQLiteDatabase db = (new Db(ctxt)).openDb();
         ContentValues value = new ContentValues();
         value.put("status", status);
         db.update("items", value, "_id=?", new String[] { id + "" });
@@ -192,7 +192,7 @@ public class ItemInfo extends Activity {
                 }
             });
         }
-        SQLiteDatabase db = (new DB(ctxt)).getWritableDatabase();
+        SQLiteDatabase db = (new Db(ctxt)).openDb();
         ContentValues value = new ContentValues();
         value.put("bookmark", bookmarked);
         db.update("items", value, "_id=?", new String[] { item_id + "" });
