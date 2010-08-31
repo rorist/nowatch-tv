@@ -299,6 +299,7 @@ public class NWService extends Service {
                                     .show();
                             Log.v(TAG, "free space=" + bytesFree);
                             Log.v(TAG, "file size=" + c.getLong(2));
+                            stopOrContinue();
                         }
                     }
                 }
