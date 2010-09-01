@@ -5,6 +5,7 @@ package net.nowatch;
 
 import net.nowatch.ui.ListItems;
 import net.nowatch.utils.Prefs;
+import net.nowatch.utils.Db;
 
 import android.app.Activity;
 import android.content.Intent;
@@ -13,6 +14,8 @@ import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
+
+import java.io.File;
 
 public class Main extends Activity {
 
@@ -28,6 +31,10 @@ public class Main extends Activity {
         Editor edit = prefs.edit();
         edit.putInt(Prefs.KEY_DENSITY, dm.densityDpi);
         edit.commit();
+        // Initialize Database
+        if (!new File(Db.DB_PATH + Db.DB_NAME).exists()) {
+            new Db(getApplicationContext()).copyDbToDevice();
+        }
         // Start list activity
         startActivity(new Intent(Main.this, ListItems.class));
         finish();

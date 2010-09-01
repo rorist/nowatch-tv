@@ -19,17 +19,12 @@ import android.util.Log;
 public class Db {
 
     private final String TAG = "Db";
-    private static final String DB_PATH = "/data/data/net.nowatch/files/";
-    private static final String DB_NAME = "nowatch.db";
+    public static final String DB_PATH = "/data/data/net.nowatch/files/";
+    public static final String DB_NAME = "nowatch.db";
     private Context ctxt = null;
 
     public Db(Context ctxt) {
         this.ctxt = ctxt;
-        // new File(DB_PATH).mkdirs();
-        // FIXME: This is no good, use Prefs
-        if (!new File(DB_PATH + DB_NAME).exists()) {
-            copyDbToDevice();
-        }
     }
 
     public SQLiteDatabase openDb() {
