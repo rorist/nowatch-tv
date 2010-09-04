@@ -194,17 +194,10 @@ public class NWService extends Service {
                     if (task.cancel(true)) {
                         downloadTasks.remove(task.item_id);
                         ItemInfo.changeStatus(ctxt, task.item_id, Item.STATUS_INCOMPLETE);
+                        notificationManager.cancel(task.item_id);
                     }
                 }
             }
-        }
-        // Remove notifications
-        try {
-            // FIXME: Do not cancel all but only current download
-            // If auto-download is desactivated, it removes the notification
-            notificationManager.cancelAll();
-        } catch (Exception e) {
-            Log.v(TAG, e.getMessage());
         }
     }
 
@@ -319,25 +312,18 @@ public class NWService extends Service {
         private Notification nf;
         private int item_id;
         private int status;
-        private String download_title;
+        private String title;
         private WeakReference<NWService> mService;
         private String error_msg = null;
         private getPodcastFile task = null;
         private String dest = null;
 
-        public DownloadTask(NWService activity, String title, int itemId, int status) {
+        public DownloadTask(NWService activity, String _title, int _item_id, int _status) {
             super();
             mService = new WeakReference<NWService>(activity);
-            if (mService != null) {
-                final NWService service = mService.get();
-                if (service != null) {
-                    service.notificationManager = (NotificationManager) service
-                            .getSystemService(Context.NOTIFICATION_SERVICE);
-                }
-            }
-            download_title = title;
-            item_id = itemId;
-            this.status = status;
+            title = _title;
+            item_id = _item_id;
+            status = _status;
         }
 
         @Override
@@ -346,8 +332,9 @@ public class NWService extends Service {
             nf = new Notification(android.R.drawable.stat_sys_download, service
                     .getString(R.string.notif_dl_started), System.currentTimeMillis());
             rv = new RemoteViews(service.getPackageName(), R.layout.notification_download);
+            // FIXME: Use feed/item image from Db
             rv.setImageViewResource(R.id.download_icon, R.drawable.icon);
-            rv.setTextViewText(R.id.download_title, download_title);
+            rv.setTextViewText(R.id.download_title, title);
             rv.setProgressBar(R.id.download_progress, 0, 0, true);
             Intent i = new Intent(service, Manage.class);
             i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -373,6 +360,10 @@ public class NWService extends Service {
                     ctxt = service.getApplicationContext();
                 }
             }
+            if (ctxt == null) {
+                cancel(false);
+                return null;
+            }
             // Download file
             try {
                 String state = Environment.getExternalStorageState();
@@ -384,7 +375,7 @@ public class NWService extends Service {
                     task = new getPodcastFile(ctxt, DownloadTask.this, fs);
                     dest = dst.getCanonicalPath() + "/" + new File(str[0]).getName();
                     if (status == Item.STATUS_INCOMPLETE) {
-                        Log.v(TAG, "try to resume download");
+                        Log.v(TAG, "resume download");
                         ItemInfo.changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
                         task.getChannel(str[0], dest, true);
                     } else {
@@ -448,7 +439,7 @@ public class NWService extends Service {
                         nf = new Notification(android.R.drawable.stat_sys_download_done,
                                 "Téléchargement terminé!", System.currentTimeMillis());
                         nf.flags = Notification.FLAG_AUTO_CANCEL;
-                        nf.setLatestEventInfo(service, download_title, service
+                        nf.setLatestEventInfo(service, title, service
                                 .getString(R.string.notif_dl_complete), PendingIntent.getActivity(
                                 service, 0, new Intent(service, ListItems.class), 0));
                         service.notificationManager.notify(item_id, nf);
@@ -564,9 +555,8 @@ public class NWService extends Service {
                                 new Intent(service, ListItems.class), 0));
                         service.notificationManager.notify(NOTIFICATION_UPDATE, nf);
                         // Auto-download items
-                        SharedPreferences prefs = PreferenceManager
-                                .getDefaultSharedPreferences(ctxt);
-                        if (prefs.getBoolean(Prefs.KEY_AUTO_DL, Prefs.DEFAULT_AUTO_DL)) {
+                        if (PreferenceManager.getDefaultSharedPreferences(ctxt).getBoolean(
+                                Prefs.KEY_AUTO_DL, Prefs.DEFAULT_AUTO_DL)) {
                             Log.v(TAG, "auto-download");
                             do {
                                 service.downloadQueue.add(c.getInt(0));
