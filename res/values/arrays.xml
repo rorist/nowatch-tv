@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string-array name="notification_update_entries">
+        <item>1 minute (FIXME: Pour tester)</item>
+        <item>10 minutes</item>
+        <item>30 minutes</item>
+        <item>1 heure</item>
+        <item>6 heures</item>
+        <item>24 heures</item>
+    </string-array>
+    <string-array name="notification_update_values">
+        <item>60000</item>
+        <item>600000</item>
+        <item>1800000</item>
+        <item>3600000</item>
+        <item>21600000</item>
+        <item>86400000</item>
+    </string-array>
+</resources>

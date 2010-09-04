@@ -7,6 +7,7 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
+import android.preference.ListPreference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.util.DisplayMetrics;
@@ -26,11 +27,12 @@ public class Prefs extends PreferenceActivity implements OnSharedPreferenceChang
     public final static boolean DEFAULT_NOTIFICATION = false;
 
     public final static String KEY_NOTIFICATION_INTV = "notification_interval";
-    public final static long DEFAULT_NOTIFICATION_INTV = 60000; // [ms]
+    public final static String DEFAULT_NOTIFICATION_INTV = "3600000"; // [ms] =
+    // 1h
 
     public final static String KEY_SIMULTANEOUS_DL = "simultaneous_download";
     public final static String DEFAULT_SIMULTANEOUS_DL = "3";
-    
+
     public final static String KEY_DENSITY = "density";
     public final static int DEFAULT_DENSITY = DisplayMetrics.DENSITY_DEFAULT;
 
@@ -47,8 +49,8 @@ public class Prefs extends PreferenceActivity implements OnSharedPreferenceChang
             Notify notif = new Notify(ctxt);
             CheckBoxPreference cb = (CheckBoxPreference) ps.findPreference(key);
             if (cb.isChecked()) {
-                notif.startNotification(prefs.getLong(KEY_NOTIFICATION_INTV,
-                        DEFAULT_NOTIFICATION_INTV));
+                notif.startNotification(Long.parseLong(prefs.getString(KEY_NOTIFICATION_INTV,
+                        DEFAULT_NOTIFICATION_INTV)));
             } else {
                 notif.cancelNotification();
             }
@@ -58,6 +60,8 @@ public class Prefs extends PreferenceActivity implements OnSharedPreferenceChang
             } catch (NumberFormatException e) {
                 ((EditTextPreference) ps.findPreference(key)).setText(DEFAULT_SIMULTANEOUS_DL);
             }
+        } else if (KEY_NOTIFICATION_INTV.equals(key)) {
+            // FIXME: Reset notification with new value
         }
     }
 }

@@ -13,7 +13,8 @@ public class Receiver extends BroadcastReceiver {
         if (Intent.ACTION_BOOT_COMPLETED.equals(intent.getAction())) {
             SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(ctxt);
             if (prefs.getBoolean(Prefs.KEY_NOTIFICATION, Prefs.DEFAULT_NOTIFICATION)) {
-                new Notify(ctxt).startNotification(prefs.getLong(Prefs.KEY_NOTIFICATION_INTV, Prefs.DEFAULT_NOTIFICATION_INTV));
+                new Notify(ctxt).startNotification(Long.parseLong(prefs.getString(
+                        Prefs.KEY_NOTIFICATION_INTV, Prefs.DEFAULT_NOTIFICATION_INTV)));
             }
         }
     }

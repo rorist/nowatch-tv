@@ -6,13 +6,15 @@
             android:title="Notification"
             android:summary=""
             android:defaultValue="false" />
-        <EditTextPreference
+        <ListPreference
             android:key="notification_update"
             android:title="Intervalle d'actualisation"
-            android:summary="Toutes les 30 minutes (FIXME)"
+            android:summary=""
             android:dependency="notification"
-            android:defaultValue="2"
-            android:inputType="number" />
+            android:entries="@array/notification_update_entries"
+            android:entryValues="@array/notification_update_values"
+            android:dialogTitle="Choisissez une valeur"
+            android:defaultValue="3600000" />
         <CheckBoxPreference
             android:key="auto_dl"
             android:title="Téléchargement auto"
