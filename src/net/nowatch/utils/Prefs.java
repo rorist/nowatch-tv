@@ -7,7 +7,6 @@ import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.os.Bundle;
 import android.preference.CheckBoxPreference;
 import android.preference.EditTextPreference;
-import android.preference.ListPreference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceScreen;
 import android.util.DisplayMetrics;
@@ -61,7 +60,7 @@ public class Prefs extends PreferenceActivity implements OnSharedPreferenceChang
                 ((EditTextPreference) ps.findPreference(key)).setText(DEFAULT_SIMULTANEOUS_DL);
             }
         } else if (KEY_NOTIFICATION_INTV.equals(key)) {
-            // FIXME: Reset notification with new value
+            new Notify(ctxt).startNotification(Long.parseLong(prefs.getString(key, null)));
         }
     }
 }

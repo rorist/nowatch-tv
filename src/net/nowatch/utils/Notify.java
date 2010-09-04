@@ -21,6 +21,7 @@ public class Notify {
     }
 
     public void startNotification(final long interval) {
+        cancelNotification();
         am.setRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(),
                 interval, pi);
     }
