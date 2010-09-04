@@ -2,10 +2,11 @@ package net.nowatch;
 
 // http://developer.android.com/intl/fr/guide/appendix/media-formats.html
 
-import net.nowatch.ui.ListItems;
-import net.nowatch.utils.Prefs;
-import net.nowatch.utils.Db;
+import java.io.File;
 
+import net.nowatch.ui.ListItems;
+import net.nowatch.utils.Db;
+import net.nowatch.utils.Prefs;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -13,8 +14,6 @@ import android.content.SharedPreferences.Editor;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.DisplayMetrics;
-
-import java.io.File;
 
 public class Main extends Activity {
 
@@ -26,11 +25,13 @@ public class Main extends Activity {
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
         // Save some values in prefs
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
+        SharedPreferences prefs = PreferenceManager
+                .getDefaultSharedPreferences(getApplicationContext());
         Editor edit = prefs.edit();
         edit.putInt(Prefs.KEY_DENSITY, dm.densityDpi);
         edit.commit();
         // Initialize Database
+        // new DB(getApplicationContext()).getReadableDatabase();
         if (!new File(Db.DB_PATH + Db.DB_NAME).exists()) {
             new Db(getApplicationContext()).copyDbToDevice();
         }

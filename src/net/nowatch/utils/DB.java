@@ -10,13 +10,15 @@ import android.util.Log;
 
 public class DB extends SQLiteOpenHelper {
     private final static String TAG = Main.TAG + "Db";
-    private final static String DB_NAME = "nowatch.Db";
+    private final static String DB_NAME = "nowatch.db";
     private final static int DB_VERSION = 2;
     private final String CREATE_FEEDS = "create table feeds (" + "_id INTEGER PRIMARY KEY,"
             + "title TEXT," + "description TEXT," + "link TEXT," + "pubDate NUMERIC,"
             + "etag TEXT," + "image BLOB);";
     private final String CREATE_ITEMS = "create table items (" + "_id INTEGER PRIMARY KEY,"
-            + "feed_id INTEGER," + "status INTEGER," + "title TEXT UNIQUE ON CONFLICT REPLACE,"
+            + "feed_id INTEGER," + "status INTEGER,"
+            + "title TEXT UNIQUE ON CONFLICT IGNORE,"
+            // TODO: Update existing items with new values instead of ignoring
             // Needs PRAGMA recursive_triggers=true;
             + "description TEXT," + "link TEXT," + "pubDate NUMERIC," + "file_uri TEXT,"
             + "file_size INTEGER," + "file_type TEXT," + "bookmark INTEGER," + "image BLOB);";

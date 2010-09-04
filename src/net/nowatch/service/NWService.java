@@ -200,6 +200,8 @@ public class NWService extends Service {
         }
         // Remove notifications
         try {
+            // FIXME: Do not cancel all but only current download
+            // If auto-download is desactivated, it removes the notification
             notificationManager.cancelAll();
         } catch (Exception e) {
             Log.v(TAG, e.getMessage());
@@ -565,10 +567,12 @@ public class NWService extends Service {
                         SharedPreferences prefs = PreferenceManager
                                 .getDefaultSharedPreferences(ctxt);
                         if (prefs.getBoolean(Prefs.KEY_AUTO_DL, Prefs.DEFAULT_AUTO_DL)) {
-                            while (c.moveToNext()) {
+                            Log.v(TAG, "auto-download");
+                            do {
                                 service.downloadQueue.add(c.getInt(0));
                                 service.stopOrContinue();
-                            }
+                            } while (c.moveToNext());
+                            service.stopOrContinue();
                         }
                     }
                 } finally {
