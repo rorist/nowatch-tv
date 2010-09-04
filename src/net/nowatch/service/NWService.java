@@ -562,8 +562,8 @@ public class NWService extends Service {
                                 service.downloadQueue.add(c.getInt(0));
                                 service.stopOrContinue();
                             } while (c.moveToNext());
-                            service.stopOrContinue();
                         }
+                        service.stopOrContinue();
                     }
                 } finally {
                     c.close();
