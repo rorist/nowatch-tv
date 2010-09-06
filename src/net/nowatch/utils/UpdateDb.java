@@ -35,20 +35,23 @@ import android.util.Log;
 
 public class UpdateDb {
 
+    // FIXME: This class is awefull, merge with UpdateTask ?
     private final static String TAG = Main.TAG + "UpdateDb";
     private final static String PUBDATE = "Wed, 31 Mar 1999 00:00:00 +0200";
     private static SQLiteDatabase db;
-    private static String feed_id;
     private static String etag = null;
+    private static int feed_id;
+    private static int type;
 
-    public static void update(final Context ctxt, String fid, int feed_xml) throws IOException {
+    public static void update(final Context ctxt, int fid, int t, String link_rss) throws IOException {
         feed_id = fid;
+        type = t;
         Cursor c = null;
         try {
             // Get lastpub and etag
             db = (new Db(ctxt)).openDb();
-            c = db.rawQuery("select etag,pubDate from feeds where _id=? limit 1",
-                    new String[] { fid });
+            c = db.rawQuery("select etag,pubDate from feeds where _id=? limit 1", new String[] { ""
+                    + fid });
             c.moveToFirst();
 
             // etag
@@ -63,7 +66,7 @@ public class UpdateDb {
             }
 
             // Try to download feed
-            new GetFeed(ctxt, pubDate).getChannel(ctxt.getString(feed_xml), etag);
+            new GetFeed(ctxt, pubDate).getChannel(link_rss, etag);
 
         } catch (SQLiteException e) {
             Log.e(TAG, e.getMessage());
@@ -108,7 +111,7 @@ public class UpdateDb {
                     if (etag != null) {
                         ContentValues etag_value = new ContentValues();
                         etag_value.put("etag", etag);
-                        db.update("feeds", etag_value, "_id=?", new String[] { feed_id });
+                        db.update("feeds", etag_value, "_id=?", new String[] { "" + feed_id });
                     }
 
                     // Start the parser
@@ -154,9 +157,9 @@ public class UpdateDb {
             if (name == "channel") {
                 // Update channel info, always
                 if (db != null) {
-                    db.update("feeds", feedMap, "_id=?", new String[] { feed_id });
+                    db.update("feeds", feedMap, "_id=?", new String[] { "" + feed_id });
                 }
-            } else if (!in_items && name == "image" && uri != RSSReader.ITUNES_DTD) {
+            } else if (!in_items && name == "image" && uri == RSSReader.ITUNES_DTD) {
                 // Get feed image
                 try {
                     feedMap.put("image", new GetImage(ctxt)
@@ -179,6 +182,7 @@ public class UpdateDb {
                         cal.setTime(item_date);
                         itemMap.put("pubDate", cal.getTimeInMillis());
                         itemMap.put("feed_id", feed_id);
+                        itemMap.put("type", type);
                         // Get item image
                         String image = itemMap.getAsString("image");
                         if (!new String("").equals(image)) {

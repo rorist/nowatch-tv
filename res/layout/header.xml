@@ -4,21 +4,20 @@
     android:orientation="vertical"
     android:layout_width="fill_parent"
     android:layout_height="wrap_content">
-    <ImageButton
-        android:id="@+id/btn_logo"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="3dip"
-        android:layout_marginRight="3dip"
-        android:layout_marginTop="3dip"
-        android:scaleType="fitXY"
-        android:background="@drawable/btn_bg"
-        android:src="@drawable/logo_nowatch" />
+<!--    <ImageButton-->
+<!--        android:id="@+id/btn_logo"-->
+<!--        android:layout_width="wrap_content"-->
+<!--        android:layout_height="wrap_content"-->
+<!--        android:layout_marginLeft="3dip"-->
+<!--        android:layout_marginRight="3dip"-->
+<!--        android:layout_marginTop="3dip"-->
+<!--        android:scaleType="fitXY"-->
+<!--        android:background="@drawable/btn_bg"-->
+<!--        android:src="@drawable/logo_nowatch" />-->
     <LinearLayout
         android:id="@+id/menu_top"
-        android:background="@drawable/menu_top"
         android:layout_width="fill_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="48dip"
         android:layout_marginLeft="3dip"
         android:layout_marginRight="3dip"
         android:layout_marginBottom="3dip">

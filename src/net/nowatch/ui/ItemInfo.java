@@ -109,11 +109,11 @@ public class ItemInfo extends Activity {
 
         // Buttons
         setBookmark(item_id, bookmarked);
-        ((ImageButton) findViewById(R.id.btn_logo)).setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                finish();
-            }
-        });
+//        ((ImageButton) findViewById(R.id.btn_logo)).setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View v) {
+//                finish();
+//            }
+//        });
         if (status == Item.STATUS_DOWNLOADING) {
             changeButton(R.id.btn_download, getString(R.string.btn_download), false, null);
             changeButton(R.id.btn_play, getString(R.string.btn_stream), true,

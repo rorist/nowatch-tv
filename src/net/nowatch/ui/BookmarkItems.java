@@ -30,11 +30,11 @@ public class BookmarkItems extends AbstractListItems {
                 finish();
             }
         });
-        findViewById(R.id.btn_logo).setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                finish();
-            }
-        });
+//        findViewById(R.id.btn_logo).setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View v) {
+//                finish();
+//            }
+//        });
 
         ((TextView) findViewById(R.id.list_empty)).setText("Aucun favoris");
     }

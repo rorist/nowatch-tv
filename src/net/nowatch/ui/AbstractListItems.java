@@ -56,11 +56,11 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
         image_size = (int) (64 * dm.density + 0.5f);
 
         // Title button
-        findViewById(R.id.btn_logo).setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                resetList();
-            }
-        });
+//        findViewById(R.id.btn_logo).setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View v) {
+//                resetList();
+//            }
+//        });
 
         // Set list adapter
         items = new ArrayList<Item>();

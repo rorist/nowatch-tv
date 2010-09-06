@@ -64,11 +64,11 @@ public class Manage extends Activity {
                 finish();
             }
         });
-        findViewById(R.id.btn_logo).setOnClickListener(new View.OnClickListener() {
-            public void onClick(View v) {
-                finish();
-            }
-        });
+//        findViewById(R.id.btn_logo).setOnClickListener(new View.OnClickListener() {
+//            public void onClick(View v) {
+//                finish();
+//            }
+//        });
 
         // Screen metrics (for dip to px conversion)
         DisplayMetrics dm = new DisplayMetrics();

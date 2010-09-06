@@ -25,7 +25,7 @@ public class RSSReader extends DefaultHandler {
     private final List<String> allowed_video = Arrays.asList("video/mp4", "video/x-m4v");
     // private final List<String> allowed_image= Arrays.asList("image/jpg",
     // "image/jpeg", "image/png");
-    private boolean in_image = false;
+    //private boolean in_image = false;
     private String current_tag;
     private StringBuffer itemBuf;
     protected boolean in_items = false;
@@ -48,6 +48,7 @@ public class RSSReader extends DefaultHandler {
         feedMap.put("image", "");
 
         itemMap = new ContentValues();
+        itemMap.put("type", 1);
         itemMap.put("feed_id", 0);
         itemMap.put("file_uri", "");
         itemMap.put("file_type", "");
@@ -73,19 +74,25 @@ public class RSSReader extends DefaultHandler {
         if (name == "item") {
             in_items = true;
             return;
-        } else if (name == "image" && uri != ITUNES_DTD) {
+        }
+        /* else if (name == "image" && uri != ITUNES_DTD) {
             in_image = true;
         }
+        */
         current_tag = name;
         itemBuf = new StringBuffer();
 
-        // Get item image if it exists
-        if (in_items && current_tag == "image" && uri == ITUNES_DTD) {
+        // Get feed and item images
+        if (current_tag == "image" && uri == ITUNES_DTD) {
             int len = attrs.getLength();
             for (int i = 0; i < len; i++) {
                 logi(attrs.getLocalName(i) + "=" + attrs.getValue(i));
                 if (attrs.getLocalName(i) == "href") {
-                    itemMap.put("image", attrs.getValue(i));
+                    if (in_items) {
+                        itemMap.put("image", attrs.getValue(i));
+                    } else {
+                        feedMap.put("image", attrs.getValue(i));
+                    }
                 }
             }
         }
@@ -117,9 +124,11 @@ public class RSSReader extends DefaultHandler {
     @Override
     public void endElement(String uri, String name, String qName) throws SAXException {
         logi("END=" + name);
+        /*
         if (name == "image") {
             in_image = false;
         }
+        */
         if (in_items && items_fields.contains(current_tag) && current_tag != null) {
             itemMap.put(current_tag, itemBuf.toString());
             itemBuf.setLength(0);
@@ -140,9 +149,11 @@ public class RSSReader extends DefaultHandler {
             feedMap.put(current_tag, new String(ch, start, length));
         }
         // Get channel image url
+        /*
         else if (in_image && current_tag == "url") {
             feedMap.put("image", new String(ch, start, length));
         }
+        */
     }
 
     @Override

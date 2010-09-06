@@ -5,7 +5,6 @@ import net.londatiga.android.QuickAction;
 import net.nowatch.Main;
 import net.nowatch.R;
 import net.nowatch.service.UpdateTask;
-import net.nowatch.utils.DB;
 import net.nowatch.utils.Db;
 import net.nowatch.utils.Item;
 import net.nowatch.utils.Prefs;
@@ -25,24 +24,26 @@ import android.widget.Button;
 
 public class ListItems extends AbstractListItems {
 
-    private static final String TAG = Main.TAG + "ItemsActivity";
+    private static final String TAG = Main.TAG + "ListItems";
     private final String REQ_ITEMS_STATUS = "SELECT items._id, '', items.status FROM items";
     private final String REQ_ITEMS_SELECT = "SELECT items._id, items.title, items.status, feeds.image, items.pubDate, items.image "
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id";
     private final String REQ_ITEMS_END = " ORDER BY items.pubDate DESC LIMIT ";
-    private final String REQ_ITEMS = REQ_ITEMS_SELECT + REQ_ITEMS_END;
-    private final String REQ_MARK_ALL = "update items set status=" + Item.STATUS_UNREAD
-            + " where status=" + Item.STATUS_NEW;
+    private final String REQ_MARK_ALL = "UPDATE items SET status=" + Item.STATUS_UNREAD + " WHERE status=" + Item.STATUS_NEW + " and type=";
+    private final String REQ_FILTER = "SELECT _id, title_clean FROM feeds WHERE type=";
     private static final int MENU_MARK_ALL = 1;
     private static final int MENU_OPTIONS = 2;
+
+    private int podcast_type;
     private String current_request;
     private String current_request_status;
-    private String current_filter = "items.feed_id=2"; // SCUDS ftw
     private UpdateTaskBtn updateTask = null;
+    private SQLiteDatabase db;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        podcast_type = getIntent().getExtras().getInt(Main.EXTRA_TYPE);
 
         // Menu buttons
         findViewById(R.id.btn_manage).setVisibility(View.VISIBLE);
@@ -67,8 +68,9 @@ public class ListItems extends AbstractListItems {
 
         // Current request
         // TODO: From Prefs ?
-        current_request = REQ_ITEMS;
-        current_request_status = REQ_ITEMS_STATUS + REQ_ITEMS_END;
+        String filter = " WHERE items.type=" + podcast_type;
+        current_request = REQ_ITEMS_SELECT + filter + REQ_ITEMS_END;
+        current_request_status = REQ_ITEMS_STATUS + filter + REQ_ITEMS_END;
     }
 
     @Override
@@ -94,8 +96,8 @@ public class ListItems extends AbstractListItems {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case MENU_MARK_ALL:
-                SQLiteDatabase db = (new Db(ctxt)).openDb();
-                db.execSQL(REQ_MARK_ALL);
+                db = (new Db(ctxt)).openDb();
+                db.execSQL(REQ_MARK_ALL + podcast_type);
                 db.close();
                 refreshListVisible();
                 return true;
@@ -145,14 +147,15 @@ public class ListItems extends AbstractListItems {
         final QuickAction qa = new QuickAction(findViewById(R.id.btn_filter_podcast));
         qa.setAnimStyle(QuickAction.ANIM_GROW_FROM_CENTER);
         // Show all
+        final String filter1 = " WHERE items.type=" + podcast_type;
         final ActionItem first = new ActionItem();
         first.setTitle("Tous");
         first.setIcon(res.getDrawable(R.drawable.action_icon));
         first.setOnClickListener(new View.OnClickListener() {
             // @Override
             public void onClick(View v) {
-                current_request = REQ_ITEMS;
-                current_request_status = REQ_ITEMS_STATUS + REQ_ITEMS_END;
+                current_request = REQ_ITEMS_SELECT + filter1 + REQ_ITEMS_END;
+                current_request_status = REQ_ITEMS_STATUS + filter1 + REQ_ITEMS_END;
                 qa.dismiss();
                 resetList();
             }
@@ -160,24 +163,29 @@ public class ListItems extends AbstractListItems {
         qa.addActionItem(first);
 
         // Set podcasts entries
-        for (int i = 0; i < DB.podcasts_len; i++) {
+        db = (new Db(ctxt)).openDb();
+        Cursor c = db.rawQuery(REQ_FILTER + podcast_type, null);
+        c.moveToFirst();
+        final String filter2 = " WHERE items.type=" + podcast_type + " and items.feed_id=";
+        do {
+            final int item_id = c.getInt(0);
             final ActionItem p = new ActionItem();
-            p.setTitle(DB.podcasts[i]);
+            p.setTitle(c.getString(1));
             p.setIcon(res.getDrawable(R.drawable.action_icon));
-            final int item_id = i + 1;
             p.setOnClickListener(new View.OnClickListener() {
                 // @Override
                 public void onClick(View v) {
-                    current_filter = "items.feed_id=" + item_id;
-                    current_request = REQ_ITEMS_SELECT + " WHERE " + current_filter + REQ_ITEMS_END;
-                    current_request_status = REQ_ITEMS_STATUS + " WHERE " + current_filter
-                            + REQ_ITEMS_END;
+                    current_request = REQ_ITEMS_SELECT + filter2 + item_id + REQ_ITEMS_END;
+                    current_request_status = REQ_ITEMS_STATUS + filter2 + item_id + REQ_ITEMS_END;
                     qa.dismiss();
                     resetList();
                 }
             });
             qa.addActionItem(p);
-        }
+        } while(c.moveToNext());
+        c.close();
+        db.close();
+
         qa.show();
     }
 
@@ -186,7 +194,6 @@ public class ListItems extends AbstractListItems {
     }
 
     protected int addToList(int offset, int limit, boolean update) {
-        SQLiteDatabase db = null;
         Cursor c = null;
         int cnt = 0;
         try {

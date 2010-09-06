@@ -2,14 +2,7 @@
 <resources>
     <string name="app_name">NoWatch.NET</string>
     <string name="loading">Chargement ...</string>
-    
-    <string name="feed_geekinc">http://feeds.feedburner.com/GeekInc</string>
-    <string name="feed_scuds">http://feeds.feedburner.com/scudstv</string>
-    <string name="feed_zapcast">http://feeds.feedburner.com/Zapcasttv</string>
-    <string name="feed_cinefuzz">http://feeds.feedburner.com/CineFuzz</string>
-    <string name="feed_tom">http://feeds.feedburner.com/tonightonmars</string>
-    <string name="feed_revuetech">http://www.stockagemedias.fr/larevuetech/xml/podcast_iphone.xml</string>
-    
+
     <string name="status_new">Nouveau</string>
     <string name="status_downloading">En téléchargement</string>
     <string name="status_incomplete">Incomplet</string>
