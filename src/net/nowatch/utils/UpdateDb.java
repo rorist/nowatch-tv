@@ -17,6 +17,7 @@ import javax.xml.parsers.SAXParserFactory;
 import net.nowatch.Main;
 import net.nowatch.network.GetFile;
 import net.nowatch.network.RSSReader;
+import net.nowatch.utils.Feed;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
@@ -32,44 +33,35 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.database.sqlite.SQLiteConstraintException;
 
 public class UpdateDb {
 
     // FIXME: This class is awefull, merge with UpdateTask ?
     private final static String TAG = Main.TAG + "UpdateDb";
     private final static String PUBDATE = "Wed, 31 Mar 1999 00:00:00 +0200";
-    private static SQLiteDatabase db;
     private static String etag = null;
     private static int feed_id;
     private static int type;
 
-    public static void update(final Context ctxt, int fid, int t, String link_rss) throws IOException {
-        feed_id = fid;
-        type = t;
-        Cursor c = null;
+    public static void update(final Context ctxt, Feed feed) throws IOException {
+        feed_id = feed.id;
+        type = feed.type;
         try {
-            // Get lastpub and etag
-            db = (new Db(ctxt)).openDb();
-            c = db.rawQuery("select etag,pubDate from feeds where _id=? limit 1", new String[] { ""
-                    + fid });
-            c.moveToFirst();
-
             // etag
-            if (c.getString(0) != null) {
-                etag = c.getString(0);
+            if (feed.etag != null) {
+                etag = feed.etag;
             }
 
             // pubDate
             String pubDate = PUBDATE;
-            if (c.getString(1) != null) {
-                pubDate = c.getString(1);
+            if (feed.pubDate != null) {
+                pubDate = feed.pubDate;
             }
 
             // Try to download feed
-            new GetFeed(ctxt, pubDate).getChannel(link_rss, etag);
+            new GetFeed(ctxt, pubDate).getChannel(feed.link_rss, etag);
 
-        } catch (SQLiteException e) {
-            Log.e(TAG, e.getMessage());
         } catch (FactoryConfigurationError e) {
             e.printStackTrace();
         } catch (FileNotFoundException e) {
@@ -78,13 +70,6 @@ public class UpdateDb {
             e.printStackTrace();
         } catch (IllegalStateException e) {
             e.printStackTrace();
-        } finally {
-            if (c != null) {
-                c.close();
-            }
-            if (db != null) {
-                db.close();
-            }
         }
     }
 
@@ -105,33 +90,20 @@ public class UpdateDb {
 
         @Override
         protected void finish(boolean delete, String file) {
-            try {
-                if (file != null) {
-                    // Save etag
-                    if (etag != null) {
-                        ContentValues etag_value = new ContentValues();
-                        etag_value.put("etag", etag);
-                        db.update("feeds", etag_value, "_id=?", new String[] { "" + feed_id });
-                    }
-
-                    // Start the parser
-                    try {
-                        XMLReader xr = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
-                        RSS handler = new RSS(ctxt, pubDate);
-                        xr.setContentHandler(handler);
-                        xr.setErrorHandler(handler);
-                        xr.parse(new InputSource(new FileReader(file)));
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    } catch (SAXException e) {
-                        Log.e(TAG, e.getMessage());
-                    } catch (ParserConfigurationException e) {
-                        e.printStackTrace();
-                    }
-                }
-            } finally {
-                if (db != null) {
-                    db.close();
+            if (file != null) {
+                // Start the parser
+                try {
+                    XMLReader xr = SAXParserFactory.newInstance().newSAXParser().getXMLReader();
+                    RSS handler = new RSS(ctxt, pubDate, etag);
+                    xr.setContentHandler(handler);
+                    xr.setErrorHandler(handler);
+                    xr.parse(new InputSource(new FileReader(file)));
+                } catch (IOException e) {
+                    e.printStackTrace();
+                } catch (SAXException e) {
+                    Log.e(TAG, e.getMessage());
+                } catch (ParserConfigurationException e) {
+                    e.printStackTrace();
                 }
             }
             super.finish(delete, file);
@@ -140,13 +112,20 @@ public class UpdateDb {
 
     private static class RSS extends RSSReader {
 
+        private SQLiteDatabase db;
         private SimpleDateFormat formatter;
         private Date item_date;
         private Calendar cal = Calendar.getInstance();
         private Context ctxt;
 
-        public RSS(final Context ctxt, String pubDate) {
+        public RSS(final Context ctxt, String pubDate, String etag) {
             this.ctxt = ctxt;
+            db = (new Db(ctxt)).openDb();
+            // Save etag
+            if (etag != null) {
+                feedMap.put("etag", etag);
+            }
+            // Date parser
             formatter = new SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss ZZZ");
             formatter.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
         }
@@ -156,9 +135,8 @@ public class UpdateDb {
             super.endElement(uri, name, qName);
             if (name == "channel") {
                 // Update channel info, always
-                if (db != null) {
-                    db.update("feeds", feedMap, "_id=?", new String[] { "" + feed_id });
-                }
+                db.update("feeds", feedMap, "_id=?", new String[] { "" + feed_id });
+                db.close();
             } else if (!in_items && name == "image" && uri == RSSReader.ITUNES_DTD) {
                 // Get feed image
                 try {
@@ -168,33 +146,31 @@ public class UpdateDb {
                     Log.e(TAG, e.getMessage());
                 }
             } else if (name == "item") {
-                if (db != null) {
+                try {
+                    item_date = formatter.parse(itemMap.getAsString("pubDate"));
+                } catch (ParseException e) {
+                    Log.e(TAG, e.getMessage());
                     try {
-                        item_date = formatter.parse(itemMap.getAsString("pubDate"));
-                    } catch (ParseException e) {
-                        Log.e(TAG, e.getMessage());
-                        try {
-                            item_date = formatter.parse(PUBDATE);
-                        } catch (ParseException e1) {
-                        }
-                    } finally {
-                        // Update some values
-                        cal.setTime(item_date);
-                        itemMap.put("pubDate", cal.getTimeInMillis());
-                        itemMap.put("feed_id", feed_id);
-                        itemMap.put("type", type);
-                        // Get item image
-                        String image = itemMap.getAsString("image");
-                        if (!new String("").equals(image)) {
-                            try {
-                                itemMap.put("image", new GetImage(ctxt).getChannel(image));
-                            } catch (IOException e) {
-                                Log.e(TAG, e.getMessage());
-                            }
-                        }
-                        // Insert in Db
-                        db.insert("items", null, itemMap);
+                        item_date = formatter.parse(PUBDATE);
+                    } catch (ParseException e1) {
                     }
+                } finally {
+                    // Update some values
+                    cal.setTime(item_date);
+                    itemMap.put("pubDate", cal.getTimeInMillis());
+                    itemMap.put("feed_id", feed_id);
+                    itemMap.put("type", type);
+                    // Get item image
+                    String image = itemMap.getAsString("image");
+                    if (!new String("").equals(image)) {
+                        try {
+                            itemMap.put("image", new GetImage(ctxt).getChannel(image));
+                        } catch (IOException e) {
+                            Log.e(TAG, e.getMessage());
+                        }
+                    }
+                    // Insert in Db
+                    db.insert("items", null, itemMap);
                 }
             }
         }

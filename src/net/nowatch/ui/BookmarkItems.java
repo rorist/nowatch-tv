@@ -15,9 +15,7 @@ import android.widget.TextView;
 public class BookmarkItems extends AbstractListItems {
 
     private static final String TAG = Main.TAG + "BookmarkItems";
-    private final String REQ = "SELECT items._id, items.title, items.status, feeds.image, items.pubDate, items.image "
-            + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id "
-            + "WHERE bookmark=1 ORDER BY items.pubDate DESC LIMIT ";
+    private final String REQ = "SELECT _id, title, status, pubDate, image, feed_id FROM items WHERE bookmark=1 ORDER BY pubDate DESC LIMIT ";
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -30,12 +28,7 @@ public class BookmarkItems extends AbstractListItems {
                 finish();
             }
         });
-//        findViewById(R.id.btn_logo).setOnClickListener(new View.OnClickListener() {
-//            public void onClick(View v) {
-//                finish();
-//            }
-//        });
-
+        
         ((TextView) findViewById(R.id.list_empty)).setText("Aucun favoris");
     }
 

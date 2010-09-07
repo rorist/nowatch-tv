@@ -27,8 +27,6 @@ public class Main extends TabActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        setContentView(R.layout.main);
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
 
@@ -44,9 +42,7 @@ public class Main extends TabActivity {
             new Db(getApplicationContext()).copyDbToDevice();
         }
 
-        // Start list activity
-        // startActivity(new Intent(Main.this, ListItems.class));
-        // finish();
+        setContentView(R.layout.main);
 
         // Tabs setup
         Resources res = getResources();

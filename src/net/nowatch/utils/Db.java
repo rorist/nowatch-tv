@@ -26,7 +26,8 @@ public class Db {
         this.ctxt = ctxt;
     }
 
-    public SQLiteDatabase openDb() {
+    // FIXME: Test this synchronization
+    synchronized public SQLiteDatabase openDb() {
         try {
             return SQLiteDatabase.openDatabase(DB_PATH + DB_NAME, null,
                     SQLiteDatabase.NO_LOCALIZED_COLLATORS);

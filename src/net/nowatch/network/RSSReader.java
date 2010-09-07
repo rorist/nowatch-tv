@@ -29,8 +29,8 @@ public class RSSReader extends DefaultHandler {
     private String current_tag;
     private StringBuffer itemBuf;
     protected boolean in_items = false;
-    protected ContentValues feedMap;
-    protected ContentValues itemMap;
+    protected ContentValues feedMap = new ContentValues();
+    protected ContentValues itemMap = new ContentValues();
     public final static String ITUNES_DTD = "http://www.itunes.com/dtds/podcast-1.0.dtd";
 
     private void logi(String str) {
@@ -40,14 +40,12 @@ public class RSSReader extends DefaultHandler {
     }
 
     private void initMaps() {
-        feedMap = new ContentValues();
         feedMap.put("title", "");
         feedMap.put("description", "");
         feedMap.put("link", "");
         feedMap.put("pubDate", "");
         feedMap.put("image", "");
 
-        itemMap = new ContentValues();
         itemMap.put("type", 1);
         itemMap.put("feed_id", 0);
         itemMap.put("file_uri", "");

@@ -5,13 +5,18 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
+import java.util.HashMap;
+import java.util.Map;
 
 import net.nowatch.R;
+import net.nowatch.Main;
+import net.nowatch.utils.Db;
 import net.nowatch.utils.Item;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
@@ -33,7 +38,10 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
     // private static final String TAG = Main.TAG + "AbstractListItems";
     private static final int ITEMS_NB = 16;
     private static final int ENDLESS_OFFSET = 3;
+    private static final String REQ_FEEDS_IMAGE = "SELECT _id, image FROM feeds WHERE type=";
+    private Map<Integer, byte[]> podcasts_images;
 
+    protected int podcast_type;
     protected int image_size;
     protected Context ctxt;
     protected List<Item> items = null;
@@ -48,19 +56,25 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         ctxt = getApplicationContext();
+        podcast_type = getIntent().getExtras().getInt(Main.EXTRA_TYPE);
         setContentView(R.layout.activity_list_items);
+
+        // Get Podcasts images
+        SQLiteDatabase db = (new Db(ctxt)).openDb();
+        Cursor c = db.rawQuery(REQ_FEEDS_IMAGE + podcast_type, null);
+        if (c.moveToFirst()) {
+            podcasts_images = new HashMap<Integer, byte[]>();
+            do {
+                podcasts_images.put(c.getInt(0), c.getBlob(1));
+            } while(c.moveToNext());
+        }
+        c.close();
+        db.close();
 
         // Screen metrics (for dip to px conversion)
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
         image_size = (int) (64 * dm.density + 0.5f);
-
-        // Title button
-//        findViewById(R.id.btn_logo).setOnClickListener(new View.OnClickListener() {
-//            public void onClick(View v) {
-//                resetList();
-//            }
-//        });
 
         // Set list adapter
         items = new ArrayList<Item>();
@@ -114,13 +128,13 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
         return item;
     }
 
-    private Bitmap createImage(byte[] logo_podcast_byte, byte[] logo_item_byte, int width,
-            int height) {
+    private Bitmap createImage(int feed_id, byte[] logo_item_byte, int width, int height) {
         final int min_size = 200;
         if (logo_item_byte != null && logo_item_byte.length > min_size) {
             return Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_item_byte, 0,
                     logo_item_byte.length), image_size, image_size, true);
         } else {
+            byte[] logo_podcast_byte = podcasts_images.get(feed_id);
             if (logo_podcast_byte != null && logo_podcast_byte.length > min_size) {
                 return Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_podcast_byte,
                         0, logo_podcast_byte.length), image_size, image_size, true);
@@ -137,9 +151,9 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
         // Status
         item.status = updateItemStatus(item, c).status;
         // Icon
-        item.logo = createImage(c.getBlob(3), c.getBlob(5), image_size, image_size);
+        item.logo = createImage(c.getInt(4), c.getBlob(5), image_size, image_size);
         // Date
-        long date = c.getLong(4);
+        long date = c.getLong(3);
         long diff = System.currentTimeMillis() / 1000 - date / 1000;
         if (diff < 3600) { // 1h
             item.date = getString(R.string.date_hour);

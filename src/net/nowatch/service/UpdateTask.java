@@ -2,13 +2,17 @@ package net.nowatch.service;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
+import java.util.List;
+import java.util.ArrayList;
 
 import net.nowatch.Main;
 import net.nowatch.R;
 import net.nowatch.network.Network;
 import net.nowatch.ui.ListItems;
 import net.nowatch.utils.Db;
+import net.nowatch.utils.Feed;
 import net.nowatch.utils.UpdateDb;
+
 import android.app.Activity;
 import android.app.Service;
 import android.content.Context;
@@ -21,7 +25,7 @@ import android.widget.Toast;
 public class UpdateTask extends AsyncTask<Void, Void, Void> {
 
     private static final String TAG = Main.TAG + "UpdateTask";
-    private static final String REQ = "SELECT _id, type, link_rss FROM feeds";
+    private static final String REQ = "SELECT _id, type, link_rss, etag, pubDate FROM feeds";
     private boolean sdcarderror = false;
     protected WeakReference<ListItems> mActivity = null;
     protected WeakReference<NWService> mService = null;
@@ -46,25 +50,28 @@ public class UpdateTask extends AsyncTask<Void, Void, Void> {
 
     @Override
     protected Void doInBackground(Void... params) {
+        final List<Feed> feeds = new ArrayList<Feed>();
         final Context ctxt = getContext();
+        
         SQLiteDatabase db = new Db(ctxt).openDb();
         Cursor c = db.rawQuery(REQ, null);
-        c.moveToFirst();
-        try {
-            if (c.getCount() > 0) {
-                do {
-                    // FIXME: Pass all information to UpdateDb.update() so this
-                    // method does not need to reopen a db cursor
-                    UpdateDb.update(ctxt, c.getInt(0), c.getInt(1), c.getString(2));
-                } while (c.moveToNext());
-            }
-        } catch (IOException e) {
-            Log.e(TAG, e.getMessage());
-            sdcarderror = true;
-        } finally {
-            c.close();
-            db.close();
+        if (c.moveToFirst()) {
+            do {
+                feeds.add(new Feed(c.getInt(0), c.getInt(1), c.getString(2), c.getString(3), c.getString(4)));
+            } while (c.moveToNext());
         }
+        c.close();
+        db.close();
+
+        for (Feed f: feeds) {
+            try{
+                UpdateDb.update(ctxt, f);
+            } catch (IOException e) {
+                Log.e(TAG, e.getMessage());
+                sdcarderror = true;
+            }
+        }
+
         return null;
     }
 

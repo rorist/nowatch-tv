@@ -21,20 +21,19 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
+import android.os.AsyncTask;
 
 public class ListItems extends AbstractListItems {
 
     private static final String TAG = Main.TAG + "ListItems";
-    private final String REQ_ITEMS_STATUS = "SELECT items._id, '', items.status FROM items";
-    private final String REQ_ITEMS_SELECT = "SELECT items._id, items.title, items.status, feeds.image, items.pubDate, items.image "
-            + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id";
-    private final String REQ_ITEMS_END = " ORDER BY items.pubDate DESC LIMIT ";
-    private final String REQ_MARK_ALL = "UPDATE items SET status=" + Item.STATUS_UNREAD + " WHERE status=" + Item.STATUS_NEW + " and type=";
-    private final String REQ_FILTER = "SELECT _id, title_clean FROM feeds WHERE type=";
+    private static final String REQ_ITEMS_STATUS = "SELECT _id, '', status FROM items";
+    private static final String REQ_ITEMS_SELECT = "SELECT _id, title, status, pubDate, feed_id, image FROM items ";
+    private static final String REQ_ITEMS_END = " ORDER BY pubDate DESC LIMIT ";
+    private static final String REQ_MARK_ALL = "UPDATE items SET status=" + Item.STATUS_UNREAD + " WHERE status=" + Item.STATUS_NEW + " and type=";
+    private static final String REQ_FILTER = "SELECT _id, title_clean FROM feeds WHERE type=";
     private static final int MENU_MARK_ALL = 1;
     private static final int MENU_OPTIONS = 2;
 
-    private int podcast_type;
     private String current_request;
     private String current_request_status;
     private UpdateTaskBtn updateTask = null;
@@ -43,7 +42,6 @@ public class ListItems extends AbstractListItems {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        podcast_type = getIntent().getExtras().getInt(Main.EXTRA_TYPE);
 
         // Menu buttons
         findViewById(R.id.btn_manage).setVisibility(View.VISIBLE);
@@ -68,7 +66,7 @@ public class ListItems extends AbstractListItems {
 
         // Current request
         // TODO: From Prefs ?
-        String filter = " WHERE items.type=" + podcast_type;
+        String filter = " WHERE type=" + podcast_type;
         current_request = REQ_ITEMS_SELECT + filter + REQ_ITEMS_END;
         current_request_status = REQ_ITEMS_STATUS + filter + REQ_ITEMS_END;
     }
@@ -124,13 +122,14 @@ public class ListItems extends AbstractListItems {
             }
         });
 
+        final int type = podcast_type;
         final ActionItem second = new ActionItem();
         second.setTitle("Favoris");
         second.setIcon(res.getDrawable(R.drawable.action_bookmark));
         second.setOnClickListener(new View.OnClickListener() {
             // @Override
             public void onClick(View v) {
-                startActivity(new Intent(ListItems.this, BookmarkItems.class));
+                startActivity(new Intent(ListItems.this, BookmarkItems.class).putExtra(Main.EXTRA_TYPE, type));
                 qa.dismiss();
             }
         });
@@ -147,7 +146,7 @@ public class ListItems extends AbstractListItems {
         final QuickAction qa = new QuickAction(findViewById(R.id.btn_filter_podcast));
         qa.setAnimStyle(QuickAction.ANIM_GROW_FROM_CENTER);
         // Show all
-        final String filter1 = " WHERE items.type=" + podcast_type;
+        final String filter1 = " WHERE type=" + podcast_type;
         final ActionItem first = new ActionItem();
         first.setTitle("Tous");
         first.setIcon(res.getDrawable(R.drawable.action_icon));
@@ -165,24 +164,25 @@ public class ListItems extends AbstractListItems {
         // Set podcasts entries
         db = (new Db(ctxt)).openDb();
         Cursor c = db.rawQuery(REQ_FILTER + podcast_type, null);
-        c.moveToFirst();
-        final String filter2 = " WHERE items.type=" + podcast_type + " and items.feed_id=";
-        do {
-            final int item_id = c.getInt(0);
-            final ActionItem p = new ActionItem();
-            p.setTitle(c.getString(1));
-            p.setIcon(res.getDrawable(R.drawable.action_icon));
-            p.setOnClickListener(new View.OnClickListener() {
-                // @Override
-                public void onClick(View v) {
-                    current_request = REQ_ITEMS_SELECT + filter2 + item_id + REQ_ITEMS_END;
-                    current_request_status = REQ_ITEMS_STATUS + filter2 + item_id + REQ_ITEMS_END;
-                    qa.dismiss();
-                    resetList();
-                }
-            });
-            qa.addActionItem(p);
-        } while(c.moveToNext());
+        if(c.moveToFirst()){
+            final String filter2 = " WHERE feed_id=";
+            do {
+                final int feed_id = c.getInt(0);
+                final ActionItem p = new ActionItem();
+                p.setTitle(c.getString(1));
+                p.setIcon(res.getDrawable(R.drawable.action_icon));
+                p.setOnClickListener(new View.OnClickListener() {
+                    // @Override
+                    public void onClick(View v) {
+                        current_request = REQ_ITEMS_SELECT + filter2 + feed_id + REQ_ITEMS_END;
+                        current_request_status = REQ_ITEMS_STATUS + filter2 + feed_id + REQ_ITEMS_END;
+                        qa.dismiss();
+                        resetList();
+                    }
+                });
+                qa.addActionItem(p);
+            } while(c.moveToNext());
+        }
         c.close();
         db.close();
 
@@ -201,8 +201,10 @@ public class ListItems extends AbstractListItems {
             if (update) {
                 c = db.rawQuery(current_request_status + offset + "," + limit, null);
             } else {
+                Log.v(TAG, "req="+current_request + offset + "," + limit);
                 c = db.rawQuery(current_request + offset + "," + limit, null);
             }
+            Log.v(TAG, "count="+c.getCount());
             if (c.moveToFirst()) {
                 cnt = c.getCount();
                 do {
@@ -217,7 +219,6 @@ public class ListItems extends AbstractListItems {
         } catch (SQLiteDiskIOException e) {
             // sqlite_stmt_journals partition is too small (4MB)
             Log.e(TAG, e.getMessage());
-            e.printStackTrace();
         } catch (SQLiteException e) {
             Log.e(TAG, e.getMessage());
         } finally {
@@ -233,7 +234,7 @@ public class ListItems extends AbstractListItems {
 
     @Override
     public void resetList() {
-        if (updateTask != null) {
+        if (updateTask != null && AsyncTask.Status.RUNNING.equals(updateTask.getStatus())) {
             updateTask.cancel(true);
         }
         super.resetList();
