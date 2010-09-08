@@ -29,8 +29,7 @@ public class Db {
     // FIXME: Test this synchronization
     synchronized public SQLiteDatabase openDb() {
         try {
-            return SQLiteDatabase.openDatabase(DB_PATH + DB_NAME, null,
-                    SQLiteDatabase.NO_LOCALIZED_COLLATORS);
+            return SQLiteDatabase.openDatabase(DB_PATH + DB_NAME, null, SQLiteDatabase.OPEN_READWRITE);
         } catch (SQLiteException e) {
             Log.e(TAG, e.getMessage());
         }

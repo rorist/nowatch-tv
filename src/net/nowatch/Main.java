@@ -42,6 +42,8 @@ public class Main extends TabActivity {
             new Db(getApplicationContext()).copyDbToDevice();
         }
 
+        //startActivity(new Intent(Main.this, ListItems.class).putExtra(EXTRA_TYPE, TYPE_FM));
+
         setContentView(R.layout.main);
 
         // Tabs setup

@@ -27,7 +27,7 @@ public class ListItems extends AbstractListItems {
 
     private static final String TAG = Main.TAG + "ListItems";
     private static final String REQ_ITEMS_STATUS = "SELECT _id, '', status FROM items";
-    private static final String REQ_ITEMS_SELECT = "SELECT _id, title, status, pubDate, feed_id, image FROM items ";
+    private static final String REQ_ITEMS_SELECT = "SELECT _id, title, status, pubDate, feed_id, image FROM items";
     private static final String REQ_ITEMS_END = " ORDER BY pubDate DESC LIMIT ";
     private static final String REQ_MARK_ALL = "UPDATE items SET status=" + Item.STATUS_UNREAD + " WHERE status=" + Item.STATUS_NEW + " and type=";
     private static final String REQ_FILTER = "SELECT _id, title_clean FROM feeds WHERE type=";

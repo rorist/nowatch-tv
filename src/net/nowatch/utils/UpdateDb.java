@@ -17,23 +17,18 @@ import javax.xml.parsers.SAXParserFactory;
 import net.nowatch.Main;
 import net.nowatch.network.GetFile;
 import net.nowatch.network.RSSReader;
-import net.nowatch.utils.Feed;
 
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
-import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.database.sqlite.SQLiteException;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.preference.PreferenceManager;
 import android.util.Log;
-import android.database.sqlite.SQLiteConstraintException;
 
 public class UpdateDb {
 

@@ -52,6 +52,10 @@ public class UpdateTask extends AsyncTask<Void, Void, Void> {
     protected Void doInBackground(Void... params) {
         final List<Feed> feeds = new ArrayList<Feed>();
         final Context ctxt = getContext();
+        String req = REQ;
+        if (mActivity!=null) {
+            req += " WHERE type="+getActivity().podcast_type;
+        }
         
         SQLiteDatabase db = new Db(ctxt).openDb();
         Cursor c = db.rawQuery(REQ, null);

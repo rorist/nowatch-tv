@@ -40,8 +40,9 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
     private static final int ENDLESS_OFFSET = 3;
     private static final String REQ_FEEDS_IMAGE = "SELECT _id, image FROM feeds WHERE type=";
     private Map<Integer, byte[]> podcasts_images;
+    
+    public int podcast_type;
 
-    protected int podcast_type;
     protected int image_size;
     protected Context ctxt;
     protected List<Item> items = null;
@@ -60,16 +61,7 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
         setContentView(R.layout.activity_list_items);
 
         // Get Podcasts images
-        SQLiteDatabase db = (new Db(ctxt)).openDb();
-        Cursor c = db.rawQuery(REQ_FEEDS_IMAGE + podcast_type, null);
-        if (c.moveToFirst()) {
-            podcasts_images = new HashMap<Integer, byte[]>();
-            do {
-                podcasts_images.put(c.getInt(0), c.getBlob(1));
-            } while(c.moveToNext());
-        }
-        c.close();
-        db.close();
+        setPodcastsImages();
 
         // Screen metrics (for dip to px conversion)
         DisplayMetrics dm = new DisplayMetrics();
@@ -97,6 +89,19 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
         Intent i = new Intent(ctxt, ItemInfo.class);
         i.putExtra(Item.EXTRA_ITEM_ID, items.get(position).id);
         startActivity(i);
+    }
+
+    private void setPodcastsImages() {
+        SQLiteDatabase db = (new Db(ctxt)).openDb();
+        Cursor c = db.rawQuery(REQ_FEEDS_IMAGE + podcast_type, null);
+        if (c.moveToFirst()) {
+            podcasts_images = new HashMap<Integer, byte[]>();
+            do {
+                podcasts_images.put(c.getInt(0), c.getBlob(1));
+            } while(c.moveToNext());
+        }
+        c.close();
+        db.close();
     }
 
     protected Item updateItemStatus(Item item, Cursor c) {
@@ -185,6 +190,7 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
     public void resetList() {
         items.clear();
         adapter.clear();
+        setPodcastsImages();
         addToList(0, ITEMS_NB);
         updateList();
         list.setSelection(0);

@@ -15,11 +15,15 @@ import android.widget.TextView;
 public class BookmarkItems extends AbstractListItems {
 
     private static final String TAG = Main.TAG + "BookmarkItems";
-    private final String REQ = "SELECT _id, title, status, pubDate, image, feed_id FROM items WHERE bookmark=1 ORDER BY pubDate DESC LIMIT ";
+    private final String REQ_START = "SELECT _id, title, status, pubDate, feed_id, image FROM items WHERE bookmark=1 AND type=";
+    private final String REQ_END = " ORDER BY pubDate DESC LIMIT ";
+    private String req;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        req = REQ_START + podcast_type + REQ_END;
 
         // Buttons
         findViewById(R.id.btn_back).setVisibility(View.VISIBLE);
@@ -48,7 +52,7 @@ public class BookmarkItems extends AbstractListItems {
         int cnt = 0;
         try {
             db = (new Db(ctxt)).openDb();
-            c = db.rawQuery(REQ + offset + "," + limit, null);
+            c = db.rawQuery(req + offset + "," + limit, null);
             if (c.moveToFirst()) {
                 cnt = c.getCount();
                 do {
