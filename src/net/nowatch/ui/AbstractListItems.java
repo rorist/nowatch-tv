@@ -40,6 +40,7 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
     private static final int ENDLESS_OFFSET = 3;
     private static final String REQ_FEEDS_IMAGE = "SELECT _id, image FROM feeds WHERE type=";
     private Map<Integer, byte[]> podcasts_images;
+    private EndlessTask endlessTask = null;
     
     public int podcast_type;
 
@@ -189,14 +190,6 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
 
     public void resetList() {
         new ResetListTask().execute();
-        /*
-        items.clear();
-        adapter.clear();
-        setPodcastsImages();
-        addToList(0, ITEMS_NB);
-        updateList();
-        list.setSelection(0);
-        */
     }
 
     private void updateList() {
@@ -258,7 +251,11 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
             // Set endless loader
             int size = items.size();
             if (position == size - ENDLESS_OFFSET) {
-                new EndlessTask().execute(size);
+                if (endlessTask != null && AsyncTask.Status.RUNNING.equals(endlessTask.getStatus())) {
+                    endlessTask.cancel(true);
+                }
+                endlessTask = new EndlessTask();
+                endlessTask.execute(size);
             }
             return convertView;
         }
@@ -321,6 +318,7 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
             // TODO: infinite loading image in the list
             items.clear();
             adapter.clear();
+            ((TextView) findViewById(R.id.list_empty)).setText("Chargement en cours");
         }
 
         @Override
@@ -334,6 +332,7 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
         protected void onPostExecute(Void unused) {
             updateList();
             list.setSelection(0);
+            ((TextView) findViewById(R.id.list_empty)).setText("Aucun élément");
         }
 
     }
