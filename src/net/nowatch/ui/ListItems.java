@@ -201,10 +201,8 @@ public class ListItems extends AbstractListItems {
             if (update) {
                 c = db.rawQuery(current_request_status + offset + "," + limit, null);
             } else {
-                Log.v(TAG, "req="+current_request + offset + "," + limit);
                 c = db.rawQuery(current_request + offset + "," + limit, null);
             }
-            Log.v(TAG, "count="+c.getCount());
             if (c.moveToFirst()) {
                 cnt = c.getCount();
                 do {
@@ -241,6 +239,7 @@ public class ListItems extends AbstractListItems {
     }
 
     public void refreshListVisible() {
+        // FIXME: Save position, refresh all elements and position the list to the saved  location, instead of this method
         addToList(list.getFirstVisiblePosition(), list.getLastVisiblePosition()
                 - list.getFirstVisiblePosition() + 1, true);
         adapter.notifyDataSetChanged();

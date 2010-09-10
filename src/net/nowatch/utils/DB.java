@@ -1,7 +1,7 @@
 /*
 create table items (_id INTEGER PRIMARY KEY, feed_id INTEGER,status INTEGER, title TEXT UNIQUE ON CONFLICT IGNORE, description TEXT, link TEXT, pubDate NUMERIC, file_uri TEXT, file_size INTEGER, file_type TEXT, bookmark INTEGER, image BLOB, type INTEGER);
-CREATE INDEX itemsIndex on items (pubDate,title,type);
-CREATE INDEX etagIndex on feeds(etag);
+CREATE INDEX itemsIndex ON items (pubDate, title, type);
+CREATE INDEX feedsIndex ON feeds (type);
 */
 
 

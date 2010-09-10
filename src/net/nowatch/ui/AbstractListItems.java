@@ -50,7 +50,7 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
     protected ItemsAdapter adapter;
 
     protected abstract int addToList(int offset, int limit);
-
+    
     protected abstract int addToList(int offset, int limit, boolean update);
 
     @Override
@@ -188,12 +188,15 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
     }
 
     public void resetList() {
+        new ResetListTask().execute();
+        /*
         items.clear();
         adapter.clear();
         setPodcastsImages();
         addToList(0, ITEMS_NB);
         updateList();
         list.setSelection(0);
+        */
     }
 
     private void updateList() {
@@ -310,6 +313,30 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
     // */
     // }
     // }
+
+    class ResetListTask extends AsyncTask<Integer, Void, Void> {
+
+        @Override
+        protected void onPreExecute() {
+            // TODO: infinite loading image in the list
+            items.clear();
+            adapter.clear();
+        }
+
+        @Override
+        protected Void doInBackground(Integer... params) {
+            setPodcastsImages();
+            addToList(0, ITEMS_NB);
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void unused) {
+            updateList();
+            list.setSelection(0);
+        }
+
+    }
 
     class EndlessTask extends AsyncTask<Integer, Void, Void> {
 

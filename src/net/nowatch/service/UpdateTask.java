@@ -58,7 +58,7 @@ public class UpdateTask extends AsyncTask<Void, Void, Void> {
         }
         
         SQLiteDatabase db = new Db(ctxt).openDb();
-        Cursor c = db.rawQuery(REQ, null);
+        Cursor c = db.rawQuery(req, null);
         if (c.moveToFirst()) {
             do {
                 feeds.add(new Feed(c.getInt(0), c.getInt(1), c.getString(2), c.getString(3), c.getString(4)));
