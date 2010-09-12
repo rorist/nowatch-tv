@@ -41,7 +41,7 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
     private static final String REQ_FEEDS_IMAGE = "SELECT _id, image FROM feeds WHERE type=";
     private Map<Integer, byte[]> podcasts_images;
     private EndlessTask endlessTask = null;
-    
+
     public int podcast_type;
 
     protected int image_size;
@@ -51,7 +51,7 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
     protected ItemsAdapter adapter;
 
     protected abstract int addToList(int offset, int limit);
-    
+
     protected abstract int addToList(int offset, int limit, boolean update);
 
     @Override
@@ -99,7 +99,7 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
             podcasts_images = new HashMap<Integer, byte[]>();
             do {
                 podcasts_images.put(c.getInt(0), c.getBlob(1));
-            } while(c.moveToNext());
+            } while (c.moveToNext());
         }
         c.close();
         db.close();
@@ -251,7 +251,8 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
             // Set endless loader
             int size = items.size();
             if (position == size - ENDLESS_OFFSET) {
-                if (endlessTask == null || !AsyncTask.Status.RUNNING.equals(endlessTask.getStatus())) {
+                if (endlessTask == null
+                        || !AsyncTask.Status.RUNNING.equals(endlessTask.getStatus())) {
                     endlessTask = new EndlessTask();
                     endlessTask.execute(size);
                 }
@@ -317,7 +318,7 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
             // TODO: infinite loading image in the list
             items.clear();
             adapter.clear();
-            ((TextView) findViewById(R.id.list_empty)).setText("Chargement en cours");
+            ((TextView) findViewById(R.id.list_empty)).setText(R.string.list_loading);
         }
 
         @Override
@@ -331,7 +332,7 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
         protected void onPostExecute(Void unused) {
             updateList();
             list.setSelection(0);
-            ((TextView) findViewById(R.id.list_empty)).setText("Aucun élément");
+            ((TextView) findViewById(R.id.list_empty)).setText(R.string.list_empty);
         }
 
     }

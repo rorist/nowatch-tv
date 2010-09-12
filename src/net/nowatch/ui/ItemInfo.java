@@ -122,7 +122,7 @@ public class ItemInfo extends Activity {
                         public void onClick(View v) {
                             // Stream the file
                             if (new Network(ctxt).isMobileAllowed()) {
-                                viewVideo(file_uri, file_type, item_id);
+                                viewFile(file_uri, file_type, item_id);
                             } else {
                                 Toast.makeText(ctxt, R.string.toast_nomobiletraffic,
                                         Toast.LENGTH_LONG).show();
@@ -135,7 +135,7 @@ public class ItemInfo extends Activity {
                     new View.OnClickListener() {
                         public void onClick(View v) {
                             // Read the local file
-                            viewVideo(GetFile.PATH_PODCASTS + "/" + new File(file_uri).getName(),
+                            viewFile(GetFile.PATH_PODCASTS + "/" + new File(file_uri).getName(),
                                     file_type, item_id);
                         }
                     });
@@ -145,7 +145,7 @@ public class ItemInfo extends Activity {
                         public void onClick(View v) {
                             // Stream the file
                             if (new Network(ctxt).isMobileAllowed()) {
-                                viewVideo(file_uri, file_type, item_id);
+                                viewFile(file_uri, file_type, item_id);
                             } else {
                                 Toast.makeText(ctxt, R.string.toast_nomobiletraffic,
                                         Toast.LENGTH_LONG).show();
@@ -157,7 +157,7 @@ public class ItemInfo extends Activity {
                         public void onClick(View v) {
                             // Download the file
                             if (new Network(ctxt).isMobileAllowed()) {
-                                downloadVideo(item_id);
+                                downloadFile(item_id);
                             } else {
                                 Toast.makeText(ctxt, R.string.toast_nomobiletraffic,
                                         Toast.LENGTH_LONG).show();
@@ -199,14 +199,15 @@ public class ItemInfo extends Activity {
         db.close();
     }
 
-    private void downloadVideo(int item_id) {
+    private void downloadFile(int item_id) {
         Intent intent = new Intent(ItemInfo.this, NWService.class);
         intent.setAction(NWService.ACTION_ADD);
         intent.putExtra(Item.EXTRA_ITEM_ID, item_id);
         startService(intent);
     }
 
-    private void viewVideo(String file, String type, int item_id) {
+    private void viewFile(String file, String type, int item_id) {
+        // FIXME: Support audio files
         // Hack type for Apple's format
         if (type.equals(new String("video/x-m4v"))) {
             type = "video/mp4";

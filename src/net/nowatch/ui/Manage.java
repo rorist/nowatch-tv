@@ -64,11 +64,6 @@ public class Manage extends Activity {
                 finish();
             }
         });
-//        findViewById(R.id.btn_logo).setOnClickListener(new View.OnClickListener() {
-//            public void onClick(View v) {
-//                finish();
-//            }
-//        });
 
         // Screen metrics (for dip to px conversion)
         DisplayMetrics dm = new DisplayMetrics();
@@ -121,8 +116,8 @@ public class Manage extends Activity {
         // Cancel will remove the file, pause will change state to INCOMPLETE
         final Context ctxt = Manage.this;
         final AlertDialog.Builder dialog = new AlertDialog.Builder(ctxt);
-        dialog.setMessage("Voulez-vous annuler le téléchargement ?");
-        dialog.setPositiveButton("Oui", new DialogInterface.OnClickListener() {
+        dialog.setMessage(R.string.dialog_cancel);
+        dialog.setPositiveButton(R.string.btn_yes, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
                 Item item = null;
                 // Remove item from list
@@ -141,7 +136,7 @@ public class Manage extends Activity {
                 startService(intent);
             }
         });
-        dialog.setNegativeButton("Non", new DialogInterface.OnClickListener() {
+        dialog.setNegativeButton(R.string.btn_no, new DialogInterface.OnClickListener() {
             public void onClick(DialogInterface dialog, int which) {
             }
         });
@@ -155,7 +150,7 @@ public class Manage extends Activity {
 
         if (type == NWService.TYPE_CURRENT) {
             final ActionItem pause = new ActionItem();
-            pause.setTitle("Pause");
+            pause.setTitle(getString(R.string.dialog_pause_title));
             pause.setIcon(res.getDrawable(R.drawable.action_pause));
             pause.setOnClickListener(new View.OnClickListener() {
                 public void onClick(View v) {
@@ -167,7 +162,7 @@ public class Manage extends Activity {
         }
 
         final ActionItem cancel = new ActionItem();
-        cancel.setTitle("Annuler");
+        cancel.setTitle(getString(R.string.dialog_cancel_title));
         cancel.setIcon(res.getDrawable(R.drawable.action_cancel));
         cancel.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
@@ -219,8 +214,6 @@ public class Manage extends Activity {
                 Log.i(TAG, "downloadCurrent=" + downloadCurrent.size());
                 Log.i(TAG, "downloadPending=" + downloadPending.size());
 
-                // Populate Lists
-                // if (adapterCurrent == null || adapterPending == null) {
                 // Create adapters
                 final Context ctxt = getApplicationContext();
                 adapterCurrent = new DlAdapter(ctxt, downloadCurrent);
@@ -231,11 +224,6 @@ public class Manage extends Activity {
                 listPending.setAdapter(adapterPending);
                 listCurrent.setOnItemClickListener(listenerCurrent);
                 listPending.setOnItemClickListener(listenerPending);
-                // } else {
-                // Update adapter
-                // adapterCurrent.notifyDataSetChanged();
-                // adapterPending.notifyDataSetChanged();
-                // }
             }
         } catch (RemoteException e) {
             if (e.getMessage() != null) {
@@ -260,8 +248,8 @@ public class Manage extends Activity {
                 } catch (RemoteException e) {
                 }
             } else {
-                Toast.makeText(getApplicationContext(), "Service inaccessible", Toast.LENGTH_SHORT)
-                        .show();
+                Toast.makeText(getApplicationContext(), R.string.toast_service_unavailable,
+                        Toast.LENGTH_SHORT).show();
             }
         }
 
@@ -271,8 +259,8 @@ public class Manage extends Activity {
             } catch (RemoteException e) {
             } finally {
                 mService = null;
-                Toast.makeText(getApplicationContext(), "Service deconnecté", Toast.LENGTH_SHORT)
-                        .show();
+                Toast.makeText(getApplicationContext(), R.string.toast_service_disconnected,
+                        Toast.LENGTH_SHORT).show();
             }
         }
     };

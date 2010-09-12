@@ -32,8 +32,8 @@ public class BookmarkItems extends AbstractListItems {
                 finish();
             }
         });
-        
-        ((TextView) findViewById(R.id.list_empty)).setText("Aucun favoris");
+
+        ((TextView) findViewById(R.id.list_empty)).setText(R.string.list_empty);
     }
 
     @Override

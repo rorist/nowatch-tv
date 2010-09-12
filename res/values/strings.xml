@@ -2,6 +2,11 @@
 <resources>
     <string name="app_name">NoWatch.NET</string>
     <string name="loading">Chargement ...</string>
+    
+    <string name="list_empty">Aucun élément</string>
+    <string name="list_loading">Chargement en cours</string>
+    <string name="list_current">En cours</string>
+    <string name="list_pending">En attente</string>
 
     <string name="status_new">Nouveau</string>
     <string name="status_downloading">En téléchargement</string>
@@ -13,13 +18,18 @@
     <string name="menu_options">Options</string>
     
     <string name="dialog_update_all">Mise à jour en cours,\nMerci de patienter ...</string>
+    <string name="dialog_cancel">Voulez-vous annuler le téléchargement ?</string>
+    <string name="dialog_cancel_title">Annuler</string>
+    <string name="dialog_pause_title">Pause</string>
     
-    <string name="toast_dl_added">Téléchargement ajouté dans la file d\'attente ...</string>
+    <string name="toast_dl_canceled">Téléchargement annulé!</string>
     <string name="toast_sdcard">La carte SD n\'est pas accessible !</string>
     <string name="toast_sdcardfreespace">Espace insuffisant sur la carte SD !</string>
     <string name="toast_notsupported">Format de fichier non supporté !</string>
     <string name="toast_notconnected">Connection indisponible !</string>
     <string name="toast_nomobiletraffic">Option MOBILE/3G desactivée !</string>
+    <string name="toast_service_unavailable">Service inaccessible</string>
+    <string name="toast_service_disconnected">Service deconnecté</string>
     
     <string name="notif_dl_started">Téléchargement démarré ...</string>
     <string name="notif_dl_complete">Téléchargement terminé !</string>
@@ -30,6 +40,8 @@
     <string name="date_days">Il y a %s jours</string>
     <string name="date_monthes">Il y a %s mois</string>
     
+    <string name="btn_yes">Oui</string>
+    <string name="btn_no">Non</string>
     <string name="btn_play">Voir</string>
     <string name="btn_stream">Voir (streaming)</string>
     <string name="btn_manage">Gérer</string>

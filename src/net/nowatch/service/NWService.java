@@ -174,12 +174,6 @@ public class NWService extends Service {
             SQLiteDatabase db = (new Db(ctxt)).openDb();
             db.execSQL(REQ_CLEAN);
             db.close();
-            // Remove notifications
-            // try {
-            // notificationManager.pauseAll();
-            // } catch (Exception e) {
-            // Log.v(TAG, e.getMessage());
-            // }
         }
     }
 
@@ -457,7 +451,7 @@ public class NWService extends Service {
             if (mService != null) {
                 final NWService service = mService.get();
                 if (service != null) {
-                    Toast.makeText(service.getApplicationContext(), "Téléchargement annulé!",
+                    Toast.makeText(service.getApplicationContext(), R.string.toast_dl_canceled,
                             Toast.LENGTH_LONG).show();
                     if (error_msg != null) {
                         Toast.makeText(service.getApplicationContext(), error_msg,
@@ -487,6 +481,8 @@ public class NWService extends Service {
             private long current_bytes = 0;
             private long start;
             private long now;
+            private int percent;
+            private int speed;
 
             public getPodcastFile(final Context ctxt, final DownloadTask task,
                     final long file_remote_size) {
@@ -510,10 +506,11 @@ public class NWService extends Service {
             @Override
             protected void update(final long count) {
                 now = System.nanoTime();
-                // Speed of the last 3 seconds
+                // Speed of the last seconds
                 if ((now - start) > PROGRESS_UPDATE && file_remote_size > 0) {
-                    task.publish((int) (file_local_size * PERCENT / file_remote_size),
-                            (int) (current_bytes / Math.abs((now - start) / PROGRESS_MAX)));
+                    percent = (int) (file_local_size * PERCENT / file_remote_size);
+                    speed = (int) (current_bytes / Math.abs((now - start) / PROGRESS_MAX));
+                    task.publish(percent, speed);
                     start = now;
                     current_bytes = count;
                 } else {

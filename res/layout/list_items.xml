@@ -26,7 +26,6 @@
             android:layout_height="0dip"
             android:layout_weight="1"
             android:ellipsize="marquee"
-            android:text="Title"
             style="@style/List.Title" />
         <LinearLayout
             android:layout_width="fill_parent"
@@ -38,7 +37,6 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:layout_marginRight="8dip"
-                android:text="1 Jan 1999"
                 style="@style/List.Sub" />
             <TextView
                 android:id="@+id/status"
@@ -46,7 +44,6 @@
                 android:layout_height="wrap_content"
                 android:singleLine="true"
                 android:ellipsize="end"
-                android:text="Status"
                 style="@style/List.Sub" />
         </LinearLayout>
     </LinearLayout>
