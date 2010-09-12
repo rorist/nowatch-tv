@@ -34,8 +34,8 @@ import android.widget.Toast;
 public class ItemInfo extends Activity {
 
     private final String TAG = Main.TAG + "InfoActivity";
-    private final String REQ = "SELECT feeds.title, items.title, items.description, items.link, "
-            + "feeds.link, feeds.image, items.file_uri, items.file_size, items.file_type, items.status, items.image, items.bookmark "
+    private final String REQ = "SELECT feeds.title, items.title, items.description, feeds.image, "
+            + "items.file_uri, items.file_size, items.file_type, items.status, items.image, items.bookmark "
             + "FROM items INNER JOIN feeds ON items.feed_id=feeds._id WHERE items._id=";
     private final String STYLE = "<style>*{color: black;}</style>";
     private final String PRE = "<meta http-equiv=\"Content-Type\" content=\"application/xhtml+text; charset=UTF-8\"/>"
@@ -67,12 +67,12 @@ public class ItemInfo extends Activity {
         // Try to get item logo, then podcast logo and finally application logo
         final int min_size = 200;
         ImageView logo = (ImageView) findViewById(R.id.logo);
-        byte[] logo_item_byte = c.getBlob(10);
+        byte[] logo_item_byte = c.getBlob(8);
         if (logo_item_byte != null && logo_item_byte.length > min_size) {
             logo.setImageBitmap(Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(
                     logo_item_byte, 0, logo_item_byte.length), image_size, image_size, true));
         } else {
-            byte[] logo_podcast_byte = c.getBlob(5);
+            byte[] logo_podcast_byte = c.getBlob(3);
             if (logo_podcast_byte != null && logo_podcast_byte.length > min_size) {
                 logo.setImageBitmap(Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(
                         logo_podcast_byte, 0, logo_podcast_byte.length), image_size, image_size,
@@ -82,11 +82,11 @@ public class ItemInfo extends Activity {
             }
         }
         // File
-        final String file_uri = c.getString(6);
-        final String file_type = c.getString(8);
+        final String file_uri = c.getString(5);
+        final String file_type = c.getString(6);
         // final String file_size = c.getString(7);
-        final int status = c.getInt(9);
-        final int bookmarked = c.getInt(11);
+        final int status = c.getInt(7);
+        final int bookmarked = c.getInt(9);
 
         // Close Db
         c.close();
@@ -109,11 +109,12 @@ public class ItemInfo extends Activity {
 
         // Buttons
         setBookmark(item_id, bookmarked);
-//        ((ImageButton) findViewById(R.id.btn_logo)).setOnClickListener(new View.OnClickListener() {
-//            public void onClick(View v) {
-//                finish();
-//            }
-//        });
+        // ((ImageButton) findViewById(R.id.btn_logo)).setOnClickListener(new
+        // View.OnClickListener() {
+        // public void onClick(View v) {
+        // finish();
+        // }
+        // });
         if (status == Item.STATUS_DOWNLOADING) {
             changeButton(R.id.btn_download, getString(R.string.btn_download), false, null);
             changeButton(R.id.btn_play, getString(R.string.btn_stream), true,
@@ -175,7 +176,6 @@ public class ItemInfo extends Activity {
     }
 
     private void setBookmark(final int item_id, int bookmarked) {
-        Log.v(TAG, "bookmarked=" + bookmarked);
         ImageButton btn_bookmark = (ImageButton) findViewById(R.id.btn_bookmark);
         if (bookmarked == 1) {
             btn_bookmark.setImageResource(R.drawable.btn_bookmark);

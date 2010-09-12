@@ -120,21 +120,21 @@ public class NWService extends Service {
         String action = null;
         if (intent != null && (action = intent.getAction()) != null) {
             Log.v(TAG, "action=" + action);
+            Bundle extras = intent.getExtras();
             if (ACTION_ADD.equals(action)) {
                 // Add item to download queue
-                Integer id = new Integer(intent.getExtras().getInt(Item.EXTRA_ITEM_ID));
+                Integer id = new Integer(extras.getInt(Item.EXTRA_ITEM_ID));
                 if (!downloadQueue.contains(id)) {
                     downloadQueue.add(id);
                 }
                 stopOrContinue();
             } else if (ACTION_CANCEL.equals(action)) {
                 // Cancel download
-                Bundle extras = intent.getExtras();
                 cancelDownload(extras.getInt(Item.EXTRA_ITEM_TYPE), extras
                         .getInt(Item.EXTRA_ITEM_ID));
                 stopOrContinue();
             } else if (ACTION_PAUSE.equals(action)) {
-                pauseDownload(intent.getExtras().getInt(Item.EXTRA_ITEM_ID));
+                pauseDownload(extras.getInt(Item.EXTRA_ITEM_ID));
                 stopOrContinue();
             } else if (ACTION_UPDATE.equals(action)) {
                 // Check for updates
@@ -214,6 +214,7 @@ public class NWService extends Service {
                 if (downloadTasks.containsKey(id)) {
                     DownloadTask task = downloadTasks.get(id);
                     synchronized (task.task) {
+                        task.task.deleteOnFinish = true;
                         task.task.isCancelled = true;
                     }
                     if (task != null && AsyncTask.Status.RUNNING.equals(task.getStatus())
@@ -231,6 +232,7 @@ public class NWService extends Service {
         if (downloadTasks.containsKey(id)) {
             DownloadTask task = downloadTasks.get(id);
             synchronized (task.task) {
+                task.task.deleteOnFinish = false;
                 task.task.isCancelled = true;
             }
             if (AsyncTask.Status.RUNNING.equals(task.getStatus()) && task.cancel(true)) {
@@ -460,9 +462,6 @@ public class NWService extends Service {
                     if (error_msg != null) {
                         Toast.makeText(service.getApplicationContext(), error_msg,
                                 Toast.LENGTH_LONG).show();
-                    }
-                    if (dest != null) {
-                        new File(dest).delete();
                     }
                     try {
                         service.notificationManager.cancel(item_id);

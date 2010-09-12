@@ -44,12 +44,14 @@ public class GetFile {
     private HttpGet httpget = null;
     private DefaultHttpClient httpclient = null;
     private final int buffer_size = 4 * 1024; // in Bytes
+    private boolean resume = false;
 
     protected String etag;
     protected long file_local_size = 0;
     protected long file_remote_size = 0;
 
     public Boolean isCancelled = false;
+    public boolean deleteOnFinish;
     public static final String PATH_CACHE = "Android/data/net.nowatch/cache";
     public static final String PATH_PODCASTS = "Podcasts/NoWatch.TV";
 
@@ -62,7 +64,7 @@ public class GetFile {
         }
     }
 
-    private HttpEntity openUrl(String src, String etag, boolean resume) {
+    private HttpEntity openUrl(String src, String etag) {
         // Set HTTP Client params
         HttpParams params = new BasicHttpParams();
         HttpConnectionParams.setStaleCheckingEnabled(params, false);
@@ -91,16 +93,19 @@ public class GetFile {
             } else {
                 file_local_size = 0;
             }
-            // Get response
+            // Execute HTTP request
             HttpResponse response = httpclient.execute(httpget);
             final int statusCode = response.getStatusLine().getStatusCode();
             Log.i(TAG, "Status:[" + statusCode + "] " + src);
             if (statusCode != HttpStatus.SC_OK) {
                 return null;
             }
-            // TODO: Do not resume if no Range-Accept header received
+            // Resume only if possible
+            if (response.getLastHeader("Accept-Ranges") == null) {
+                resume = false;
+            }
             // Save etag
-            else if (response.getLastHeader("ETag") != null) {
+            if (response.getLastHeader("ETag") != null) {
                 this.etag = response.getLastHeader("ETag").getValue();
             }
             // Save file_size
@@ -145,8 +150,11 @@ public class GetFile {
         getChannel(src, dst, etag, true, false);
     }
 
-    public void getChannel(String src, String dst, String etag, boolean deleteOnFinish,
-            boolean resume) throws ClientProtocolException, UnknownHostException, IOException {
+    public void getChannel(String src, String dst, String etag, boolean _deleteOnFinish,
+            boolean resumable) throws ClientProtocolException, UnknownHostException, IOException {
+
+        resume = resumable;
+        deleteOnFinish = _deleteOnFinish;
 
         if (!Environment.MEDIA_MOUNTED.equals(Environment.getExternalStorageState())) {
             return;
@@ -155,7 +163,7 @@ public class GetFile {
         // Get OutputStream and InputStream
         File dstFile = getDestination(dst);
         file_local_size = dstFile.length();
-        final HttpEntity entity = openUrl(src, etag, resume);
+        final HttpEntity entity = openUrl(src, etag);
         if (entity == null) {
             return;
         }

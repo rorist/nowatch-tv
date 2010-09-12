@@ -251,11 +251,10 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
             // Set endless loader
             int size = items.size();
             if (position == size - ENDLESS_OFFSET) {
-                if (endlessTask != null && AsyncTask.Status.RUNNING.equals(endlessTask.getStatus())) {
-                    endlessTask.cancel(true);
+                if (endlessTask == null || !AsyncTask.Status.RUNNING.equals(endlessTask.getStatus())) {
+                    endlessTask = new EndlessTask();
+                    endlessTask.execute(size);
                 }
-                endlessTask = new EndlessTask();
-                endlessTask.execute(size);
             }
             return convertView;
         }
