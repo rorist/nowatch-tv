@@ -187,8 +187,8 @@ public class NWService extends Service {
                 synchronized (task) {
                     if (task.cancel(true)) {
                         downloadTasks.remove(task.item_id);
-                        ItemInfo.changeStatus(ctxt, task.item_id, Item.STATUS_INCOMPLETE);
                         notificationManager.cancel(task.item_id);
+                        ItemInfo.changeStatus(ctxt, task.item_id, Item.STATUS_INCOMPLETE);
                     }
                 }
             }
