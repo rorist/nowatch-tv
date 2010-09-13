@@ -56,7 +56,7 @@ public class NWService extends Service {
     private static final long PROGRESS_UPDATE = 3000000000L;
     private static final String REQ_NEW = "select items._id from items where status="
             + Item.STATUS_NEW;
-    private final String REQ_ITEM = "select title,file_uri,file_size,status from items where _id=? limit 1";
+    private final String REQ_ITEM = "select title,file_uri,file_size,status,type from items where _id=? limit 1";
     private final String REQ_CLEAN = "update items set status=" + Item.STATUS_UNREAD
             + " where status=" + Item.STATUS_DOWNLOADING;
     private final RemoteCallbackList<IServiceCallback> mCallbacks = new RemoteCallbackList<IServiceCallback>();
@@ -278,7 +278,7 @@ public class NWService extends Service {
                         c.moveToFirst();
                         if (bytesFree > c.getLong(2)) {
                             DownloadTask task = new DownloadTask(NWService.this, c.getString(0),
-                                    itemId, c.getInt(3));
+                                    itemId, c.getInt(3), c.getInt(4));
                             task.execute(c.getString(1), c.getString(2));
                             downloadTasks.put(itemId, task);
                             c.close();
@@ -308,18 +308,20 @@ public class NWService extends Service {
         private Notification nf;
         private int item_id;
         private int status;
+        private int type;
         private String title;
         private WeakReference<NWService> mService;
         private String error_msg = null;
         private getPodcastFile task = null;
         private String dest = null;
 
-        public DownloadTask(NWService activity, String _title, int _item_id, int _status) {
+        public DownloadTask(NWService activity, String _title, int _item_id, int _status, int _type) {
             super();
             mService = new WeakReference<NWService>(activity);
             title = _title;
             item_id = _item_id;
             status = _status;
+            type = _type;
         }
 
         @Override
@@ -437,7 +439,7 @@ public class NWService extends Service {
                         nf.flags = Notification.FLAG_AUTO_CANCEL;
                         nf.setLatestEventInfo(service, title, service
                                 .getString(R.string.notif_dl_complete), PendingIntent.getActivity(
-                                service, 0, new Intent(service, ListItems.class), 0));
+                                service, 0, new Intent(service, ListItems.class).putExtra(Main.EXTRA_TYPE, type), 0));
                         service.notificationManager.notify(item_id, nf);
                         service.stopOrContinue();
                     }
