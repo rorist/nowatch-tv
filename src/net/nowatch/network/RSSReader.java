@@ -18,12 +18,12 @@ public class RSSReader extends DefaultHandler {
 
     private final static String TAG = Main.TAG + "RSSReader";
     private final boolean LOG_INFO = false;
-    private final List<String> feeds_fields = Arrays.asList("_id", "title", "description", "link",
+    private final List<String> feeds_fields = Arrays.asList("_id", "title", "description",
             "pubDate", "image");
     private final List<String> items_fields = Arrays.asList("_id", "feed_id", "title",
-            "description", "link", "pubDate", "file_uri", "file_size", "file_type");
+            "description", "pubDate", "file_uri", "file_size", "file_type");
     private final List<String> allowed_file = Arrays.asList("video/mp4", "video/x-m4v",
-            "audio/mpeg", "audio/mp4", "Audio/mp3", "audio/x-m4a");
+            "audio/mpeg", "audio/mp4", "audio/mp3", "audio/x-m4a");
     private String current_tag;
     private StringBuffer itemBuf;
     protected boolean in_items = false;
@@ -40,7 +40,6 @@ public class RSSReader extends DefaultHandler {
     private void initMaps() {
         feedMap.put("title", "");
         feedMap.put("description", "");
-        feedMap.put("link", "");
         feedMap.put("pubDate", "");
         feedMap.put("image", "");
 
@@ -105,10 +104,10 @@ public class RSSReader extends DefaultHandler {
                     file_type = attrs.getValue(i);
                 }
             }
-            if (allowed_file.contains(file_type)) {
+            if (allowed_file.contains(file_type.toLowerCase())) {
                 itemMap.put("file_uri", file_uri);
                 itemMap.put("file_size", file_size);
-                itemMap.put("file_type", file_type);
+                itemMap.put("file_type", file_type.toLowerCase());
             }
         }
     }

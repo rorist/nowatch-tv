@@ -82,9 +82,9 @@ public class ItemInfo extends Activity {
             }
         }
         // File
-        final String file_uri = c.getString(5);
+        final String file_uri = c.getString(4);
+        // final String file_size = c.getString(5);
         final String file_type = c.getString(6);
-        // final String file_size = c.getString(7);
         final int status = c.getInt(7);
         final int bookmarked = c.getInt(9);
 
@@ -207,10 +207,11 @@ public class ItemInfo extends Activity {
     }
 
     private void viewFile(String file, String type, int item_id) {
-        // FIXME: Support audio files
-        // Hack type for Apple's format
+        Log.v(TAG, "file=" + file + ", type=" + type);
         if (type.equals(new String("video/x-m4v"))) {
             type = "video/mp4";
+        } else if (type.equals(new String("audio/x-m4a"))) {
+            type = "audio/mp4";
         }
         Intent i = new Intent(Intent.ACTION_VIEW);
         try {

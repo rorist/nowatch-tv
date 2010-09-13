@@ -33,7 +33,9 @@
     
     <string name="notif_dl_started">Téléchargement démarré ...</string>
     <string name="notif_dl_complete">Téléchargement terminé !</string>
-    <string name="notif_dl_canceled">Téléchargement annulé !</string>
+    <string name="notif_update_new_title">Nouveaux podcasts</string>
+    <string name="notif_update_new_desc">Podcasts disponibles</string>
+    <string name="notif_update_new_info">%s nouveaux éléments</string>
     
     <string name="date_hour">Moins d\'une heure</string>
     <string name="date_hours">Il y a %s heures</string>
@@ -42,8 +44,8 @@
     
     <string name="btn_yes">Oui</string>
     <string name="btn_no">Non</string>
-    <string name="btn_play">Voir</string>
-    <string name="btn_stream">Voir (streaming)</string>
+    <string name="btn_play">Jouer</string>
+    <string name="btn_stream">Jouer (streaming)</string>
     <string name="btn_manage">Gérer</string>
     <string name="btn_download">Télécharger</string>
     <string name="btn_back">Retour</string>

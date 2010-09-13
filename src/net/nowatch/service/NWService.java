@@ -433,7 +433,7 @@ public class NWService extends Service {
                         Log.v(TAG, e.getMessage());
                     } finally {
                         nf = new Notification(android.R.drawable.stat_sys_download_done,
-                                "Téléchargement terminé!", System.currentTimeMillis());
+                                service.getString(R.string.notif_dl_complete), System.currentTimeMillis());
                         nf.flags = Notification.FLAG_AUTO_CANCEL;
                         nf.setLatestEventInfo(service, title, service
                                 .getString(R.string.notif_dl_complete), PendingIntent.getActivity(
@@ -544,10 +544,10 @@ public class NWService extends Service {
                     if (nb > 0) {
                         // Show notification about new items
                         Notification nf = new Notification(R.drawable.icon_scream_48,
-                                "Nouveaux podcasts", System.currentTimeMillis());
+                                service.getString(R.string.notif_update_new_title), System.currentTimeMillis());
                         nf.flags = Notification.FLAG_AUTO_CANCEL;
-                        nf.setLatestEventInfo(service, "Podcasts disponibles", nb
-                                + " nouveaux éléments", PendingIntent.getActivity(service, 0,
+                        nf.setLatestEventInfo(service, service.getString(R.string.notif_update_new_desc),
+                            String.format(service.getString(R.string.notif_update_new_info), nb), PendingIntent.getActivity(service, 0,
                                 new Intent(service, ListItems.class), 0));
                         service.notificationManager.notify(NOTIFICATION_UPDATE, nf);
                         // Auto-download items
