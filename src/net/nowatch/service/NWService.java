@@ -37,6 +37,8 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -46,17 +48,20 @@ import android.os.RemoteException;
 import android.os.StatFs;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.util.DisplayMetrics;
+import android.view.WindowManager;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
 public class NWService extends Service {
 
     private static final String TAG = Main.TAG + "NWService";
+    private static final int IMG_DIP = 72;
     private static final int NOTIFICATION_UPDATE = -1;
     private static final long PROGRESS_UPDATE = 3000000000L;
     private static final String REQ_NEW = "select items._id from items where status="
             + Item.STATUS_NEW;
-    private final String REQ_ITEM = "select title,file_uri,file_size,status,type from items where _id=? limit 1";
+    private final String REQ_ITEM = "SELECT items.title, items.file_uri, items.file_size, items.status, items.type, items.image, feeds.image FROM items INNER JOIN feeds ON items.feed_id=feeds._id WHERE items._id=? LIMIT 1";
     private final String REQ_CLEAN = "update items set status=" + Item.STATUS_UNREAD
             + " where status=" + Item.STATUS_DOWNLOADING;
     private final RemoteCallbackList<IServiceCallback> mCallbacks = new RemoteCallbackList<IServiceCallback>();
@@ -277,11 +282,9 @@ public class NWService extends Service {
                         Cursor c = db.rawQuery(REQ_ITEM, new String[] { "" + itemId });
                         c.moveToFirst();
                         if (bytesFree > c.getLong(2)) {
-                            DownloadTask task = new DownloadTask(NWService.this, c.getString(0),
-                                    itemId, c.getInt(3), c.getInt(4));
-                            task.execute(c.getString(1), c.getString(2));
+                            DownloadTask task = new DownloadTask(NWService.this, itemId, c);
+                            task.execute();
                             downloadTasks.put(itemId, task);
-                            c.close();
                             db.close();
                             ItemInfo.changeStatus(ctxt, itemId, Item.STATUS_DOWNLOADING);
                             clientCallback();
@@ -302,7 +305,7 @@ public class NWService extends Service {
         }
     }
 
-    static class DownloadTask extends AsyncTask<String, Integer, Void> {
+    static class DownloadTask extends AsyncTask<Void, Integer, Void> {
 
         private RemoteViews rv;
         private Notification nf;
@@ -310,18 +313,27 @@ public class NWService extends Service {
         private int status;
         private int type;
         private String title;
+        private String file_uri;
+        private String file_size;
+        private byte[] image_item;
+        private byte[] image_feed;
         private WeakReference<NWService> mService;
         private String error_msg = null;
         private getPodcastFile task = null;
         private String dest = null;
 
-        public DownloadTask(NWService activity, String _title, int _item_id, int _status, int _type) {
+        public DownloadTask(NWService service, int _item_id, Cursor c) {
             super();
-            mService = new WeakReference<NWService>(activity);
-            title = _title;
+            mService = new WeakReference<NWService>(service);
             item_id = _item_id;
-            status = _status;
-            type = _type;
+            title = c.getString(0);
+            file_uri = c.getString(1);
+            file_size = c.getString(2);
+            status = c.getInt(3);
+            type = c.getInt(4);
+            image_item = c.getBlob(5);
+            image_feed = c.getBlob(6);
+            c.close();
         }
 
         @Override
@@ -330,8 +342,25 @@ public class NWService extends Service {
             nf = new Notification(android.R.drawable.stat_sys_download, service
                     .getString(R.string.notif_dl_started), System.currentTimeMillis());
             rv = new RemoteViews(service.getPackageName(), R.layout.notification_download);
-            // FIXME: Use feed/item image from Db
-            rv.setImageViewResource(R.id.download_icon, R.drawable.icon);
+            // Screen metrics (for dip to px conversion)
+            DisplayMetrics dm = new DisplayMetrics();
+            ((WindowManager) service.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getMetrics(dm);
+            final int image_size = (int) (IMG_DIP * dm.density + 0.5f);
+            // Get logo
+            final int min_size = 200;
+            if (image_item != null && image_item.length > min_size) {
+                rv.setImageViewBitmap(R.id.download_icon, Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(
+                        image_item, 0, image_item.length), image_size, image_size, true));
+            } else {
+                if (image_feed != null && image_feed.length > min_size) {
+                    rv.setImageViewBitmap(R.id.download_icon, Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(
+                            image_feed, 0, image_feed.length), image_size, image_size,
+                            true));
+                } else {
+                    rv.setImageViewResource(R.id.download_icon, R.drawable.icon);
+                }
+            }
+            //rv.setImageViewResource(R.id.download_icon, R.drawable.icon);
             rv.setTextViewText(R.id.download_title, title);
             rv.setProgressBar(R.id.download_progress, 0, 0, true);
             Intent i = new Intent(service, Manage.class);
@@ -344,10 +373,10 @@ public class NWService extends Service {
         }
 
         @Override
-        protected Void doInBackground(String... str) {
+        protected Void doInBackground(Void... unused) {
             int fs = 1;
             try {
-                fs = Integer.parseInt(str[1]);
+                fs = Integer.parseInt(file_size);
             } catch (NumberFormatException e) {
             }
             // Get Context
@@ -365,20 +394,20 @@ public class NWService extends Service {
             // Download file
             try {
                 String state = Environment.getExternalStorageState();
-                if (Environment.MEDIA_MOUNTED.equals(state) && !str[0].equals(new String(""))) {
+                if (Environment.MEDIA_MOUNTED.equals(state) && !file_uri.equals(new String(""))) {
                     File dst = new File(Environment.getExternalStorageDirectory()
                             .getCanonicalPath()
                             + "/" + GetFile.PATH_PODCASTS);
                     dst.mkdirs();
                     task = new getPodcastFile(ctxt, DownloadTask.this, fs);
-                    dest = dst.getCanonicalPath() + "/" + new File(str[0]).getName();
+                    dest = dst.getCanonicalPath() + "/" + new File(file_uri).getName();
                     if (status == Item.STATUS_INCOMPLETE) {
                         Log.v(TAG, "resume download");
                         ItemInfo.changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
-                        task.getChannel(str[0], dest, true);
+                        task.getChannel(file_uri, dest, true);
                     } else {
                         ItemInfo.changeStatus(ctxt, item_id, Item.STATUS_DOWNLOADING);
-                        task.getChannel(str[0], dest, false);
+                        task.getChannel(file_uri, dest, false);
                     }
                 } else {
                     cancel(false);

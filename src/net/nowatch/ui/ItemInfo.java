@@ -109,12 +109,6 @@ public class ItemInfo extends Activity {
 
         // Buttons
         setBookmark(item_id, bookmarked);
-        // ((ImageButton) findViewById(R.id.btn_logo)).setOnClickListener(new
-        // View.OnClickListener() {
-        // public void onClick(View v) {
-        // finish();
-        // }
-        // });
         if (status == Item.STATUS_DOWNLOADING) {
             changeButton(R.id.btn_download, getString(R.string.btn_download), false, null);
             changeButton(R.id.btn_play, getString(R.string.btn_stream), true,
@@ -200,10 +194,13 @@ public class ItemInfo extends Activity {
     }
 
     private void downloadFile(int item_id) {
+        // Launch action on the service
         Intent intent = new Intent(ItemInfo.this, NWService.class);
         intent.setAction(NWService.ACTION_ADD);
         intent.putExtra(Item.EXTRA_ITEM_ID, item_id);
         startService(intent);
+        // Desactivate the button
+        changeButton(R.id.btn_download, getString(R.string.btn_download), false, null);
     }
 
     private void viewFile(String file, String type, int item_id) {
