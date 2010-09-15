@@ -463,13 +463,12 @@ public class NWService extends Service {
                     } catch (Exception e) {
                         Log.v(TAG, e.getMessage());
                     } finally {
-                        // TODO: Open ItemInfo on the downloaded item !
                         nf = new Notification(android.R.drawable.stat_sys_download_done,
                                 service.getString(R.string.notif_dl_complete), System.currentTimeMillis());
                         nf.flags = Notification.FLAG_AUTO_CANCEL;
                         nf.setLatestEventInfo(service, title, service
                                 .getString(R.string.notif_dl_complete), PendingIntent.getActivity(
-                                service, 0, new Intent(service, ListItems.class).putExtra(Main.EXTRA_TYPE, type), 0));
+                                service, 0, new Intent(service, ItemInfo.class).putExtra(Item.EXTRA_ITEM_ID, item_id), 0));
                         service.notificationManager.notify(item_id, nf);
                         service.stopOrContinue();
                     }

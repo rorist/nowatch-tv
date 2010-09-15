@@ -87,9 +87,7 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
     }
 
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        Intent i = new Intent(ctxt, ItemInfo.class);
-        i.putExtra(Item.EXTRA_ITEM_ID, items.get(position).id);
-        startActivity(i);
+        startActivity(new Intent(ctxt, ItemInfo.class).putExtra(Item.EXTRA_ITEM_ID, items.get(position).id));
     }
 
     private void setPodcastsImages() {
