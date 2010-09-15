@@ -177,14 +177,6 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
             formatter.setTimeZone(TimeZone.getTimeZone("Europe/Paris"));
             item.date = formatter.format(new Date(date));
         }
-        // Actions
-        // item.action = new View.OnClickListener() {
-        // public void onClick(View v) {
-        // Intent i = new Intent(ctxt, InfoActivity.class);
-        // i.putExtra("item_id", item.id);
-        // startActivity(i);
-        // }
-        // };
         return item;
     }
 
@@ -204,7 +196,6 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
         TextView status;
         TextView date;
         ImageView logo;
-        // ImageButton action;
     }
 
     protected class ItemsAdapter extends ArrayAdapter<Item> implements Filterable {
@@ -235,8 +226,6 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
                 vh.status = (TextView) convertView.findViewById(R.id.status);
                 vh.date = (TextView) convertView.findViewById(R.id.date);
                 vh.logo = (ImageView) convertView.findViewById(R.id.logo);
-                // vh.action = (ImageButton)
-                // convertView.findViewById(R.id.btn_actions);
                 convertView.setTag(vh);
             } else {
                 vh = (ViewHolder) convertView.getTag();
@@ -247,7 +236,6 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
             vh.status.setText(item.status);
             vh.date.setText(item.date);
             vh.logo.setImageBitmap(item.logo);
-            // vh.action.setOnClickListener(item.action);
             // Set endless loader
             int size = items.size();
             if (position == size - ENDLESS_OFFSET) {

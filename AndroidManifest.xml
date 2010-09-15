@@ -35,6 +35,10 @@
             android:label="@string/app_name"/>
         
         <activity
+            android:name=".ui.TwitterList"
+            android:label="@string/app_name"/>
+        
+        <activity
             android:name=".ui.BookmarkItems"
             android:label="@string/app_name"/>
             

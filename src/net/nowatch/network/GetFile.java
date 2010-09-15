@@ -104,11 +104,11 @@ public class GetFile {
             if (response.getLastHeader("Accept-Ranges") == null) {
                 resume = false;
             }
-            // Save etag
+            // Get etag
             if (response.getLastHeader("ETag") != null) {
                 this.etag = response.getLastHeader("ETag").getValue();
             }
-            // Save file_size
+            // Get file_size
             if (response.getLastHeader("Content-Length") != null) {
                 try {
                     file_remote_size = Long.parseLong(response.getLastHeader("Content-Length")

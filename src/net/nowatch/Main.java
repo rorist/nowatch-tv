@@ -22,6 +22,8 @@ public class Main extends TabActivity {
     public static final String TAG = "NWTV:";
     public static final int TYPE_TV = 1;
     public static final int TYPE_FM = 2;
+    public static final int TYPE_BLOG = 3;
+    public static final int TYPE_TWITTER = 4;
     public static final String EXTRA_TYPE = "extra_type";
 
     @Override
@@ -61,6 +63,12 @@ public class Main extends TabActivity {
         // NoWatch.FM
         intent = new Intent().setClass(Main.this, ListItems.class).putExtra(EXTRA_TYPE, TYPE_FM);
         spec = tabHost.newTabSpec("FM").setIndicator("", res.getDrawable(R.drawable.tab_fm))
+                .setContent(intent);
+        tabHost.addTab(spec);
+
+        // Twitter
+        intent = new Intent().setClass(Main.this, TwitterList.class).putExtra(EXTRA_TYPE, TYPE_TWITTER);
+        spec = tabHost.newTabSpec("TW").setIndicator("", res.getDrawable(R.drawable.tab_twitter))
                 .setContent(intent);
         tabHost.addTab(spec);
 
