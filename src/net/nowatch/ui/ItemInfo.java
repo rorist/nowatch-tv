@@ -20,6 +20,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.View;
@@ -108,6 +109,7 @@ public class ItemInfo extends Activity {
         });
 
         // Buttons
+        // TODO: Handle play/download buttons separatly
         setBookmark(item_id, bookmarked);
         if (status == Item.STATUS_DOWNLOADING) {
             changeButton(R.id.btn_download, getString(R.string.btn_download), false, null);
@@ -129,8 +131,8 @@ public class ItemInfo extends Activity {
                     new View.OnClickListener() {
                         public void onClick(View v) {
                             // Read the local file
-                            viewFile(GetFile.PATH_PODCASTS + "/" + new File(file_uri).getName(),
-                                    file_type, item_id);
+                            viewFile("file://" + Environment.getExternalStorageDirectory().toString() + "/"
+                                + GetFile.PATH_PODCASTS + "/" + new File(file_uri).getName(), file_type, item_id);
                         }
                     });
         } else {

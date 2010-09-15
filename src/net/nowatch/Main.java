@@ -5,6 +5,7 @@ package net.nowatch;
 import java.io.File;
 
 import net.nowatch.ui.ListItems;
+import net.nowatch.ui.TwitterList;
 import net.nowatch.utils.Db;
 import net.nowatch.utils.Prefs;
 import android.app.TabActivity;

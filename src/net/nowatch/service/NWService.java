@@ -463,6 +463,7 @@ public class NWService extends Service {
                     } catch (Exception e) {
                         Log.v(TAG, e.getMessage());
                     } finally {
+                        // TODO: Open ItemInfo on the downloaded item !
                         nf = new Notification(android.R.drawable.stat_sys_download_done,
                                 service.getString(R.string.notif_dl_complete), System.currentTimeMillis());
                         nf.flags = Notification.FLAG_AUTO_CANCEL;
