@@ -16,6 +16,8 @@
     
     <string name="menu_mark_all">Tout marquer comme lu</string>
     <string name="menu_options">Options</string>
+    <string name="menu_download">Téléchargement</string>
+    <string name="menu_bookmark">Favoris</string>
     
     <string name="dialog_update_all">Mise à jour en cours,\nMerci de patienter ...</string>
     <string name="dialog_cancel">Voulez-vous annuler le téléchargement ?</string>

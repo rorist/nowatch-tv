@@ -206,27 +206,34 @@ public class ItemInfo extends Activity {
     }
 
     private void viewFile(String file, String type, int item_id) {
+        // iTunes hack
         Log.v(TAG, "file=" + file + ", type=" + type);
         if (type.equals(new String("video/x-m4v"))) {
             type = "video/mp4";
         } else if (type.equals(new String("audio/x-m4a"))) {
             type = "audio/mp4";
         }
+        // Prepare to read
         Intent i = new Intent(Intent.ACTION_VIEW);
+        i.putExtra("oneshot", false); // FIXME: Check if service is actually stopped without
         try {
             i.setDataAndType(Uri.parse(file), type);
-            startActivity(i);
-            changeStatus(ctxt, item_id, Item.STATUS_READ);
+            startActivity(i); // TODO: StartActivityForResult() and save track position ?
         } catch (ActivityNotFoundException e) {
             Log.e(TAG, e.getMessage());
             try {
                 i.setType("video/*");
                 startActivity(i);
-                changeStatus(ctxt, item_id, Item.STATUS_READ);
             } catch (ActivityNotFoundException e1) {
                 Log.e(TAG, e1.getMessage());
                 Toast.makeText(ctxt, R.string.toast_notsupported, Toast.LENGTH_LONG).show();
             }
+        }
+        // Change status
+        if (file.startsWith("http://")) {
+            changeStatus(ctxt, item_id, Item.STATUS_READ);
+        } else {
+            changeStatus(ctxt, item_id, Item.STATUS_DL_READ);
         }
     }
 

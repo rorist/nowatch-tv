@@ -29,7 +29,8 @@ public class ListItems extends AbstractListItems {
     private static final String REQ_ITEMS_STATUS = "SELECT _id, '', status FROM items";
     private static final String REQ_ITEMS_SELECT = "SELECT _id, title, status, pubDate, feed_id, image FROM items";
     private static final String REQ_ITEMS_END = " ORDER BY pubDate DESC LIMIT ";
-    private static final String REQ_MARK_ALL = "UPDATE items SET status=" + Item.STATUS_UNREAD + " WHERE status=" + Item.STATUS_NEW + " and type=";
+    private static final String REQ_MARK_ALL = "UPDATE items SET status=" + Item.STATUS_UNREAD
+            + " WHERE status=" + Item.STATUS_NEW + " and type=";
     private static final String REQ_FILTER = "SELECT _id, title_clean FROM feeds WHERE type=";
     private static final int MENU_MARK_ALL = 1;
     private static final int MENU_OPTIONS = 2;
@@ -112,7 +113,7 @@ public class ListItems extends AbstractListItems {
         qa.setAnimStyle(QuickAction.ANIM_GROW_FROM_CENTER);
 
         final ActionItem first = new ActionItem();
-        first.setTitle("Téléchargements");
+        first.setTitle(getString(R.string.menu_download));
         first.setIcon(res.getDrawable(R.drawable.action_download));
         first.setOnClickListener(new View.OnClickListener() {
             // @Override
@@ -124,12 +125,13 @@ public class ListItems extends AbstractListItems {
 
         final int type = podcast_type;
         final ActionItem second = new ActionItem();
-        second.setTitle("Favoris");
+        second.setTitle(getString(R.string.menu_bookmark));
         second.setIcon(res.getDrawable(R.drawable.action_bookmark));
         second.setOnClickListener(new View.OnClickListener() {
             // @Override
             public void onClick(View v) {
-                startActivity(new Intent(ListItems.this, BookmarkItems.class).putExtra(Main.EXTRA_TYPE, type));
+                startActivity(new Intent(ListItems.this, BookmarkItems.class).putExtra(
+                        Main.EXTRA_TYPE, type));
                 qa.dismiss();
             }
         });
@@ -164,7 +166,7 @@ public class ListItems extends AbstractListItems {
         // Set podcasts entries
         db = (new Db(ctxt)).openDb();
         Cursor c = db.rawQuery(REQ_FILTER + podcast_type, null);
-        if(c.moveToFirst()){
+        if (c.moveToFirst()) {
             final String filter2 = " WHERE feed_id=";
             do {
                 final int feed_id = c.getInt(0);
@@ -175,13 +177,14 @@ public class ListItems extends AbstractListItems {
                     // @Override
                     public void onClick(View v) {
                         current_request = REQ_ITEMS_SELECT + filter2 + feed_id + REQ_ITEMS_END;
-                        current_request_status = REQ_ITEMS_STATUS + filter2 + feed_id + REQ_ITEMS_END;
+                        current_request_status = REQ_ITEMS_STATUS + filter2 + feed_id
+                                + REQ_ITEMS_END;
                         qa.dismiss();
                         resetList();
                     }
                 });
                 qa.addActionItem(p);
-            } while(c.moveToNext());
+            } while (c.moveToNext());
         }
         c.close();
         db.close();
@@ -239,7 +242,8 @@ public class ListItems extends AbstractListItems {
     }
 
     public void refreshListVisible() {
-        // FIXME: Save position, refresh all elements and position the list to the saved  location, instead of this method
+        // FIXME: Save position, refresh all elements and position the list to
+        // the saved location, instead of this method
         addToList(list.getFirstVisiblePosition(), list.getLastVisiblePosition()
                 - list.getFirstVisiblePosition() + 1, true);
         adapter.notifyDataSetChanged();

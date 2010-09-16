@@ -7,7 +7,7 @@
             android:summary=""
             android:defaultValue="false" />
         <ListPreference
-            android:key="notification_update"
+            android:key="notification_interval"
             android:title="Intervalle d'actualisation"
             android:summary=""
             android:dependency="notification"

@@ -1,6 +1,6 @@
 package net.nowatch.utils;
 
-public class Feed {
+public class Feed extends Object {
 
     public int id;
     public int type;

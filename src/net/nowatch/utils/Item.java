@@ -3,7 +3,7 @@ package net.nowatch.utils;
 import android.graphics.Bitmap;
 import android.view.View.OnClickListener;
 
-public class Item {
+public class Item extends Object {
 
     public static final String EXTRA_ITEM_ID = "extra_item_id";
     public static final String EXTRA_ITEM_POSITION = "extra_item_position";

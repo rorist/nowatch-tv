@@ -16,7 +16,6 @@ import net.nowatch.R;
 import net.nowatch.network.GetFile;
 import net.nowatch.network.Network;
 import net.nowatch.ui.ItemInfo;
-import net.nowatch.ui.ListItems;
 import net.nowatch.ui.Manage;
 import net.nowatch.utils.Db;
 import net.nowatch.utils.Item;
@@ -35,10 +34,10 @@ import android.content.IntentFilter;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
@@ -47,8 +46,8 @@ import android.os.RemoteCallbackList;
 import android.os.RemoteException;
 import android.os.StatFs;
 import android.preference.PreferenceManager;
-import android.util.Log;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.WindowManager;
 import android.widget.RemoteViews;
 import android.widget.Toast;
@@ -311,7 +310,7 @@ public class NWService extends Service {
         private Notification nf;
         private int item_id;
         private int status;
-        private int type;
+        // private int type;
         private String title;
         private String file_uri;
         private String file_size;
@@ -330,7 +329,7 @@ public class NWService extends Service {
             file_uri = c.getString(1);
             file_size = c.getString(2);
             status = c.getInt(3);
-            type = c.getInt(4);
+            // type = c.getInt(4);
             image_item = c.getBlob(5);
             image_feed = c.getBlob(6);
             c.close();
@@ -344,23 +343,25 @@ public class NWService extends Service {
             rv = new RemoteViews(service.getPackageName(), R.layout.notification_download);
             // Screen metrics (for dip to px conversion)
             DisplayMetrics dm = new DisplayMetrics();
-            ((WindowManager) service.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getMetrics(dm);
+            ((WindowManager) service.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay()
+                    .getMetrics(dm);
             final int image_size = (int) (IMG_DIP * dm.density + 0.5f);
             // Get logo
             final int min_size = 200;
             if (image_item != null && image_item.length > min_size) {
-                rv.setImageViewBitmap(R.id.download_icon, Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(
-                        image_item, 0, image_item.length), image_size, image_size, true));
+                rv.setImageViewBitmap(R.id.download_icon, Bitmap.createScaledBitmap(BitmapFactory
+                        .decodeByteArray(image_item, 0, image_item.length), image_size, image_size,
+                        true));
             } else {
                 if (image_feed != null && image_feed.length > min_size) {
-                    rv.setImageViewBitmap(R.id.download_icon, Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(
-                            image_feed, 0, image_feed.length), image_size, image_size,
-                            true));
+                    rv.setImageViewBitmap(R.id.download_icon, Bitmap.createScaledBitmap(
+                            BitmapFactory.decodeByteArray(image_feed, 0, image_feed.length),
+                            image_size, image_size, true));
                 } else {
                     rv.setImageViewResource(R.id.download_icon, R.drawable.icon);
                 }
             }
-            //rv.setImageViewResource(R.id.download_icon, R.drawable.icon);
+            // rv.setImageViewResource(R.id.download_icon, R.drawable.icon);
             rv.setTextViewText(R.id.download_title, title);
             rv.setProgressBar(R.id.download_progress, 0, 0, true);
             Intent i = new Intent(service, Manage.class);
@@ -457,18 +458,20 @@ public class NWService extends Service {
                         Toast.makeText(service.getApplicationContext(), error_msg,
                                 Toast.LENGTH_LONG).show();
                     }
+                    service.downloadTasks.remove(item_id);
                     ItemInfo.changeStatus(service, item_id, Item.STATUS_DL_UNREAD);
                     try {
                         service.notificationManager.cancel(item_id);
                     } catch (Exception e) {
                         Log.v(TAG, e.getMessage());
                     } finally {
-                        nf = new Notification(android.R.drawable.stat_sys_download_done,
-                                service.getString(R.string.notif_dl_complete), System.currentTimeMillis());
+                        nf = new Notification(android.R.drawable.stat_sys_download_done, service
+                                .getString(R.string.notif_dl_complete), System.currentTimeMillis());
                         nf.flags = Notification.FLAG_AUTO_CANCEL;
                         nf.setLatestEventInfo(service, title, service
                                 .getString(R.string.notif_dl_complete), PendingIntent.getActivity(
-                                service, 0, new Intent(service, ItemInfo.class).putExtra(Item.EXTRA_ITEM_ID, item_id), 0));
+                                service, 0, new Intent(service, ItemInfo.class).putExtra(
+                                        Item.EXTRA_ITEM_ID, item_id), 0));
                         service.notificationManager.notify(item_id, nf);
                         service.stopOrContinue();
                     }
@@ -574,12 +577,14 @@ public class NWService extends Service {
                     int nb = c.getCount();
                     if (nb > 0) {
                         // Show notification about new items
-                        Notification nf = new Notification(R.drawable.icon_scream_48,
-                                service.getString(R.string.notif_update_new_title), System.currentTimeMillis());
+                        Notification nf = new Notification(R.drawable.icon_scream_48, service
+                                .getString(R.string.notif_update_new_title), System
+                                .currentTimeMillis());
                         nf.flags = Notification.FLAG_AUTO_CANCEL;
-                        nf.setLatestEventInfo(service, service.getString(R.string.notif_update_new_desc),
-                            String.format(service.getString(R.string.notif_update_new_info), nb), PendingIntent.getActivity(service, 0,
-                                new Intent(service, ListItems.class), 0));
+                        nf.setLatestEventInfo(service, service
+                                .getString(R.string.notif_update_new_desc), String.format(service
+                                .getString(R.string.notif_update_new_info), nb), PendingIntent
+                                .getActivity(service, 0, new Intent(service, Main.class), 0));
                         service.notificationManager.notify(NOTIFICATION_UPDATE, nf);
                         // Auto-download items
                         if (PreferenceManager.getDefaultSharedPreferences(ctxt).getBoolean(

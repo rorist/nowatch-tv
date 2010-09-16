@@ -15,6 +15,7 @@ public class Prefs extends PreferenceActivity implements OnSharedPreferenceChang
 
     private Context ctxt;
     private PreferenceScreen ps;
+    // private static final String TAG = Main.TAG + "Prefs";
 
     public final static String KEY_MOBILE_TRAFFIC = "mobile_traffic";
     public final static boolean DEFAULT_MOBILE_TRAFFIC = false;
@@ -48,8 +49,9 @@ public class Prefs extends PreferenceActivity implements OnSharedPreferenceChang
             Notify notif = new Notify(ctxt);
             CheckBoxPreference cb = (CheckBoxPreference) ps.findPreference(key);
             if (cb.isChecked()) {
-                notif.startNotification(Long.parseLong(prefs.getString(KEY_NOTIFICATION_INTV,
-                        DEFAULT_NOTIFICATION_INTV)));
+                long time = Long.parseLong(prefs.getString(KEY_NOTIFICATION_INTV,
+                        DEFAULT_NOTIFICATION_INTV));
+                notif.startNotification(time);
             } else {
                 notif.cancelNotification();
             }
