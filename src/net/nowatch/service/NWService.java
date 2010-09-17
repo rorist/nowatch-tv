@@ -364,9 +364,8 @@ public class NWService extends Service {
             // rv.setImageViewResource(R.id.download_icon, R.drawable.icon);
             rv.setTextViewText(R.id.download_title, title);
             rv.setProgressBar(R.id.download_progress, 0, 0, true);
-            Intent i = new Intent(service, Manage.class);
-            i.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            nf.contentIntent = PendingIntent.getActivity(service, 0, i, 0);
+            nf.contentIntent = PendingIntent.getActivity(service, 0,
+                new Intent(service, Manage.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP), 0);
             nf.contentView = rv;
             nf.flags |= Notification.FLAG_ONGOING_EVENT;
             nf.flags |= Notification.FLAG_NO_CLEAR;
@@ -471,7 +470,7 @@ public class NWService extends Service {
                         nf.setLatestEventInfo(service, title, service
                                 .getString(R.string.notif_dl_complete), PendingIntent.getActivity(
                                 service, 0, new Intent(service, ItemInfo.class).putExtra(
-                                        Item.EXTRA_ITEM_ID, item_id), 0));
+                                        Item.EXTRA_ITEM_ID, item_id).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP), 0));
                         service.notificationManager.notify(item_id, nf);
                         service.stopOrContinue();
                     }
@@ -584,7 +583,7 @@ public class NWService extends Service {
                         nf.setLatestEventInfo(service, service
                                 .getString(R.string.notif_update_new_desc), String.format(service
                                 .getString(R.string.notif_update_new_info), nb), PendingIntent
-                                .getActivity(service, 0, new Intent(service, Main.class), 0));
+                                .getActivity(service, 0, new Intent(service, Main.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP), 0));
                         service.notificationManager.notify(NOTIFICATION_UPDATE, nf);
                         // Auto-download items
                         if (PreferenceManager.getDefaultSharedPreferences(ctxt).getBoolean(
