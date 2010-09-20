@@ -2,7 +2,7 @@ package net.nowatch.network;
 
 import java.lang.ref.WeakReference;
 
-import net.nowatch.service.NWService;
+import net.nowatch.service.NotifService;
 import net.nowatch.utils.Prefs;
 
 import android.app.Activity;
@@ -20,7 +20,7 @@ public class Network {
     private ConnectivityManager manager;
     private WeakReference<Activity> mActivity = null;
     private WeakReference<Context> mContext = null;
-    private WeakReference<NWService> mService = null;
+    private WeakReference<NotifService> mService = null;
 
     public Network(Activity activity) {
         mActivity = new WeakReference<Activity>(activity);
@@ -30,9 +30,9 @@ public class Network {
         }
     }
 
-    public Network(NWService service) {
-        mService = new WeakReference<NWService>(service);
-        final NWService s = mService.get();
+    public Network(NotifService service) {
+        mService = new WeakReference<NotifService>(service);
+        final NotifService s = mService.get();
         if (s != null) {
             manager = (ConnectivityManager) s.getSystemService(Context.CONNECTIVITY_SERVICE);
         }

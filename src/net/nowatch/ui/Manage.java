@@ -5,11 +5,11 @@ import java.util.List;
 
 import net.londatiga.android.ActionItem;
 import net.londatiga.android.QuickAction;
-import net.nowatch.IService;
-import net.nowatch.IServiceCallback;
+import net.nowatch.service.INotifService;
+import net.nowatch.service.INotifServiceCallback;
 import net.nowatch.Main;
 import net.nowatch.R;
-import net.nowatch.service.NWService;
+import net.nowatch.service.NotifService;
 import net.nowatch.utils.Db;
 import net.nowatch.utils.Item;
 import android.app.Activity;
@@ -53,7 +53,7 @@ public class Manage extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        startService(new Intent(Manage.this, NWService.class));
+        startService(new Intent(Manage.this, NotifService.class));
         setContentView(R.layout.activity_manage);
         mInflater = LayoutInflater.from(getApplicationContext());
 
@@ -80,7 +80,7 @@ public class Manage extends Activity {
     @Override
     public void onStart() {
         super.onStart();
-        bindService(new Intent(Manage.this, NWService.class), mConnection, BIND_AUTO_CREATE);
+        bindService(new Intent(Manage.this, NotifService.class), mConnection, BIND_AUTO_CREATE);
     }
 
     @Override
@@ -91,12 +91,12 @@ public class Manage extends Activity {
 
     private OnItemClickListener listenerCurrent = new OnItemClickListener() {
         public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-            DialogActions(v, position, NWService.TYPE_CURRENT);
+            DialogActions(v, position, NotifService.TYPE_CURRENT);
         }
     };
     private OnItemClickListener listenerPending = new OnItemClickListener() {
         public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-            DialogActions(v, position, NWService.TYPE_PENDING);
+            DialogActions(v, position, NotifService.TYPE_PENDING);
         }
     };
 
@@ -104,8 +104,8 @@ public class Manage extends Activity {
         // Send intent to service
         Item item = downloadCurrent.get(position);
         final Context ctxt = Manage.this;
-        Intent intent = new Intent(ctxt, NWService.class);
-        intent.setAction(NWService.ACTION_PAUSE);
+        Intent intent = new Intent(ctxt, NotifService.class);
+        intent.setAction(NotifService.ACTION_PAUSE);
         intent.putExtra(Item.EXTRA_ITEM_ID, item.id);
         startService(intent);
         adapterCurrent.remove(item);
@@ -121,16 +121,16 @@ public class Manage extends Activity {
             public void onClick(DialogInterface dialog, int which) {
                 Item item = null;
                 // Remove item from list
-                if (type == NWService.TYPE_CURRENT) {
+                if (type == NotifService.TYPE_CURRENT) {
                     item = downloadCurrent.get(position);
                     adapterCurrent.remove(item);
-                } else if (type == NWService.TYPE_PENDING) {
+                } else if (type == NotifService.TYPE_PENDING) {
                     item = downloadPending.get(position);
                     adapterPending.remove(item);
                 }
                 // Send intent to service
-                Intent intent = new Intent(ctxt, NWService.class);
-                intent.setAction(NWService.ACTION_CANCEL);
+                Intent intent = new Intent(ctxt, NotifService.class);
+                intent.setAction(NotifService.ACTION_CANCEL);
                 intent.putExtra(Item.EXTRA_ITEM_ID, item.id);
                 intent.putExtra(Item.EXTRA_ITEM_TYPE, type);
                 startService(intent);
@@ -148,7 +148,7 @@ public class Manage extends Activity {
         final QuickAction qa = new QuickAction(view);
         qa.setAnimStyle(QuickAction.ANIM_GROW_FROM_CENTER);
 
-        if (type == NWService.TYPE_CURRENT) {
+        if (type == NotifService.TYPE_CURRENT) {
             final ActionItem pause = new ActionItem();
             pause.setTitle(getString(R.string.dialog_pause_title));
             pause.setIcon(res.getDrawable(R.drawable.action_pause));
@@ -237,10 +237,10 @@ public class Manage extends Activity {
     /**
      * Service Binding
      */
-    private IService mService = null;
+    private INotifService mService = null;
     private ServiceConnection mConnection = new ServiceConnection() {
         public void onServiceConnected(ComponentName className, IBinder service) {
-            mService = IService.Stub.asInterface(service);
+            mService = INotifService.Stub.asInterface(service);
             if (mService != null) {
                 try {
                     mService._registerCallback(mCallback);
@@ -265,7 +265,7 @@ public class Manage extends Activity {
         }
     };
 
-    private IServiceCallback mCallback = new IServiceCallback.Stub() {
+    private INotifServiceCallback mCallback = new INotifServiceCallback.Stub() {
         public void _valueChanged() {
             runOnUiThread(new Runnable() {
                 public void run() {

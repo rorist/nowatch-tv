@@ -6,7 +6,7 @@ import net.nowatch.Main;
 import net.nowatch.R;
 import net.nowatch.network.GetFile;
 import net.nowatch.network.Network;
-import net.nowatch.service.NWService;
+import net.nowatch.service.NotifService;
 import net.nowatch.utils.Db;
 import net.nowatch.utils.Item;
 import android.app.Activity;
@@ -197,8 +197,8 @@ public class ItemInfo extends Activity {
 
     private void downloadFile(int item_id) {
         // Launch action on the service
-        Intent intent = new Intent(ItemInfo.this, NWService.class);
-        intent.setAction(NWService.ACTION_ADD);
+        Intent intent = new Intent(ItemInfo.this, NotifService.class);
+        intent.setAction(NotifService.ACTION_ADD);
         intent.putExtra(Item.EXTRA_ITEM_ID, item_id);
         startService(intent);
         // Desactivate the button

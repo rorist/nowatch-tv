@@ -11,9 +11,12 @@
         android:theme="@android:style/Theme.Light.NoTitleBar">
 
         <service
-            android:name=".service.NWService"
-            android:label="@string/app_name"
-            android:process=":NWService" />
+            android:name=".service.NotifService"
+            android:process=":NotifService" />
+
+        <service
+            android:name=".service.MusicService"
+            android:process=":MusicService" />
             
         <receiver android:name=".utils.Receiver">
             <intent-filter>
@@ -51,10 +54,42 @@
             android:name=".ui.Manage"
             android:label="@string/app_name"
             android:configChanges="keyboard|keyboardHidden|orientation" />
-            
+
         <activity
             android:name=".utils.Prefs"
             android:label="@string/app_name" />
+
+        <activity android:name=".ui.Player"
+            android:label="@string/app_name"
+            android:icon="@drawable/icon_music"
+            android:taskAffinity=""
+            android:launchMode="singleTask"
+            android:clearTaskOnLaunch="true"
+            android:excludeFromRecents="true" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content"/>
+                <data android:scheme="file"/>
+                <data android:mimeType="audio/*"/>
+                <data android:mimeType="application/ogg"/>
+                <data android:mimeType="application/x-ogg"/>
+                <data android:mimeType="application/itunes"/>
+                <data android:mimeType="video/*"/>
+            </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data android:scheme="http" />
+                <data android:mimeType="audio/mp3"/>
+                <data android:mimeType="audio/x-mp3"/>
+                <data android:mimeType="audio/mpeg"/>
+                <data android:mimeType="audio/mp4"/>
+                <data android:mimeType="audio/mp4a-latm"/>
+                <data android:mimeType="video/*"/>
+            </intent-filter>
+        </activity>
         
     </application>
     

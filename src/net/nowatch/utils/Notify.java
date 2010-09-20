@@ -1,7 +1,7 @@
 package net.nowatch.utils;
 
 import net.nowatch.Main;
-import net.nowatch.service.NWService;
+import net.nowatch.service.NotifService;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -18,8 +18,8 @@ public class Notify {
 
     public Notify(final Context ctxt) {
         am = (AlarmManager) ctxt.getSystemService(Context.ALARM_SERVICE);
-        Intent i = new Intent(ctxt, NWService.class);
-        i.setAction(NWService.ACTION_UPDATE);
+        Intent i = new Intent(ctxt, NotifService.class);
+        i.setAction(NotifService.ACTION_UPDATE);
         pi = PendingIntent.getService(ctxt, REQUEST, i, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 

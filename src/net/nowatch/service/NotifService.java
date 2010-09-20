@@ -9,8 +9,6 @@ import java.util.Iterator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
-import net.nowatch.IService;
-import net.nowatch.IServiceCallback;
 import net.nowatch.Main;
 import net.nowatch.R;
 import net.nowatch.network.GetFile;
@@ -52,7 +50,7 @@ import android.view.WindowManager;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
-public class NWService extends Service {
+public class NotifService extends Service {
 
     private static final String TAG = Main.TAG + "NWService";
     private static final int IMG_DIP = 72;
@@ -63,7 +61,7 @@ public class NWService extends Service {
     private final String REQ_ITEM = "SELECT items.title, items.file_uri, items.file_size, items.status, items.type, items.image, feeds.image FROM items INNER JOIN feeds ON items.feed_id=feeds._id WHERE items._id=? LIMIT 1";
     private final String REQ_CLEAN = "update items set status=" + Item.STATUS_UNREAD
             + " where status=" + Item.STATUS_DOWNLOADING;
-    private final RemoteCallbackList<IServiceCallback> mCallbacks = new RemoteCallbackList<IServiceCallback>();
+    private final RemoteCallbackList<INotifServiceCallback> mCallbacks = new RemoteCallbackList<INotifServiceCallback>();
     private final ConcurrentLinkedQueue<Integer> downloadQueue = new ConcurrentLinkedQueue<Integer>();
     private final ConcurrentHashMap<Integer, DownloadTask> downloadTasks = new ConcurrentHashMap<Integer, DownloadTask>();
     private UpdateTaskNotif updateTask;
@@ -142,7 +140,7 @@ public class NWService extends Service {
                 stopOrContinue();
             } else if (ACTION_UPDATE.equals(action)) {
                 // Check for updates
-                updateTask = new UpdateTaskNotif(NWService.this);
+                updateTask = new UpdateTaskNotif(NotifService.this);
                 updateTask.execute();
             } else {
                 // Nothing to do
@@ -281,7 +279,7 @@ public class NWService extends Service {
                         Cursor c = db.rawQuery(REQ_ITEM, new String[] { "" + itemId });
                         c.moveToFirst();
                         if (bytesFree > c.getLong(2)) {
-                            DownloadTask task = new DownloadTask(NWService.this, itemId, c);
+                            DownloadTask task = new DownloadTask(NotifService.this, itemId, c);
                             task.execute();
                             downloadTasks.put(itemId, task);
                             db.close();
@@ -316,14 +314,14 @@ public class NWService extends Service {
         private String file_size;
         private byte[] image_item;
         private byte[] image_feed;
-        private WeakReference<NWService> mService;
+        private WeakReference<NotifService> mService;
         private String error_msg = null;
         private getPodcastFile task = null;
         private String dest = null;
 
-        public DownloadTask(NWService service, int _item_id, Cursor c) {
+        public DownloadTask(NotifService service, int _item_id, Cursor c) {
             super();
-            mService = new WeakReference<NWService>(service);
+            mService = new WeakReference<NotifService>(service);
             item_id = _item_id;
             title = c.getString(0);
             file_uri = c.getString(1);
@@ -337,7 +335,7 @@ public class NWService extends Service {
 
         @Override
         protected void onPreExecute() {
-            final NWService service = mService.get();
+            final NotifService service = mService.get();
             nf = new Notification(android.R.drawable.stat_sys_download, service
                     .getString(R.string.notif_dl_started), System.currentTimeMillis());
             rv = new RemoteViews(service.getPackageName(), R.layout.notification_download);
@@ -364,8 +362,8 @@ public class NWService extends Service {
             // rv.setImageViewResource(R.id.download_icon, R.drawable.icon);
             rv.setTextViewText(R.id.download_title, title);
             rv.setProgressBar(R.id.download_progress, 0, 0, true);
-            nf.contentIntent = PendingIntent.getActivity(service, 0,
-                new Intent(service, Manage.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP), 0);
+            nf.contentIntent = PendingIntent.getActivity(service, 0, new Intent(service,
+                    Manage.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP), 0);
             nf.contentView = rv;
             nf.flags |= Notification.FLAG_ONGOING_EVENT;
             nf.flags |= Notification.FLAG_NO_CLEAR;
@@ -382,7 +380,7 @@ public class NWService extends Service {
             // Get Context
             Context ctxt = null;
             if (mService != null) {
-                final NWService service = mService.get();
+                final NotifService service = mService.get();
                 if (service != null) {
                     ctxt = service.getApplicationContext();
                 }
@@ -431,7 +429,7 @@ public class NWService extends Service {
         @Override
         protected void onProgressUpdate(Integer... values) {
             if (mService != null) {
-                final NWService service = mService.get();
+                final NotifService service = mService.get();
                 if (service != null) {
                     String status;
                     if (values[1] < 1024) {
@@ -451,7 +449,7 @@ public class NWService extends Service {
             Log.v(TAG, "onPostExecute()");
             super.onPostExecute(unused);
             if (mService != null) {
-                final NWService service = mService.get();
+                final NotifService service = mService.get();
                 if (service != null) {
                     if (error_msg != null) {
                         Toast.makeText(service.getApplicationContext(), error_msg,
@@ -470,7 +468,8 @@ public class NWService extends Service {
                         nf.setLatestEventInfo(service, title, service
                                 .getString(R.string.notif_dl_complete), PendingIntent.getActivity(
                                 service, 0, new Intent(service, ItemInfo.class).putExtra(
-                                        Item.EXTRA_ITEM_ID, item_id).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP), 0));
+                                        Item.EXTRA_ITEM_ID, item_id).setFlags(
+                                        Intent.FLAG_ACTIVITY_CLEAR_TOP), 0));
                         service.notificationManager.notify(item_id, nf);
                         service.stopOrContinue();
                     }
@@ -482,7 +481,7 @@ public class NWService extends Service {
         protected void onCancelled() {
             Log.v(TAG, "onCancelled()");
             if (mService != null) {
-                final NWService service = mService.get();
+                final NotifService service = mService.get();
                 if (service != null) {
                     Toast.makeText(service.getApplicationContext(), R.string.toast_dl_canceled,
                             Toast.LENGTH_LONG).show();
@@ -559,14 +558,14 @@ public class NWService extends Service {
      */
     private static class UpdateTaskNotif extends UpdateTask {
 
-        public UpdateTaskNotif(NWService s) {
+        public UpdateTaskNotif(NotifService s) {
             super(s);
         }
 
         @Override
         protected void onPostExecute(Void unused) {
             super.onPostExecute(unused);
-            final NWService service = getService();
+            final NotifService service = getService();
             if (service != null) {
                 final Context ctxt = service.getApplicationContext();
                 SQLiteDatabase db = (new Db(ctxt)).openDb();
@@ -583,7 +582,8 @@ public class NWService extends Service {
                         nf.setLatestEventInfo(service, service
                                 .getString(R.string.notif_update_new_desc), String.format(service
                                 .getString(R.string.notif_update_new_info), nb), PendingIntent
-                                .getActivity(service, 0, new Intent(service, Main.class).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP), 0));
+                                .getActivity(service, 0, new Intent(service, Main.class)
+                                        .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP), 0));
                         service.notificationManager.notify(NOTIFICATION_UPDATE, nf);
                         // Auto-download items
                         if (PreferenceManager.getDefaultSharedPreferences(ctxt).getBoolean(
@@ -606,7 +606,7 @@ public class NWService extends Service {
         @Override
         protected void onCancelled() {
             super.onCancelled();
-            final NWService service = getService();
+            final NotifService service = getService();
             if (service != null) {
                 service.stopOrContinue();
             }
@@ -617,15 +617,15 @@ public class NWService extends Service {
     /**
      * Service control (IPC) using AIDL interface
      */
-    private final IService.Stub mBinder = new IService.Stub() {
+    private final INotifService.Stub mBinder = new INotifService.Stub() {
 
-        public void _registerCallback(IServiceCallback cb) {
+        public void _registerCallback(INotifServiceCallback cb) {
             if (cb != null) {
                 mCallbacks.register(cb);
             }
         }
 
-        public void _unregisterCallback(IServiceCallback cb) {
+        public void _unregisterCallback(INotifServiceCallback cb) {
             if (cb != null) {
                 mCallbacks.unregister(cb);
             }

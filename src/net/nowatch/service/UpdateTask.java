@@ -28,14 +28,14 @@ public class UpdateTask extends AsyncTask<Void, Void, Void> {
     private static final String REQ = "SELECT _id, type, link_rss, etag, pubDate FROM feeds";
     private boolean sdcarderror = false;
     protected WeakReference<ListItems> mActivity = null;
-    protected WeakReference<NWService> mService = null;
+    protected WeakReference<NotifService> mService = null;
 
     public UpdateTask(ListItems activity) {
         mActivity = new WeakReference<ListItems>(activity);
     }
 
-    public UpdateTask(NWService service) {
-        mService = new WeakReference<NWService>(service);
+    public UpdateTask(NotifService service) {
+        mService = new WeakReference<NotifService>(service);
     }
 
     @Override
@@ -112,9 +112,9 @@ public class UpdateTask extends AsyncTask<Void, Void, Void> {
         return null;
     }
 
-    protected NWService getService() {
+    protected NotifService getService() {
         if (mService != null) {
-            final NWService s = mService.get();
+            final NotifService s = mService.get();
             if (s != null) {
                 return s;
             }
