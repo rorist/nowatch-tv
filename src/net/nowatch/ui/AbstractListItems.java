@@ -61,9 +61,6 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
         podcast_type = getIntent().getExtras().getInt(Main.EXTRA_TYPE);
         setContentView(R.layout.activity_list_items);
 
-        // Get Podcasts images
-        setPodcastsImages();
-
         // Screen metrics (for dip to px conversion)
         DisplayMetrics dm = new DisplayMetrics();
         getWindowManager().getDefaultDisplay().getMetrics(dm);
@@ -132,22 +129,6 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
         return item;
     }
 
-    private Bitmap createImage(int feed_id, byte[] logo_item_byte, int width, int height) {
-        final int min_size = 200;
-        if (logo_item_byte != null && logo_item_byte.length > min_size) {
-            return Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_item_byte, 0,
-                    logo_item_byte.length), image_size, image_size, true);
-        } else {
-            byte[] logo_podcast_byte = podcasts_images.get(feed_id);
-            if (logo_podcast_byte != null && logo_podcast_byte.length > min_size) {
-                return Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_podcast_byte,
-                        0, logo_podcast_byte.length), image_size, image_size, true);
-            } else {
-                return BitmapFactory.decodeResource(getResources(), R.drawable.icon);
-            }
-        }
-    }
-
     protected Item createItem(Cursor c) {
         final Item item = new Item();
         item.id = c.getInt(0);
@@ -155,7 +136,21 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
         // Status
         item.status = updateItemStatus(item, c).status;
         // Icon
-        item.logo = createImage(c.getInt(4), c.getBlob(5), image_size, image_size);
+        final int min_size = 200;
+        final int feed_id = c.getInt(4);
+        final byte [] logo_item_byte = c.getBlob(5);
+        if (logo_item_byte != null && logo_item_byte.length > min_size) {
+            item.logo = Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_item_byte, 0,
+                    logo_item_byte.length), image_size, image_size, true);
+        } else {
+            byte[] logo_podcast_byte = podcasts_images.get(feed_id);
+            if (logo_podcast_byte != null && logo_podcast_byte.length > min_size) {
+                item.logo = Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_podcast_byte,
+                        0, logo_podcast_byte.length), image_size, image_size, true);
+            } else {
+                item.logo = BitmapFactory.decodeResource(getResources(), R.drawable.icon);
+            }
+        }
         // Date
         long date = c.getLong(3);
         long diff = System.currentTimeMillis() / 1000 - date / 1000;

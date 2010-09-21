@@ -204,6 +204,7 @@ public class ListItems extends AbstractListItems {
             if (update) {
                 c = db.rawQuery(current_request_status + offset + "," + limit, null);
             } else {
+                // FIXME: Sometimes the cursor/db isn't closed
                 c = db.rawQuery(current_request + offset + "," + limit, null);
             }
             if (c.moveToFirst()) {

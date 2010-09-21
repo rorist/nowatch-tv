@@ -26,16 +26,15 @@ public class Db {
         this.ctxt = ctxt;
     }
 
-    public SQLiteDatabase openDb(boolean write) throws SQLiteException {
-        if(writable) {
-            return SQLiteDatabase.openDatabase(DB_PATH + DB_NAME, null, SQLiteDatabase.OPEN_READWRITE);
-        } else {
-            return SQLiteDatabase.openDatabase(DB_PATH + DB_NAME, null, SQLiteDatabase.OPEN_READONLY);
-        }
-    }
-
     public SQLiteDatabase openDb() throws SQLiteException {
         return openDb(false);
+    }
+
+    public SQLiteDatabase openDb(boolean writable) throws SQLiteException {
+        if (writable) {
+            return SQLiteDatabase.openDatabase(DB_PATH + DB_NAME, null, SQLiteDatabase.OPEN_READWRITE);
+        }
+        return SQLiteDatabase.openDatabase(DB_PATH + DB_NAME, null, SQLiteDatabase.OPEN_READONLY);
     }
 
     public void copyDbToDevice() {

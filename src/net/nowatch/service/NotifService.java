@@ -56,11 +56,10 @@ public class NotifService extends Service {
     private static final int IMG_DIP = 72;
     private static final int NOTIFICATION_UPDATE = -1;
     private static final long PROGRESS_UPDATE = 3000000000L;
-    private static final String REQ_NEW = "select items._id from items where status="
+    private static final String REQ_NEW = "SELECT items._id FROM items WHERE status="
             + Item.STATUS_NEW;
     private final String REQ_ITEM = "SELECT items.title, items.file_uri, items.file_size, items.status, items.type, items.image, feeds.image FROM items INNER JOIN feeds ON items.feed_id=feeds._id WHERE items._id=? LIMIT 1";
-    private final String REQ_CLEAN = "update items set status=" + Item.STATUS_UNREAD
-            + " where status=" + Item.STATUS_DOWNLOADING;
+    private final String REQ_CLEAN = "UPDATE items SET status=" + Item.STATUS_UNREAD + " WHERE status=" + Item.STATUS_DOWNLOADING;
     private final RemoteCallbackList<INotifServiceCallback> mCallbacks = new RemoteCallbackList<INotifServiceCallback>();
     private final ConcurrentLinkedQueue<Integer> downloadQueue = new ConcurrentLinkedQueue<Integer>();
     private final ConcurrentHashMap<Integer, DownloadTask> downloadTasks = new ConcurrentHashMap<Integer, DownloadTask>();
@@ -173,7 +172,7 @@ public class NotifService extends Service {
         // Clean failed downloads
         if (downloadTasks.size() == 0) {
             // Reset state
-            SQLiteDatabase db = (new Db(ctxt)).openDb();
+            SQLiteDatabase db = (new Db(ctxt)).openDb(true);
             db.execSQL(REQ_CLEAN);
             db.close();
         }
