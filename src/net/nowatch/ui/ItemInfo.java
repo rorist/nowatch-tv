@@ -131,8 +131,10 @@ public class ItemInfo extends Activity {
                     new View.OnClickListener() {
                         public void onClick(View v) {
                             // Read the local file
-                            viewFile("file://" + Environment.getExternalStorageDirectory().toString() + "/"
-                                + GetFile.PATH_PODCASTS + "/" + new File(file_uri).getName(), file_type, item_id);
+                            viewFile("file://"
+                                    + Environment.getExternalStorageDirectory().toString() + "/"
+                                    + GetFile.PATH_PODCASTS + "/" + new File(file_uri).getName(),
+                                    file_type, item_id);
                         }
                     });
         } else {
@@ -164,7 +166,7 @@ public class ItemInfo extends Activity {
     }
 
     public static void changeStatus(Context ctxt, int id, int status) {
-        SQLiteDatabase db = (new Db(ctxt)).openDb();
+        SQLiteDatabase db = (new Db(ctxt)).openDb(true);
         ContentValues value = new ContentValues();
         value.put("status", status);
         db.update("items", value, "_id=?", new String[] { id + "" });
@@ -188,7 +190,7 @@ public class ItemInfo extends Activity {
                 }
             });
         }
-        SQLiteDatabase db = (new Db(ctxt)).openDb();
+        SQLiteDatabase db = (new Db(ctxt)).openDb(true);
         ContentValues value = new ContentValues();
         value.put("bookmark", bookmarked);
         db.update("items", value, "_id=?", new String[] { item_id + "" });
@@ -215,10 +217,10 @@ public class ItemInfo extends Activity {
         }
         // Prepare to read
         Intent i = new Intent(Intent.ACTION_VIEW);
-        i.putExtra("oneshot", false); // FIXME: Check if service is actually stopped without
+        i.putExtra(Player.EXTRA_ITEM_ID, item_id);
         try {
             i.setDataAndType(Uri.parse(file), type);
-            startActivity(i); // TODO: StartActivityForResult() and save track position ?
+            startActivity(i);
         } catch (ActivityNotFoundException e) {
             Log.e(TAG, e.getMessage());
             try {

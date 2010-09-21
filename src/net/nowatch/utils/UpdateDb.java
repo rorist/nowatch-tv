@@ -115,7 +115,7 @@ public class UpdateDb {
 
         public RSS(final Context ctxt, String pubDate, String etag) {
             this.ctxt = ctxt;
-            db = (new Db(ctxt)).openDb();
+            db = (new Db(ctxt)).openDb(true);
             // Save etag
             if (etag != null) {
                 feedMap.put("etag", etag);

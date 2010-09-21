@@ -23,6 +23,7 @@
     <string name="dialog_cancel">Voulez-vous annuler le téléchargement ?</string>
     <string name="dialog_cancel_title">Annuler</string>
     <string name="dialog_pause_title">Pause</string>
+    <string name="dialog_loading">Chargement en cours ...</string>
     
     <string name="toast_dl_canceled">Téléchargement annulé!</string>
     <string name="toast_sdcard">La carte SD n\'est pas accessible !</string>

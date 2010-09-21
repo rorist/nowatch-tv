@@ -26,14 +26,16 @@ public class Db {
         this.ctxt = ctxt;
     }
 
-    // FIXME: Test this synchronization
-    synchronized public SQLiteDatabase openDb() {
-        try {
+    public SQLiteDatabase openDb(boolean write) throws SQLiteException {
+        if(writable) {
             return SQLiteDatabase.openDatabase(DB_PATH + DB_NAME, null, SQLiteDatabase.OPEN_READWRITE);
-        } catch (SQLiteException e) {
-            Log.e(TAG, e.getMessage());
+        } else {
+            return SQLiteDatabase.openDatabase(DB_PATH + DB_NAME, null, SQLiteDatabase.OPEN_READONLY);
         }
-        return null;
+    }
+
+    public SQLiteDatabase openDb() throws SQLiteException {
+        return openDb(false);
     }
 
     public void copyDbToDevice() {
