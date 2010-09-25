@@ -216,21 +216,23 @@ public class ItemInfo extends Activity {
             type = "audio/mp4";
         }
         // Prepare to read
-        Intent i = new Intent(Intent.ACTION_VIEW);
+        // Intent i = new Intent(Intent.ACTION_VIEW);
+        Intent i = new Intent(ItemInfo.this, Player.class);
         i.putExtra(Player.EXTRA_ITEM_ID, item_id);
-        try {
-            i.setDataAndType(Uri.parse(file), type);
-            startActivity(i);
-        } catch (ActivityNotFoundException e) {
-            Log.e(TAG, e.getMessage());
-            try {
-                i.setType("video/*");
-                startActivity(i);
-            } catch (ActivityNotFoundException e1) {
-                Log.e(TAG, e1.getMessage());
-                Toast.makeText(ctxt, R.string.toast_notsupported, Toast.LENGTH_LONG).show();
-            }
-        }
+        // try {
+        i.setDataAndType(Uri.parse(file), type);
+        startActivity(i);
+        // } catch (ActivityNotFoundException e) {
+        // Log.e(TAG, e.getMessage());
+        // try {
+        // i.setType("video/*");
+        // startActivity(i);
+        // } catch (ActivityNotFoundException e1) {
+        // Log.e(TAG, e1.getMessage());
+        // Toast.makeText(ctxt, R.string.toast_notsupported,
+        // Toast.LENGTH_LONG).show();
+        // }
+        // }
         // Change status
         if (file.startsWith("http://")) {
             changeStatus(ctxt, item_id, Item.STATUS_READ);

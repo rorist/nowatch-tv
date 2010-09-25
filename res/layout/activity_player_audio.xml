@@ -38,7 +38,7 @@
                 android:id="@+id/player_time_current"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="0:00"
+                android:text="--:--"
                 style="@style/List.Sub" />
             <TextView
                 android:layout_width="wrap_content"
@@ -49,7 +49,7 @@
                 android:id="@+id/player_time_total"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="99:99"
+                android:text="--:--"
                 style="@style/List.Sub" />
         </LinearLayout>
     </LinearLayout>
@@ -74,6 +74,7 @@
             android:src="@android:drawable/ic_media_play" />
     </LinearLayout>
     <SeekBar
+        android:id="@+id/seek"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:paddingBottom="6dip"
