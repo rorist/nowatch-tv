@@ -21,7 +21,7 @@ public class RSSReader extends DefaultHandler {
     private final List<String> feeds_fields = Arrays.asList("_id", "title", "description",
             "pubDate", "image");
     private final List<String> items_fields = Arrays.asList("_id", "feed_id", "title",
-            "description", "pubDate", "file_uri", "file_size", "file_type");
+            "description", "pubDate", "file_uri", "file_size", "file_type", "duration");
     private final List<String> allowed_file = Arrays.asList("video/mp4", "video/x-m4v",
             "audio/mpeg", "audio/mp4", "audio/mp3", "audio/x-m4a");
     private String current_tag;
@@ -48,6 +48,7 @@ public class RSSReader extends DefaultHandler {
         itemMap.put("file_uri", "");
         itemMap.put("file_type", "");
         itemMap.put("file_size", "");
+        itemMap.put("duration", "");
         itemMap.put("image", "");
         itemMap.put("status", Item.STATUS_NEW);
     }

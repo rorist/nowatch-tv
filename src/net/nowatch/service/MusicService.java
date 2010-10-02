@@ -12,7 +12,6 @@ public class MusicService extends Service {
 
     // private static final String TAG = Main.TAG + "MusicService";
     private MediaPlayer mp = new MediaPlayer();
-    private long currentPosition = 0;
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -33,6 +32,8 @@ public class MusicService extends Service {
     public void onDestroy() {
         mp.stop();
         mp.release();
+        // mp = null;
+        // TODO: Deregister callback
     }
 
     /**
@@ -52,8 +53,8 @@ public class MusicService extends Service {
             }
         }
 
-        public void play(long position) throws RemoteException {
-            currentPosition = position;
+        public void play(int position) throws RemoteException {
+            mp.seekTo(position * 1000);
             mp.start();
             // mp.setOnCompletionListener(new OnCompletionListener() {
             // public void onCompletion(MediaPlayer mp) {
@@ -66,7 +67,7 @@ public class MusicService extends Service {
         }
 
         public long getPosition() throws RemoteException {
-            return currentPosition;
+            return mp.getCurrentPosition() / 1000;
         }
 
     };

@@ -1,6 +1,7 @@
 package net.nowatch.ui;
 
-//http://developer.android.com/reference/android/media/MediaPlayer.html
+// http://developer.android.com/reference/android/media/MediaPlayer.html
+// Based on packages/apps/Music/src/com/android/music/MediaPlaybackActivity.java
 
 import net.nowatch.R;
 import net.nowatch.service.IMusicService;
@@ -28,7 +29,7 @@ public class Player extends Activity {
     public static final String EXTRA_POSITION = "extra_position";
     public static final String EXTRA_ITEM_ID = "extra_item_id";
     private static final String REQ = "SELECT feeds.title, items.title, feeds.image, "
-            + " items.image FROM items INNER JOIN feeds ON items.feed_id=feeds._id WHERE items._id=";
+            + " items.image, items.duration FROM items INNER JOIN feeds ON items.feed_id=feeds._id WHERE items._id=";
     private static final int REFRESH = 1;
     private IMusicService mService;
     private String mPath;
@@ -40,6 +41,7 @@ public class Player extends Activity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_player_load);
 
         mIntent = getIntent();
         mExtras = mIntent.getExtras();
@@ -98,9 +100,7 @@ public class Player extends Activity {
             c.moveToFirst();
             podcast = c.getString(0);
             episode = c.getString(1);
-            // FIXME: get duration from RSS ?
-            // mDuration = c.getLong(2);
-            mDuration = 60 * 60; // 1h
+            mDuration = c.getLong(4);
             // TODO: Get image
             c.close();
             db.close();
@@ -112,6 +112,7 @@ public class Player extends Activity {
         // Set UI
         setContentView(R.layout.activity_player_audio);
         ((SeekBar) findViewById(R.id.seek)).setMax(1000);
+        ((TextView) findViewById(R.id.player_time_total)).setText(getTime(mDuration));
         ((TextView) findViewById(R.id.player_show)).setText(podcast);
         ((TextView) findViewById(R.id.player_episode)).setText(episode);
         findViewById(R.id.btn_pause).setOnClickListener(new OnClickListener() {
@@ -129,7 +130,7 @@ public class Player extends Activity {
             public void onClick(View v) {
                 if (mService != null) {
                     try {
-                        mService.play(0L);
+                        mService.play((int) mPosition);
                     } catch (RemoteException e) {
                         e.printStackTrace();
                     }
@@ -148,16 +149,21 @@ public class Player extends Activity {
     private long refresh() {
         if (mService != null) {
             try {
-                long pos = mService.getPosition();
-                long remaining = 1000 - (pos % 1000);
-                ((TextView) findViewById(R.id.player_time_current)).setText("" + pos);
-                ((SeekBar) findViewById(R.id.seek)).setProgress((int) (1000 * pos / mDuration));
+                mPosition = mService.getPosition();
+                long remaining = 1000 - (mPosition % 1000);
+                ((TextView) findViewById(R.id.player_time_current)).setText(getTime(mPosition));
+                ((SeekBar) findViewById(R.id.seek))
+                        .setProgress((int) (1000 * mPosition / mDuration));
                 return remaining;
             } catch (RemoteException e) {
                 e.printStackTrace();
             }
         }
         return 500;
+    }
+
+    private String getTime(long t) {
+        return String.format("%02d:%02d:%02d", t / 3600, t % 3600 / 60, t % 3600 % 60);
     }
 
     private ServiceConnection mConnection = new ServiceConnection() {
@@ -168,7 +174,7 @@ public class Player extends Activity {
                 try {
                     // Start the player
                     mService.openFile(mPath);
-                    mService.play(mPosition);
+                    mService.play((int) mPosition);
                 } catch (RemoteException e) {
                     e.printStackTrace();
                 }

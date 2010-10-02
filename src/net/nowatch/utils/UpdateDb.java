@@ -6,8 +6,11 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.Date;
+import java.util.List;
 import java.util.TimeZone;
 
 import javax.xml.parsers.FactoryConfigurationError;
@@ -140,6 +143,22 @@ public class UpdateDb {
                 } catch (IOException e) {
                     Log.e(TAG, e.getMessage());
                 }
+            } else if (name == "duration") {
+                // Duration to seconds
+                int sec = 0;
+                List<String> a = Arrays.asList(itemMap.getAsString("duration").split(":"));
+                Collections.reverse(a);
+                // Seconds
+                sec = Integer.parseInt(a.get(0));
+                if (a.size() > 1) {
+                    // Minutes
+                    sec += Integer.parseInt(a.get(1)) * 60;
+                    if (a.size() > 2) {
+                        // Hours
+                        sec += Integer.parseInt(a.get(2)) * 60 * 60;
+                    }
+                }
+                itemMap.put("duration", sec);
             } else if (name == "item") {
                 try {
                     item_date = formatter.parse(itemMap.getAsString("pubDate"));

@@ -10,7 +10,6 @@ import net.nowatch.service.NotifService;
 import net.nowatch.utils.Db;
 import net.nowatch.utils.Item;
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
