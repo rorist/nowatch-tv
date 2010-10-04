@@ -23,8 +23,10 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.SeekBar;
+import android.widget.SeekBar.OnSeekBarChangeListener;
 import android.widget.TextView;
 import android.widget.Toast;
+import java.lang.IllegalStateException;
 
 public class Player extends Activity {
 
@@ -38,6 +40,7 @@ public class Player extends Activity {
     private String mPath;
     private long mDuration;
     private long mPosition;
+    //private long mBufferPosition;
     private Intent mIntent;
     private Bundle mExtras;
     private boolean isAudio = true;
@@ -46,6 +49,7 @@ public class Player extends Activity {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_player_load);
+        ((SeekBar) findViewById(R.id.seek)).setEnabled(false);
 
         mIntent = getIntent();
         mExtras = mIntent.getExtras();
@@ -94,7 +98,6 @@ public class Player extends Activity {
 
     private void playVideo() {
         // Use foreground video player
-        setProgressBarIndeterminateVisibility(false);
         setContentView(R.layout.activity_player_video);
     }
 
@@ -136,7 +139,6 @@ public class Player extends Activity {
         
         // Populate UI
         setContentView(R.layout.activity_player_audio);
-        ((SeekBar) findViewById(R.id.seek)).setMax(1000);
         ((TextView) findViewById(R.id.player_time_total)).setText(getTime(mDuration));
         ((TextView) findViewById(R.id.player_show)).setText(podcast);
         ((TextView) findViewById(R.id.player_episode)).setText(episode);
@@ -155,29 +157,56 @@ public class Player extends Activity {
             public void onClick(View v) {
                 if (mService != null) {
                     try {
-                        mService.play((int) mPosition);
+                        mService.play();
                     } catch (RemoteException e) {
                         e.printStackTrace();
                     }
                 }
             }
         });
+        ((SeekBar) findViewById(R.id.seek)).setMax(1000);
+        ((SeekBar) findViewById(R.id.seek)).setOnSeekBarChangeListener(new OnSeekBarChangeListener() {
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                if(fromUser){
+                    if (mService != null) {
+                        try {
+                            mHandler.removeMessages(REFRESH);
+                            mPosition = mDuration * progress / 1000;
+                            seekBar.setProgress((int) (1000 * mPosition / mDuration));
+                            mService.seek((int) mPosition);
+                            queueNextRefresh(refresh());
+                            // FIXME: Show to user that is it loading if mPosition > mBufferPosition
+                        } catch (RemoteException e) {
+                            e.printStackTrace();
+                        }
+                    }
+                }
+            }
+            public void onStartTrackingTouch (SeekBar seekBar) {
+            }
+            public void onStopTrackingTouch (SeekBar seekBar) {
+            }
+        });
 
         // Update UI
-        long delay = refresh();
-        queueNextRefresh(delay);
+        queueNextRefresh(refresh());
     }
 
     private long refresh() {
         if (mService != null) {
             try {
-                mPosition = mService.getPosition();
-                long remaining = 1000 - (mPosition % 1000);
-                ((TextView) findViewById(R.id.player_time_current)).setText(getTime(mPosition));
-                ((SeekBar) findViewById(R.id.seek))
-                        .setProgress((int) (1000 * mPosition / mDuration));
-                return remaining;
+                if(mService.isPlaying()){
+                    mPosition = mService.getPosition();
+                    long remaining = 1000 - (mPosition % 1000);
+                    ((TextView) findViewById(R.id.player_time_current)).setText(getTime(mPosition));
+                    ((SeekBar) findViewById(R.id.seek))
+                            .setProgress((int) (1000 * mPosition / mDuration));
+                    ((SeekBar) findViewById(R.id.seek)).setSecondaryProgress((int) (mService.getBufferPercent() * 10));
+                    return remaining;
+                }
             } catch (RemoteException e) {
+                e.printStackTrace();
+            } catch (IllegalStateException e) {
                 e.printStackTrace();
             }
         }

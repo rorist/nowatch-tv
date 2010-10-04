@@ -31,6 +31,7 @@ public class MusicService extends Service {
     protected static final int SERVICE_ID = 1;
     private MediaPlayer mp = new MediaPlayer();
     private NotificationManager nm;
+    private int mBufferPercent = 0;
     private boolean isPaused = false;
 
     @Override
@@ -86,22 +87,23 @@ public class MusicService extends Service {
             openFile(msg, url, type, id);
         }
 
-        public void openFile(String msg, String path, String type, int item_id) throws RemoteException {
-            // Notification
-            Intent i = new Intent(MusicService.this, Player.class).putExtra(Item.EXTRA_ITEM_ID, item_id)
-                    .setDataAndType(Uri.parse(path), type).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-            Notification nf = new Notification(R.drawable.stat_notify_musicplayer,
-                    "Lecture en cours ... (FIXME)", System.currentTimeMillis());
-            nf.flags = Notification.FLAG_ONGOING_EVENT | Notification.FLAG_FOREGROUND_SERVICE;
-            nf.setLatestEventInfo(MusicService.this, "Lecture en cours", msg, PendingIntent
-                    .getActivity(MusicService.this, 0, i, 0));
-            nm.notify(SERVICE_ID, nf);
+        public void openFile(final String msg, final String path, final String type, final int item_id) throws RemoteException {
             try {
-                // Auto-play
                 mp.setOnPreparedListener(new OnPreparedListener() {
                     public void onPrepared(MediaPlayer mp) {
+                        // Notification
+                        Intent i = new Intent(MusicService.this, Player.class).putExtra(Item.EXTRA_ITEM_ID, item_id)
+                                .setDataAndType(Uri.parse(path), type).setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                        Notification nf = new Notification(R.drawable.stat_notify_musicplayer,
+                                "Lecture en cours ... (FIXME)", System.currentTimeMillis());
+                        nf.flags = Notification.FLAG_ONGOING_EVENT | Notification.FLAG_FOREGROUND_SERVICE;
+                        nf.setLatestEventInfo(MusicService.this, "Lecture en cours", msg, PendingIntent
+                                .getActivity(MusicService.this, 0, i, 0));
+                        nm.notify(SERVICE_ID, nf);
+                        // Auto-play
                         try {
-                            play(0);
+                            seek(0);
+                            play();
                         } catch (RemoteException e) {
                             e.printStackTrace();
                         }
@@ -110,8 +112,14 @@ public class MusicService extends Service {
                 // On complete
                 mp.setOnCompletionListener(new OnCompletionListener() {
                     public void onCompletion(MediaPlayer mp) {
-                        isPaused = false;
                         mp.stop();
+                        stopSelf();
+                    }
+                });
+                // Buffer info
+                mp.setOnBufferingUpdateListener(new MediaPlayer.OnBufferingUpdateListener() {
+                    public void onBufferingUpdate(MediaPlayer mp, int percent) {
+                        mBufferPercent = percent;
                     }
                 });
                 // Preparation
@@ -123,8 +131,16 @@ public class MusicService extends Service {
             }
         }
 
-        public void play(int position) throws RemoteException {
+        public void seek(int position) {
             mp.seekTo(position * 1000);
+            mp.setOnSeekCompleteListener(new MediaPlayer.OnSeekCompleteListener(){
+                public void onSeekComplete (MediaPlayer mp){
+                    // TODO: Callback to player
+                }
+            });
+        }
+
+        public void play() throws RemoteException {
             mp.start();
             isPaused = false;
         }
@@ -136,6 +152,10 @@ public class MusicService extends Service {
 
         public long getPosition() throws RemoteException {
             return mp.getCurrentPosition() / 1000;
+        }
+
+        public int getBufferPercent() throws RemoteException {
+            return mBufferPercent;
         }
 
         public boolean isPlaying() throws RemoteException {

@@ -141,8 +141,14 @@ public class ItemInfo extends Activity {
                     new View.OnClickListener() {
                         public void onClick(View v) {
                             // Stream the file
-                            if (new Network(ctxt).isMobileAllowed()) {
-                                viewFile(file_uri, file_type, item_id);
+                            Network net = new Network(ctxt);
+                            if (net.isMobileAllowed()) {
+                                if (net.isConnected()) {
+                                    viewFile(file_uri, file_type, item_id);
+                                } else {
+                                    Toast.makeText(ctxt, R.string.toast_notconnected,
+                                            Toast.LENGTH_LONG).show();
+                                }
                             } else {
                                 Toast.makeText(ctxt, R.string.toast_nomobiletraffic,
                                         Toast.LENGTH_LONG).show();
