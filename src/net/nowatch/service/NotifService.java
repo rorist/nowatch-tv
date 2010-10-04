@@ -59,7 +59,8 @@ public class NotifService extends Service {
     private static final String REQ_NEW = "SELECT items._id FROM items WHERE status="
             + Item.STATUS_NEW;
     private final String REQ_ITEM = "SELECT items.title, items.file_uri, items.file_size, items.status, items.type, items.image, feeds.image FROM items INNER JOIN feeds ON items.feed_id=feeds._id WHERE items._id=? LIMIT 1";
-    private final String REQ_CLEAN = "UPDATE items SET status=" + Item.STATUS_UNREAD + " WHERE status=" + Item.STATUS_DOWNLOADING;
+    private final String REQ_CLEAN = "UPDATE items SET status=" + Item.STATUS_UNREAD
+            + " WHERE status=" + Item.STATUS_DOWNLOADING;
     private final RemoteCallbackList<INotifServiceCallback> mCallbacks = new RemoteCallbackList<INotifServiceCallback>();
     private final ConcurrentLinkedQueue<Integer> downloadQueue = new ConcurrentLinkedQueue<Integer>();
     private final ConcurrentHashMap<Integer, DownloadTask> downloadTasks = new ConcurrentHashMap<Integer, DownloadTask>();
@@ -72,13 +73,13 @@ public class NotifService extends Service {
     public static final String ACTION_PAUSE = "action_pause";
     public static final int TYPE_CURRENT = 1;
     public static final int TYPE_PENDING = 2;
-    public NotificationManager notificationManager;
+    public NotificationManager nm;
 
     @Override
     public void onCreate() {
         Log.i(TAG, "onCreate()");
         ctxt = getApplicationContext();
-        notificationManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+        nm = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         IntentFilter filter = new IntentFilter();
         filter.addAction(ConnectivityManager.CONNECTIVITY_ACTION);
         registerReceiver(receiver, filter);
@@ -188,7 +189,7 @@ public class NotifService extends Service {
                 synchronized (task) {
                     if (task.cancel(true)) {
                         downloadTasks.remove(task.item_id);
-                        notificationManager.cancel(task.item_id);
+                        nm.cancel(task.item_id);
                         ItemInfo.changeStatus(ctxt, task.item_id, Item.STATUS_INCOMPLETE);
                     }
                 }
@@ -366,7 +367,7 @@ public class NotifService extends Service {
             nf.contentView = rv;
             nf.flags |= Notification.FLAG_ONGOING_EVENT;
             nf.flags |= Notification.FLAG_NO_CLEAR;
-            service.notificationManager.notify(item_id, nf);
+            service.nm.notify(item_id, nf);
         }
 
         @Override
@@ -438,7 +439,7 @@ public class NotifService extends Service {
                     }
                     rv.setProgressBar(R.id.download_progress, 100, values[0], false);
                     rv.setTextViewText(R.id.download_status, status);
-                    service.notificationManager.notify(item_id, nf);
+                    service.nm.notify(item_id, nf);
                 }
             }
         }
@@ -457,7 +458,7 @@ public class NotifService extends Service {
                     service.downloadTasks.remove(item_id);
                     ItemInfo.changeStatus(service, item_id, Item.STATUS_DL_UNREAD);
                     try {
-                        service.notificationManager.cancel(item_id);
+                        service.nm.cancel(item_id);
                     } catch (Exception e) {
                         Log.v(TAG, e.getMessage());
                     } finally {
@@ -469,7 +470,7 @@ public class NotifService extends Service {
                                 service, 0, new Intent(service, ItemInfo.class).putExtra(
                                         Item.EXTRA_ITEM_ID, item_id).setFlags(
                                         Intent.FLAG_ACTIVITY_CLEAR_TOP), 0));
-                        service.notificationManager.notify(item_id, nf);
+                        service.nm.notify(item_id, nf);
                         service.stopOrContinue();
                     }
                 }
@@ -489,7 +490,7 @@ public class NotifService extends Service {
                                 Toast.LENGTH_LONG).show();
                     }
                     try {
-                        service.notificationManager.cancel(item_id);
+                        service.nm.cancel(item_id);
                     } catch (Exception e) {
                         Log.v(TAG, e.getMessage());
                     } finally {
@@ -583,7 +584,7 @@ public class NotifService extends Service {
                                 .getString(R.string.notif_update_new_info), nb), PendingIntent
                                 .getActivity(service, 0, new Intent(service, Main.class)
                                         .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP), 0));
-                        service.notificationManager.notify(NOTIFICATION_UPDATE, nf);
+                        service.nm.notify(NOTIFICATION_UPDATE, nf);
                         // Auto-download items
                         if (PreferenceManager.getDefaultSharedPreferences(ctxt).getBoolean(
                                 Prefs.KEY_AUTO_DL, Prefs.DEFAULT_AUTO_DL)) {

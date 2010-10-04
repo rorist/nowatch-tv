@@ -62,14 +62,14 @@
             android:id="@+id/btn_pause"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="15dip"
+            android:padding="10dip"
             android:background="@drawable/btn_bg"
             android:src="@android:drawable/ic_media_pause" />
         <ImageButton
             android:id="@+id/btn_play"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:padding="15dip"
+            android:padding="10dip"
             android:background="@drawable/btn_bg"
             android:src="@android:drawable/ic_media_play" />
     </LinearLayout>

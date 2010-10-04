@@ -3,6 +3,7 @@ package net.nowatch.ui;
 // http://developer.android.com/reference/android/media/MediaPlayer.html
 // Based on packages/apps/Music/src/com/android/music/MediaPlaybackActivity.java
 
+import net.nowatch.Main;
 import net.nowatch.R;
 import net.nowatch.service.IMusicService;
 import net.nowatch.service.MusicService;
@@ -18,14 +19,16 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.os.RemoteException;
+import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.SeekBar;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class Player extends Activity {
 
-    // private static final String TAG = Main.TAG + "MusicPlayer";
+    private static final String TAG = Main.TAG + "MusicPlayer";
     public static final String EXTRA_POSITION = "extra_position";
     public static final String EXTRA_ITEM_ID = "extra_item_id";
     private static final String REQ = "SELECT feeds.title, items.title, feeds.image, "
@@ -37,6 +40,7 @@ public class Player extends Activity {
     private long mPosition;
     private Intent mIntent;
     private Bundle mExtras;
+    private boolean isAudio = true;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -60,17 +64,24 @@ public class Player extends Activity {
             mPath = mIntent.getDataString();
         }
 
-        // Play file
+        // File type
         if (type.toLowerCase().startsWith("video/")) {
-            playVideo();
-        } else {
-            playAudio();
+            isAudio = false;
         }
+        // Start service
+        startService(new Intent(Player.this, MusicService.class));
     }
 
     @Override
-    public void onDestroy() {
-        super.onDestroy();
+    public void onStart() {
+        super.onStart();
+        bindService(new Intent(Player.this, MusicService.class), mConnection, 0);
+
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
         if (mService != null) {
             unbindService(mConnection);
         }
@@ -83,20 +94,37 @@ public class Player extends Activity {
 
     private void playVideo() {
         // Use foreground video player
+        setProgressBarIndeterminateVisibility(false);
         setContentView(R.layout.activity_player_video);
     }
 
     private void playAudio() {
-        // Start music player service
-        Intent service = new Intent(Player.this, MusicService.class);
-        startService(service);
+        if (mIntent.hasExtra(EXTRA_ITEM_ID)) {
+            int item_id = mExtras.getInt(EXTRA_ITEM_ID);
+            // Open and Play the file
+            if (mService != null) {
+                try {
+                    mService.openFileId(item_id);
+                } catch (RemoteException e) {
+                    e.printStackTrace();
+                }
+            }
+        } else {
+            // ContentResolver resolver = getContentResolver();
+            // TODO: get data from resolver if we want generic player
+        }
 
+    }
+
+    private void setUI(){
         // Get podcast, episode and image
         String podcast = "Inconnu";
         String episode = "Inconnu (TODO)";
+        
         if (mIntent.hasExtra(EXTRA_ITEM_ID)) {
+            int item_id = mExtras.getInt(EXTRA_ITEM_ID);
             SQLiteDatabase db = (new Db(getApplicationContext())).openDb();
-            Cursor c = db.rawQuery(REQ + mExtras.getInt(EXTRA_ITEM_ID), null);
+            Cursor c = db.rawQuery(REQ + item_id, null);
             c.moveToFirst();
             podcast = c.getString(0);
             episode = c.getString(1);
@@ -104,12 +132,9 @@ public class Player extends Activity {
             // TODO: Get image
             c.close();
             db.close();
-        } else {
-            // ContentResolver resolver = getContentResolver();
-            // TODO: get data from resolver if we want generic player
         }
-
-        // Set UI
+        
+        // Populate UI
         setContentView(R.layout.activity_player_audio);
         ((SeekBar) findViewById(R.id.seek)).setMax(1000);
         ((TextView) findViewById(R.id.player_time_total)).setText(getTime(mDuration));
@@ -137,9 +162,6 @@ public class Player extends Activity {
                 }
             }
         });
-
-        // Read file
-        bindService(service, mConnection, 0);
 
         // Update UI
         long delay = refresh();
@@ -170,14 +192,17 @@ public class Player extends Activity {
 
         public void onServiceConnected(ComponentName className, IBinder service) {
             mService = IMusicService.Stub.asInterface(service);
-            if (mService != null) {
-                try {
-                    // Start the player
-                    mService.openFile(mPath);
-                    mService.play((int) mPosition);
-                } catch (RemoteException e) {
-                    e.printStackTrace();
+            try {
+                if (!mService.isPlaying()) {
+                    if (isAudio) {
+                        playAudio();
+                    } else {
+                        playVideo();
+                    }
                 }
+                setUI();
+            } catch (RemoteException e) {
+                e.printStackTrace();
             }
         }
 
