@@ -84,7 +84,8 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
     }
 
     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-        startActivity(new Intent(ctxt, ItemInfo.class).putExtra(Item.EXTRA_ITEM_ID, items.get(position).id));
+        startActivity(new Intent(ctxt, ItemInfo.class).putExtra(Item.EXTRA_ITEM_ID, items
+                .get(position).id));
     }
 
     private void setPodcastsImages() {
@@ -138,15 +139,16 @@ public abstract class AbstractListItems extends Activity implements OnItemClickL
         // Icon
         final int min_size = 200;
         final int feed_id = c.getInt(4);
-        final byte [] logo_item_byte = c.getBlob(5);
+        final byte[] logo_item_byte = c.getBlob(5);
         if (logo_item_byte != null && logo_item_byte.length > min_size) {
             item.logo = Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_item_byte, 0,
                     logo_item_byte.length), image_size, image_size, true);
         } else {
             byte[] logo_podcast_byte = podcasts_images.get(feed_id);
             if (logo_podcast_byte != null && logo_podcast_byte.length > min_size) {
-                item.logo = Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(logo_podcast_byte,
-                        0, logo_podcast_byte.length), image_size, image_size, true);
+                item.logo = Bitmap.createScaledBitmap(BitmapFactory.decodeByteArray(
+                        logo_podcast_byte, 0, logo_podcast_byte.length), image_size, image_size,
+                        true);
             } else {
                 item.logo = BitmapFactory.decodeResource(getResources(), R.drawable.icon);
             }
