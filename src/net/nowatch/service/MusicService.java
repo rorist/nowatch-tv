@@ -149,6 +149,7 @@ public class MusicService extends Service {
 
         public void openFile(final String msg, final String path, final String type,
                 final int item_id, final boolean autoplay) throws RemoteException {
+            Log.v(TAG, "openFile() id=" + item_id);
             try {
                 mp.setOnPreparedListener(new OnPreparedListener() {
                     public void onPrepared(MediaPlayer mp) {
@@ -159,8 +160,8 @@ public class MusicService extends Service {
                                 .setFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
                         Notification nf = new Notification(R.drawable.stat_notify_musicplayer,
                                 "Lecture en cours ... (FIXME)", System.currentTimeMillis());
-                        nf.flags = Notification.FLAG_ONGOING_EVENT
-                                | Notification.FLAG_FOREGROUND_SERVICE;
+                        nf.flags |= Notification.FLAG_ONGOING_EVENT;
+                        nf.flags |= Notification.FLAG_NO_CLEAR;
                         nf.setLatestEventInfo(MusicService.this, "Lecture en cours", msg,
                                 PendingIntent.getActivity(MusicService.this, 0, i, 0));
                         nm.notify(SERVICE_ID, nf);
@@ -199,6 +200,7 @@ public class MusicService extends Service {
         }
 
         public void seek(int position) {
+            Log.v(TAG, "seek() position=" + position);
             mp.seekTo(position * 1000);
             mp.setOnSeekCompleteListener(new MediaPlayer.OnSeekCompleteListener() {
                 public void onSeekComplete(MediaPlayer mp) {
@@ -208,11 +210,13 @@ public class MusicService extends Service {
         }
 
         public void play() throws RemoteException {
+            Log.v(TAG, "play()");
             mp.start();
             isPaused = false;
         }
 
         public void pause() throws RemoteException {
+            Log.v(TAG, "pause()");
             mp.pause();
             isPaused = true;
         }
@@ -226,6 +230,7 @@ public class MusicService extends Service {
         }
 
         public boolean isPlaying() throws RemoteException {
+            Log.v(TAG, "isPlaying()");
             return mp.isPlaying() || isPaused;
         }
 
@@ -243,6 +248,7 @@ public class MusicService extends Service {
 
         @Override
         public int getItemId() throws RemoteException {
+            Log.v(TAG, "getItemId()");
             return mItemId;
         }
 

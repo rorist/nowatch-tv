@@ -80,6 +80,7 @@ public class Player extends Activity {
 
     @Override
     protected void onNewIntent(Intent intent) {
+        Log.v(TAG, "onNewIntent()");
         // FIXME: Start new file
         setIntent(intent);
         setFileByIntent();
@@ -106,6 +107,7 @@ public class Player extends Activity {
                 Log.v(TAG, "is not playing");
                 // Start playback
                 if (mItemId != -1) {
+                    Log.v(TAG, "mItemId="+mItemId);
                     // Open and Play the file
                     if (mItemId != mService.getItemId()) {
                         mService.openFileId(mItemId, true);
@@ -297,6 +299,7 @@ public class Player extends Activity {
             runOnUiThread(new Runnable() {
                 @Override
                 public void run() {
+                    Log.v(TAG, "finishPrepared()");
                     mDialog.dismiss();
                     queueNextRefresh(refresh());
                 }
